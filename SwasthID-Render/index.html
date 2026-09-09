@@ -1948,7 +1948,7 @@
          firebaseUser = user || null;
          if (user) {
            cloudSyncReady = await loadCloudState();
-           profileOnboardingRequired = !isProfileActuallyComplete();
+           profileOnboardingRequired = !isProfileActuallyComplete() && patientData.onboardingSkipped !== true;
            if (document.getElementById('dashboard')?.style.display === 'block') {
              renderPersonalizedUI();
            }
@@ -1984,6 +1984,7 @@
      email: email || '',
      occupation: '',
      profileCompleted: false,
+     onboardingSkipped: false,
      dob: '',
      bloodGroup: '',
      conditions: [],
@@ -2006,6 +2007,15 @@
    localStorage.removeItem('swasth_addedKcal');
    localStorage.removeItem('swasth_stepsToday');
    localStorage.removeItem('swasth_lastActiveDate');
+ }
+
+ function onboardingSkipStorageKey(email = firebaseUser?.email || patientData?.email || '') {
+   const normalized = String(email || '').trim().toLowerCase();
+   return normalized ? `swasth_onboardingSkipped_${normalized}` : 'swasth_onboardingSkipped';
+ }
+
+ function isOnboardingSkippedForCurrentUser() {
+   return localStorage.getItem(onboardingSkipStorageKey()) === 'true';
  }
 
  function isSeedDemoProfile(profile) {
@@ -2031,7 +2041,8 @@
    Object.keys(patientData).forEach(key => delete patientData[key]);
    Object.assign(patientData, blankProfile);
    clearCloudCacheForUserSwitch();
-   profileOnboardingRequired = true;
+   patientData.onboardingSkipped = isOnboardingSkippedForCurrentUser();
+   profileOnboardingRequired = !patientData.onboardingSkipped;
    return blankProfile;
  }
 
@@ -2077,6 +2088,7 @@
        }
      }
      patientData.email = firebaseUser.email || patientData.email || '';
+     if (isOnboardingSkippedForCurrentUser()) patientData.onboardingSkipped = true;
 
      const savedTarget = localStorage.getItem('swasth_calorieTarget');
      if (savedTarget) {
@@ -2173,7 +2185,7 @@
    const credential = await auth.signInWithEmailAndPassword(email, password);
    firebaseUser = credential.user;
    cloudSyncReady = await loadCloudState();
-   profileOnboardingRequired = !isProfileActuallyComplete();
+   profileOnboardingRequired = !isProfileActuallyComplete() && patientData.onboardingSkipped !== true;
    if (cloudSyncReady) await migrateLocalDataToCloud();
    return credential.user;
  }
@@ -2186,6 +2198,7 @@
    // A new Firebase account must start with a clean user-owned cache.
    clearCloudCacheForUserSwitch();
    const blankProfile = createBlankPersonalizedProfile(email);
+   localStorage.removeItem(onboardingSkipStorageKey(email));
    Object.keys(patientData).forEach(key => delete patientData[key]);
    Object.assign(patientData, blankProfile);
    localStorage.setItem('swasth_abhaId', email);
@@ -2303,7 +2316,7 @@ let profileOnboardingRequired = false;
    renderPersonalizedUI();
 
    // Existing sessions with incomplete profiles are guided into onboarding as well.
-   const needsProfile = profileOnboardingRequired || !isProfileActuallyComplete();
+   const needsProfile = (profileOnboardingRequired || !isProfileActuallyComplete()) && patientData.onboardingSkipped !== true;
    if (needsProfile) {
      setTimeout(() => {
        openProfileModal();
@@ -2377,7 +2390,7 @@ let profileOnboardingRequired = false;
      firebaseUser = auth.currentUser;
      cloudSyncReady = await loadCloudState();
      const savedId = localStorage.getItem('swasth_abhaId') || firebaseUser.email || 'SwasthID User';
-     profileOnboardingRequired = !isProfileActuallyComplete();
+     profileOnboardingRequired = !isProfileActuallyComplete() && patientData.onboardingSkipped !== true;
      performLoginSetup(savedId);
      await migrateLocalDataToCloud();
      return;
@@ -2436,7 +2449,7 @@ let profileOnboardingRequired = false;
        localStorage.setItem('swasth_loggedIn', 'true');
        localStorage.setItem('swasth_abhaId', email);
        await syncCloudState('swasth_abhaId');
-       profileOnboardingRequired = !isProfileActuallyComplete();
+       profileOnboardingRequired = !isProfileActuallyComplete() && patientData.onboardingSkipped !== true;
        performLoginSetup(email);
        setTimeout(() => {
          showToast('', 'Scheduled Dose', 'Thyroxine 12.5mcg — scheduled for breakfast.');
@@ -3644,7 +3657,14 @@ function isProfileActuallyComplete() {
   return !!name && name !== 'SwasthID User' && !looksLikeDemo && patientData.profileCompleted === true;
 }
 
-function openProfileModal() {
+function openProfileModal(forceOpen = false) {
+  // A user who previously chose Skip for now should not be pushed back into onboarding
+  // automatically on later logins. Explicit Profile/Edit actions can pass forceOpen=true.
+  if (!forceOpen && isOnboardingSkippedForCurrentUser()) {
+    patientData.onboardingSkipped = true;
+    profileOnboardingRequired = false;
+    return;
+  }
   const modal = document.getElementById('profileModal'); if (!modal) return;
   const fullName = patientData.name || '';
   const nameParts = {
@@ -3685,8 +3705,28 @@ function openProfileModal() {
 function closeProfileModal() {
   const modal = document.getElementById('profileModal');
   if (!modal) return;
-  if (profileOnboardingRequired || !isProfileActuallyComplete()) return;
   modal.classList.remove('show');
+}
+async function skipProfileOnboarding() {
+  const modal = document.getElementById('profileModal');
+  if (!modal) return;
+  patientData.onboardingSkipped = true;
+  profileOnboardingRequired = false;
+  try {
+    localStorage.setItem(onboardingSkipStorageKey(), 'true');
+    if (firebaseUser && db) {
+      await cloudDoc().set({
+        profile: { ...patientData, onboardingSkipped: true },
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } else {
+      await syncProfileToCloud();
+    }
+  } catch (error) {
+    console.warn('Onboarding skip could not be synced:', error);
+  }
+  modal.classList.remove('show');
+  showToast('', 'Setup skipped', 'You can complete your profile anytime from Profile.');
 }
 function parseProfileConditions(text) { return String(text||'').split('\n').map(x=>x.trim()).filter(Boolean).map(name=>({name,status:'Ongoing'})); }
 function parseProfileMeds(text) { return String(text||'').split('\n').map(x=>x.trim()).filter(Boolean).map(line=>{ const p=line.split('|').map(x=>x.trim()); return {name:p[0],dose:p[1]||'',schedule:p[2]||'Review schedule',reason:''}; }); }
@@ -3788,6 +3828,8 @@ async function savePersonalizedProfile() {
   if(Number.isFinite(kcal)&&kcal>=800&&kcal<=6000){ patientData.nutrition={...(patientData.nutrition||{}),calorieTarget:kcal,targetSource:'User profile benchmark'}; localStorage.setItem('swasth_calorieTarget',String(kcal)); await syncCloudState('swasth_calorieTarget'); }
   patientData.emergencyContact={name:get('profileEmergencyNameInput'),relation:get('profileEmergencyRelationInput'),phone:get('profileEmergencyPhoneInput')};
   patientData.profileCompleted=true;
+  patientData.onboardingSkipped=false;
+  localStorage.removeItem(onboardingSkipStorageKey());
   profileOnboardingRequired=false;
   await syncProfileToCloud();
   renderPersonalizedUI();
@@ -3828,13 +3870,18 @@ document.addEventListener('click', e => {
     if(normalAllergyCheck.value!=='__NONE__' && normalAllergyCheck.checked && none) none.checked=false;
     return;
   }
-  if (e.target.closest('#editProfileBtn')) openProfileModal();
-  if (e.target.closest('#cancelProfileBtn')) closeProfileModal();
-  if (e.target.id === 'profileModal') closeProfileModal();
+  if (e.target.closest('#editProfileBtn')) openProfileModal(true);
+  if (e.target.closest('#cancelProfileBtn')) {
+    if (profileOnboardingRequired || !isProfileActuallyComplete()) skipProfileOnboarding();
+    else closeProfileModal();
+  }
+  if (e.target.id === 'profileModal' && !(profileOnboardingRequired || !isProfileActuallyComplete())) closeProfileModal();
   if (e.target.closest('#authSuccessContinue')) {
     const modal = document.getElementById('authSuccessModal');
     if (modal) modal.classList.remove('show');
-    setTimeout(openProfileModal, 180);
+    setTimeout(() => {
+      if (!isOnboardingSkippedForCurrentUser()) openProfileModal(true);
+    }, 180);
   }
 });
 document.addEventListener('submit', async e => {
@@ -3978,7 +4025,11 @@ function renderEmergencyQRIfReady(){
  }
  if(button) { button.disabled=true; button.textContent='Searching...'; }
  const status=document.getElementById('resultsLabel');
+ const badge=document.getElementById('medicineSourceBadge');
+ const disclaimer=document.getElementById('medicineDisclaimer');
  if(status) status.textContent='Searching medicine database...';
+ if(badge) badge.textContent='Checking live API';
+ if(disclaimer) disclaimer.style.display='none';
  try{
   const apiResults=await fetchMedicineApi(query);
   if(apiResults && apiResults.length){
@@ -3988,15 +4039,31 @@ function renderEmergencyQRIfReady(){
   }
   const localResults=localMedicineSearch(query);
   renderMedicineResults(localResults,query,'local');
- }catch(error){
-  console.warn('DrugSetu search failed:',error);
-  window.__medicineApiLastError=String(error?.message || error);
-  const localResults=localMedicineSearch(query);
-  renderMedicineResults(localResults,query,'local');
-  const disclaimer=document.getElementById('medicineDisclaimer');
   if(disclaimer){
    disclaimer.style.display='block';
-   disclaimer.innerHTML='DrugSetu live search is currently unavailable, so SwasthID is showing its local reference catalogue. ' + escMed(window.__medicineApiLastError);
+   disclaimer.textContent=apiResults === null
+    ? 'Live medicine search is not configured in this environment. SwasthID is showing its local reference catalogue.'
+    : 'The live medicine service returned no matching records. SwasthID is showing its local reference catalogue.';
+  }
+ }catch(error){
+  console.warn('Medicine API search failed:',error);
+  const message=String(error?.message || error || 'Unknown error');
+  window.__medicineApiLastError=message;
+  const localResults=localMedicineSearch(query);
+  renderMedicineResults(localResults,query,'local');
+  if(disclaimer){
+   disclaimer.style.display='block';
+   if(/returned 500/.test(message)){
+    disclaimer.innerHTML='Live medicine search is temporarily unavailable because the SwasthID medicine service returned a server error (HTTP 500). The local reference catalogue is being shown instead. Check the Render service logs for the backend error. <button type=\"button\" class=\"n-btn\" style=\"margin-left:8px;\" onclick=\"searchMedicines()\">Retry</button>';
+   }else if(/returned 401|returned 403/.test(message)){
+    disclaimer.innerHTML='Live medicine search is unavailable because the medicine API authentication/configuration was rejected. The local reference catalogue is being shown instead. Check the Render environment variables and DrugSetu API credentials.';
+   }else if(/returned 429/.test(message)){
+    disclaimer.innerHTML='Live medicine search is temporarily rate-limited. The local reference catalogue is being shown instead. Please try again later.';
+   }else if(/timed out|timeout|aborted/i.test(message)){
+    disclaimer.innerHTML='Live medicine search timed out. The local reference catalogue is being shown instead. Please try again.';
+   }else{
+    disclaimer.innerHTML='Live medicine search is currently unavailable. The local reference catalogue is being shown instead. <span style="display:block;margin-top:5px;">Technical detail: ' + escMed(message) + '</span>';
+   }
   }
  }finally{
   if(button){ button.disabled=false; button.textContent='Search'; }
@@ -4009,13 +4076,28 @@ function renderEmergencyQRIfReady(){
  async function fetchMedicineApi(query){
  if(!MEDICINE_API_BASE || MEDICINE_API_BASE === 'local') return null;
  const controller=new AbortController();
- const timer=setTimeout(()=>controller.abort(),7000);
+ const timer=setTimeout(()=>controller.abort(),10000);
  try{
  const url=MEDICINE_API_BASE.replace(/\/$/,'') + '/search?q=' + encodeURIComponent(query);
- const res=await fetch(url,{headers:{'Accept':'application/json'},signal:controller.signal});
- if(!res.ok) throw new Error('Medicine API returned ' + res.status);
+ let res;
+ try{
+  res=await fetch(url,{headers:{'Accept':'application/json'},signal:controller.signal});
+ }catch(error){
+  if(error?.name === 'AbortError') throw new Error('Medicine API request timed out after 10 seconds');
+  throw new Error('Medicine API network error: ' + String(error?.message || error));
+ }
+ if(!res.ok){
+  let detail='';
+  try{
+   const body=await res.clone().json();
+   detail=body?.error || body?.message || body?.detail || '';
+  }catch(_){ }
+  const suffix=detail ? ': ' + String(detail) : '';
+  throw new Error('Medicine API returned ' + res.status + suffix);
+ }
  const data=await res.json();
- const rows=Array.isArray(data) ? data : (data.data || data.results || data.medicines || []);
+ const rows=Array.isArray(data) ? data : (data.data || data.results || data.medicines || data.products || []);
+ if(!Array.isArray(rows)) throw new Error('Medicine API returned an unexpected response format');
  return rows.map(normalizeMedicineResult).filter(x=>x.name);
  } finally { clearTimeout(timer); }
  }
@@ -4173,53 +4255,77 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 }
 
 async function fetchNearbyHospitals(lat, lon) {
- const query = `[out:json][timeout:20];
+ const query = `[out:json][timeout:18];
  (
  node["amenity"="hospital"](around:7000,${lat},${lon});
  way["amenity"="hospital"](around:7000,${lat},${lon});
  relation["amenity"="hospital"](around:7000,${lat},${lon});
  node["amenity"="clinic"](around:5000,${lat},${lon});
  way["amenity"="clinic"](around:5000,${lat},${lon});
+ relation["amenity"="clinic"](around:5000,${lat},${lon});
  );
  out center tags;`;
 
- const res = await fetch('https://overpass-api.de/api/interpreter', {
- method: 'POST',
- headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
- body: query
- });
- if (!res.ok) throw new Error('Nearby healthcare search failed');
- const data = await res.json();
+ const endpoints = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter'
+ ];
+ let lastError = null;
 
- const seen = new Set();
- return data.elements
- .map(el => {
- const elLat = el.lat ?? el.center?.lat;
- const elLon = el.lon ?? el.center?.lon;
- const tags = el.tags || {};
- if (elLat == null || elLon == null || !tags.name) return null;
+ for (const endpoint of endpoints) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 22000);
+  try {
+   const url = `${endpoint}?data=${encodeURIComponent(query)}`;
+   const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+    signal: controller.signal,
+    cache: 'no-store'
+   });
+   if (!res.ok) throw new Error(`Healthcare data service returned HTTP ${res.status}`);
+   const data = await res.json();
+   if (!data || !Array.isArray(data.elements)) throw new Error('Healthcare data service returned an invalid response');
 
- const key = `${tags.name}|${Number(elLat).toFixed(5)}|${Number(elLon).toFixed(5)}`;
- if (seen.has(key)) return null;
- seen.add(key);
+   const seen = new Set();
+   return data.elements
+    .map(el => {
+     const elLat = el.lat ?? el.center?.lat;
+     const elLon = el.lon ?? el.center?.lon;
+     const tags = el.tags || {};
+     if (elLat == null || elLon == null || !tags.name) return null;
 
- return {
- id: el.id,
- name: tags.name,
- lat: Number(elLat),
- lon: Number(elLon),
- dist: haversineKm(lat, lon, Number(elLat), Number(elLon)),
- type: tags.amenity === 'hospital' ? 'Hospital' : 'Clinic',
- emergency: tags.emergency === 'yes' || tags.emergency === '24/7',
- govt: tags.operator_type === 'government' ||
- /government|govt|state|district hospital/i.test(`${tags.operator || ''} ${tags.name}`),
- phone: tags.phone || tags['contact:phone'] || null,
- address: tags['addr:street'] || tags['addr:full'] || ''
- };
- })
- .filter(Boolean)
- .sort((a, b) => a.dist - b.dist)
- .slice(0, 8);
+     const key = `${tags.name}|${Number(elLat).toFixed(5)}|${Number(elLon).toFixed(5)}`;
+     if (seen.has(key)) return null;
+     seen.add(key);
+
+     return {
+      id: el.id,
+      name: tags.name,
+      lat: Number(elLat),
+      lon: Number(elLon),
+      dist: haversineKm(lat, lon, Number(elLat), Number(elLon)),
+      type: tags.amenity === 'hospital' ? 'Hospital' : 'Clinic',
+      emergency: tags.emergency === 'yes' || tags.emergency === '24/7',
+      govt: tags.operator_type === 'government' ||
+       /government|govt|state|district hospital/i.test(`${tags.operator || ''} ${tags.name}`),
+      phone: tags.phone || tags['contact:phone'] || null,
+      address: tags['addr:street'] || tags['addr:full'] || ''
+     };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, 8);
+  } catch (err) {
+   lastError = err;
+   console.warn(`Nearby healthcare endpoint failed: ${endpoint}`, err);
+  } finally {
+   clearTimeout(timeout);
+  }
+ }
+
+ throw lastError || new Error('No nearby healthcare data service is available');
 }
 
 function renderNearbyList(hospitals, userLat, userLon) {
@@ -4227,16 +4333,17 @@ function renderNearbyList(hospitals, userLat, userLon) {
  const subtitle = document.getElementById('nearbySubtitle');
 
  if (!hospitals.length) {
- list.innerHTML = `<div style="text-align:center; padding:18px; font-size:13px; color:var(--muted);">No hospitals or clinics were found within the search area.</div>`;
- return;
+  list.innerHTML = `<div style="text-align:center; padding:18px; font-size:13px; color:var(--muted);">No hospitals or clinics were found within the search area.</div>`;
+  subtitle.textContent = 'No nearby healthcare centers were found in the current search area.';
+  return;
  }
 
  subtitle.textContent = `Real-time search around your current location • ${hospitals.length} nearby centers found.`;
 
  list.innerHTML = hospitals.map(h => {
- const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLon}&destination=${h.lat},${h.lon}&travelmode=driving`;
- const safePhone = h.phone ? h.phone.replace(/[^+0-9]/g, '') : '';
- return `
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLon}&destination=${h.lat},${h.lon}&travelmode=driving`;
+  const safePhone = h.phone ? h.phone.replace(/[^+0-9]/g, '') : '';
+  return `
  <div class="nearby-item">
  <div style="min-width:0;">
  <div class="n-name">${escapeHtml(h.name)}</div>
@@ -4269,53 +4376,72 @@ function setNearbyLoading(isLoading) {
  document.getElementById('findNearbyBtn').disabled = isLoading;
 }
 
-function showNearbyError(message) {
+function showNearbyError(message, title = 'Nearby search is temporarily unavailable.') {
  const list = document.getElementById('nearbyItemsList');
  const fallback = document.getElementById('nearbyFallback');
+ const fallbackTitle = fallback.querySelector('b');
+ const fallbackText = fallback.querySelector('div:nth-child(2)');
  document.getElementById('nearbyLoadingState').style.display = 'none';
  document.getElementById('findNearbyBtn').disabled = false;
+ if (fallbackTitle) fallbackTitle.textContent = title;
+ if (fallbackText) fallbackText.textContent = message;
  fallback.style.display = 'block';
- list.innerHTML = `<div style="text-align:center; padding:10px 18px 18px; font-size:12px; color:var(--muted);">${escapeHtml(message)}</div>`;
+ list.innerHTML = '';
 }
 
 function loadNearbyHospitals() {
  setNearbyLoading(true);
+ document.getElementById('nearbySubtitle').textContent = 'Requesting your browser location…';
 
  if (!window.isSecureContext) {
- showNearbyError('Location access requires HTTPS. Deploy the site on Render (or use localhost during development) and try again.');
- return;
+  showNearbyError('Location access requires HTTPS. Open the deployed SwasthID site on Render and try again.', 'Secure location access is required.');
+  return;
  }
 
  if (!navigator.geolocation) {
- showNearbyError('This browser does not support location services.');
- return;
+  showNearbyError('This browser does not support location services.', 'Location is not supported.');
+  return;
  }
 
- navigator.geolocation.getCurrentPosition(
- async (pos) => {
- const { latitude, longitude, accuracy } = pos.coords;
- try {
- const hospitals = await fetchNearbyHospitals(latitude, longitude);
- setNearbyLoading(false);
- document.getElementById('nearbyFallback').style.display = 'none';
- renderNearbyList(hospitals, latitude, longitude);
- document.getElementById('nearbySubtitle').title = `Location accuracy: approximately ${Math.round(accuracy)} m`;
- } catch (err) {
- console.error('Nearby hospital search:', err);
- showNearbyError('We could not load nearby healthcare centers right now. Please try again.');
- }
- },
- (err) => {
- console.warn('Geolocation error:', err);
- const messages = {
- 1: 'Location permission was denied. Allow location access for SwasthID and try again.',
- 2: 'Your location could not be determined. Check your device location settings and try again.',
- 3: 'Location request timed out. Please try again.'
- };
- showNearbyError(messages[err.code] || 'Unable to determine your location. Please try again.');
- },
- { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
- );
+ const getPosition = options => new Promise((resolve, reject) => {
+  navigator.geolocation.getCurrentPosition(resolve, reject, options);
+ });
+
+ (async () => {
+  let pos;
+  try {
+   // Desktop browsers often have no GPS. Start with the normal network-based location path.
+   pos = await getPosition({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
+  } catch (firstErr) {
+   console.warn('Standard geolocation attempt failed:', firstErr);
+   // If the browser can use a higher-accuracy source, give it a second chance.
+   try {
+    pos = await getPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
+   } catch (err) {
+    console.warn('High-accuracy geolocation attempt failed:', err);
+    const messages = {
+     1: 'Location permission was denied. Check the browser permission for this SwasthID site, then press Try again.',
+     2: 'Your device could not determine a location. Make sure Windows/browser location services are enabled, then try again.',
+     3: 'The location request timed out. Check your connection and try again.'
+    };
+    showNearbyError(messages[err.code] || 'Unable to determine your location. Please try again.', 'Could not get your location.');
+    return;
+   }
+  }
+
+  const { latitude, longitude, accuracy } = pos.coords;
+  try {
+   document.getElementById('nearbySubtitle').textContent = 'Location found. Searching nearby hospitals and clinics…';
+   const hospitals = await fetchNearbyHospitals(latitude, longitude);
+   setNearbyLoading(false);
+   document.getElementById('nearbyFallback').style.display = 'none';
+   renderNearbyList(hospitals, latitude, longitude);
+   document.getElementById('nearbySubtitle').title = `Location accuracy: approximately ${Math.round(accuracy)} m`;
+  } catch (err) {
+   console.error('Nearby hospital search:', err);
+   showNearbyError('Your location was found, but the nearby healthcare data service could not be reached. Please try again.', 'Location works, but the nearby search service is unavailable.');
+  }
+ })();
 }
 
 document.getElementById('findNearbyBtn')?.addEventListener('click', loadNearbyHospitals);
