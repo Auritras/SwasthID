@@ -435,15 +435,24 @@
  .simple-explain { background: linear-gradient(135deg,#eef6f1,#fffaf2); border: 1px solid #d7e5da; border-radius: 10px; padding: 14px; position: relative; }
 
  /* Emergency Passport */
- .emergency-hero { background: var(--danger-soft); border: 1px solid #ECC5BD; border-left: 5px solid var(--danger); border-radius: var(--radius-md); padding: 22px 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
- .emergency-kicker { font-size: 11px; font-weight: 700; letter-spacing: 1.1px; color: var(--danger); margin-bottom: 6px; }
- .emergency-hero h3 { font-size: 24px; margin: 0 0 4px; color: var(--danger); }
+ .emergency-hero { background: linear-gradient(135deg, #FFF3F0 0%, #FFF9F7 100%); border: 1px solid #ECC5BD; border-left: 5px solid var(--danger); border-radius: var(--radius-md); padding: 24px 26px; display: flex; justify-content: space-between; align-items: center; gap: 28px; }
+ .emergency-kicker { font-size: 10.5px; font-weight: 800; letter-spacing: 1.15px; color: var(--danger); margin-bottom: 7px; }
+ .emergency-hero h3 { font-size: 25px; line-height: 1.15; margin: 0 0 7px; color: var(--danger); }
  .emergency-hero h3:before { display: none; }
- .passport-status { background: #FFF; border: 1px solid #ECC5BD; border-radius: var(--radius-sm); padding: 12px 16px; text-align: center; font-weight: 700; color: var(--danger); white-space: nowrap; }
+ .emergency-hero .section-sub { max-width: 620px; margin: 0; line-height: 1.55; }
+ .passport-status { min-width: 215px; background: #FFF; border: 1px solid #E8C1B9; border-radius: 12px; padding: 13px 16px; color: var(--danger); box-shadow: 0 3px 12px rgba(94,42,34,.05); }
+ .passport-status .status-main { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800; line-height:1.2; }
+ .passport-status .status-dot { width:9px; height:9px; flex:0 0 9px; border-radius:50%; background:#2F8F62; box-shadow:0 0 0 3px #E7F5ED; }
+ .passport-status .status-sub { margin-top:8px; padding-top:8px; border-top:1px solid #F0DEDA; display:flex; align-items:center; gap:7px; color:#6A756F; font-size:11.5px; font-weight:600; }
+ .passport-status .status-mark { width:7px; height:7px; flex:0 0 7px; border-radius:2px; background:var(--danger); }
  .passport-layout { display: grid; grid-template-columns: 1fr 260px; gap: 20px; align-items: start; }
  .emergency-card { border: 1px solid #ECC5BD; border-radius: var(--radius-md); background: var(--surface); overflow: hidden; }
  .emergency-card-head { background: var(--danger); color: #FFF; padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; }
  .emergency-row { display: flex; gap: 14px; padding: 13px 16px; border-bottom: 1px solid var(--line); align-items: flex-start; font-size: 13px; }
+ .rx-physician-line { display:flex; align-items:center; gap:22px; padding:14px 18px; border-bottom:1px solid var(--line); }
+ .rx-physician-line label { flex:0 0 auto; color:var(--ink); }
+ .rx-physician-field { flex:1 1 auto; min-width:0; width:100%; border:1px solid var(--line); border-radius:7px; padding:8px 10px; font:inherit; color:var(--ink); background:#fff; }
+ .rx-physician-field:focus { outline:2px solid rgba(45,111,79,.16); border-color:#8fbca2; }
  .emergency-row:last-child { border-bottom: none; }
  .qr-box { border: 1px solid var(--line); border-radius: var(--radius-md); padding: 18px; text-align: center; background: var(--surface); }
  .fake-qr { width: 160px; height: 160px; margin: 8px auto 14px; display:flex; justify-content:center; align-items:center; }
@@ -866,7 +875,7 @@
  .content { padding: 24px 18px 56px; }
  .gov-footer { padding: 16px 18px; gap: 12px; flex-wrap: wrap; }
  .doctor-hero, .emergency-hero { padding: 20px; }
- .doctor-hero .doc-badge, .emergency-hero .passport-status { align-self: stretch; }
+ .doctor-hero .doc-badge, .emergency-hero .passport-status { align-self: stretch; width:100%; }
  .passport-layout, .privacy-grid, .clinical-grid, .scan-grid { grid-template-columns: 1fr; }
  .profile-vitals { grid-template-columns: repeat(3, minmax(0, 1fr)); }
  .activity-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -965,6 +974,8 @@
  .passport-layout { gap: 12px; }
  .emergency-card-head { flex-direction: column; align-items: flex-start; gap: 6px; }
  .emergency-row { gap: 10px; padding: 12px 13px; }
+ .rx-physician-line { align-items:flex-start; flex-direction:column; gap:7px; padding:13px; }
+ .rx-physician-field { width:100%; }
  .qr-box { padding: 14px; }
  .fake-qr { width: 150px; height: 150px; }
  .privacy-grid { gap: 10px; }
@@ -1041,8 +1052,22 @@
 .profile-field textarea{min-height:84px;resize:vertical;}
 .profile-name-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 .medicine-input-header{display:grid;grid-template-columns:1.35fr .85fr 1fr 38px;gap:10px;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--muted);}
-.medicine-input-row{display:grid;grid-template-columns:1.35fr .85fr 1fr 38px;gap:10px;margin-bottom:10px;align-items:center;}
+.medicine-input-row{display:grid;grid-template-columns:1.35fr .85fr 1fr 38px;gap:10px;margin-bottom:10px;align-items:start;}
 .medicine-input-row input{min-width:0;}
+.med-time-editor{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:8px 10px;background:var(--soft);border:1px solid var(--line);border-radius:8px;}
+.med-time-editor-label{font-size:11px;font-weight:700;color:var(--muted);width:100%;}
+.med-time-slot{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
+.med-time-slot input{padding:6px 7px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);}
+.today-med-empty{padding:18px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);text-align:center;}
+.today-med-item{display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:9px;box-shadow:0 2px 8px rgba(0,0,0,.03);}
+.today-med-time{font-weight:800;font-size:15px;color:var(--ink);}
+.today-med-time small{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-top:2px;}
+.today-med-name{font-weight:750;font-size:14px;overflow-wrap:anywhere;}
+.today-med-meta{font-size:11px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere;}
+.today-med-time-editor{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap;}
+.today-med-time-editor input{width:108px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--ink);}
+.today-med-item.taken{opacity:.7;}
+.today-med-item.taken .today-med-time{ text-decoration:line-through;}
 .medicine-remove-btn{width:38px;height:42px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:18px;line-height:1;}
 .medicine-remove-btn:hover{border-color:var(--accent,#1b5148);color:var(--ink);}
 .medicine-add-btn{margin-top:2px;}
@@ -1056,7 +1081,7 @@
 .normal-allergy-option input{margin:0;accent-color:var(--accent,#1b5148);}
 @media(max-width:620px){.contact-inline-grid{grid-template-columns:1fr;gap:10px;}}
 
-@media(max-width:620px){.profile-name-grid{grid-template-columns:1fr}.medicine-input-header{display:none}.medicine-input-row{grid-template-columns:1fr 1fr 1fr 38px;gap:7px}.medicine-input-row input{font-size:12px;padding:10px 9px}.medicine-remove-btn{width:38px;}}
+@media(max-width:620px){.profile-name-grid{grid-template-columns:1fr}.medicine-input-header{display:none}.medicine-input-row{grid-template-columns:1fr 1fr 38px;gap:7px}.medicine-input-row .medicine-schedule-input{grid-column:1 / 3}.medicine-input-row input{font-size:12px;padding:10px 9px}.medicine-remove-btn{width:38px}.today-med-item{grid-template-columns:1fr;gap:7px}.today-med-time{font-size:14px}.today-med-item .med-action{justify-self:start}}
 
 .profile-field input:focus,.profile-field select:focus,.profile-field textarea:focus{border-color:var(--accent,#1b5148);box-shadow:0 0 0 3px rgba(27,81,72,.08);}
 .profile-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;flex-wrap:wrap;}
@@ -1487,7 +1512,10 @@
  </div>
  <div class="extract-card">
  <div class="extract-head"><h4>Extracted Information</h4><span class="tag resolved" id="ocrConfBadge">98% Confidence</span></div>
- <div class="doctor-line"><b>Detected Physician</b><span id="detectedDocName">Dr. Rohan Iyer</span></div>
+ <div class="doctor-line rx-physician-line">
+ <label for="detectedDocName"><b>Detected Physician</b></label>
+ <input id="detectedDocName" class="rx-physician-field" type="text" value="Dr. Rohan Iyer" placeholder="Enter physician name" aria-label="Detected physician">
+ </div>
  
  <div id="dynamicMedsList">
  <div class="medicine-row"><div class="medicine-check"></div><div><b>Thyroxine 12.5 mcg</b><span>Once daily</span></div></div>
@@ -1634,9 +1662,12 @@
  <div>
  <div class="emergency-kicker"> PATIENT-CONTROLLED EMERGENCY ACCESS</div>
  <h3 class="serif">Emergency Health Passport</h3>
- <p class="section-sub" style="padding-left:0; color:#40524C;">Provides emergency responders instant access to critical baseline data without requiring an OTP or password.</p>
+ <p class="section-sub" style="padding-left:0; color:#40524C;">Instant access to critical emergency information for responders — no OTP or password required.</p>
  </div>
- <div class="passport-status" id="emergencyProfileStatus">● Emergency Profile Active<span>Broadcast layer ready</span></div>
+ <div class="passport-status" id="emergencyProfileStatus">
+ <div class="status-main"><span class="status-dot"></span><span>Emergency profile active</span></div>
+ <div class="status-sub"><span class="status-mark"></span><span>QR access ready</span></div>
+</div>
  </section>
 
  <section>
@@ -2494,7 +2525,9 @@ let profileOnboardingRequired = false;
        const result = await firebaseCreateAccount(email, password);
        localStorage.setItem('swasth_loggedIn', 'true');
        localStorage.setItem('swasth_abhaId', email);
-       profileOnboardingRequired = true;
+       // Show the account-created greeting first. The personalization form opens
+       // only after the user presses Continue in that greeting.
+       profileOnboardingRequired = false;
        performLoginSetup(email);
        showAccountCreatedModal(result.cloudReady);
      } else {
@@ -2767,49 +2800,122 @@ if (supportBtn && !supportBtn.dataset.bound) {
  /* =========================================================
  5. MEDICATION TRACKER (MARK AS TAKEN & PERSISTENCE)
  ========================================================= */
+ function parseMedicationDoseCount(m) {
+ const text = `${m?.dose || ''} ${m?.medicine || ''}`.toLowerCase();
+ const match = text.match(/(?:^|\s)(\d+)\s*(?:tablet|tablets|tab|tabs|capsule|capsules|cap|caps|pill|pills)\b/i);
+ return match ? Math.max(1, Math.min(12, Number(match[1]))) : 1;
+ }
+ function parseMedicationFrequencyCount(m) {
+ const f = String(m?.frequency || m?.schedule || '').toLowerCase();
+ if (/three times|thrice|\btds\b|3\s*times/.test(f)) return 3;
+ if (/twice|two times|\bbd\b|2\s*times/.test(f)) return 2;
+ return 1;
+ }
+ function medicationSlotCount(m) {
+ return Math.max(1, parseMedicationDoseCount(m) * parseMedicationFrequencyCount(m));
+ }
+ function suggestedMedicationTimes(m, count) {
+ const existing = Array.isArray(m?.times) ? m.times.filter(Boolean) : [];
+ if (existing.length >= count) return existing.slice(0, count);
+ const defaults = ['08:00','14:00','20:00','22:00','09:00','18:00'];
+ const out = existing.slice();
+ while (out.length < count) out.push(defaults[Math.min(out.length, defaults.length - 1)]);
+ return out;
+ }
+ function formatMedicationTime(value) {
+ if (!value) return 'Set time';
+ const [h, min] = String(value).split(':').map(Number);
+ if (!Number.isFinite(h) || !Number.isFinite(min)) return value;
+ const d = new Date(); d.setHours(h, min, 0, 0);
+ return d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+ }
  function getCurrentMedicationList() {
  const saved = getSavedPrescriptions();
  const latest = saved[0];
  if (latest && latest.medicines?.length) return latest.medicines;
- return patientData.medications.map(m => ({
- medicine: m.name, dose: m.dose, frequency: m.schedule, instructions: m.reason || ''
+ return (patientData.medications || []).map(m => ({
+   medicine: m.name, dose: m.dose, frequency: m.schedule, instructions: m.reason || '', times: m.times || []
  }));
  }
-
+ function medicationScheduleKey(index, unitIndex) { return `med_${index}_${unitIndex}`; }
+ function saveMedicationTimes(index, times) {
+ const meds = getCurrentMedicationList();
+ const target = meds[index];
+ if (!target) return;
+ const clean = times.map(v => String(v || '').trim()).filter(Boolean);
+ if (!clean.length) return;
+ target.times = clean;
+ const saved = getSavedPrescriptions();
+ if (saved[0] && saved[0].medicines?.length) {
+   saved[0].medicines = meds;
+   savePrescriptions(saved);
+ } else {
+   const patientIndex = (patientData.medications || []).findIndex(m => String(m.name || '') === String(target.medicine || ''));
+   if (patientIndex >= 0) {
+     patientData.medications[patientIndex].times = clean;
+     cacheProfileLocally();
+     syncProfileToCloud();
+   }
+ }
+ renderTodayMedications();
+ showToast('', 'Medication time saved', `${target.medicine} schedule updated.`);
+ }
  function renderTodayMedications() {
  const list = document.getElementById('todayMedList');
  if (!list) return;
  const meds = getCurrentMedicationList();
- const status = JSON.parse(localStorage.getItem('swasth_medStatus')) || {};
- list.innerHTML = meds.map((m, i) => {
- const id = `med_${i}_${m.medicine.replace(/[^a-z0-9]/gi,'').toLowerCase()}`;
- const savedStatus = status[id];
- return `<div class="med-item ${savedStatus?.taken ? 'taken' : ''}" id="${id}">
- <div class="time">${m.frequency === 'Once weekly' ? 'Weekly' : 'Today'}</div>
- <div class="details"><div class="name">${escapeHtml(m.medicine)}${m.dose ? ' ' + escapeHtml(m.dose) : ''}</div><div class="dose">${escapeHtml(m.frequency || 'Review schedule')}${m.instructions ? ' · ' + escapeHtml(m.instructions) : ''}</div></div>
- <button class="med-action" onclick="markMedTaken('${id}', '${escapeHtml(m.medicine).replace(/'/g,"\\'")}')">${savedStatus?.taken ? ` Taken at ${escapeHtml(savedStatus.time)}` : 'Mark Taken'}</button>
- </div>`;
- }).join('');
+ const status = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+ if (!meds.length) {
+   list.innerHTML = '<div class="today-med-empty">No medications added yet. Add medicines in Profile or upload a prescription.</div>';
+   return;
  }
-
+ let html = '';
+ meds.forEach((m, i) => {
+   const count = medicationSlotCount(m);
+   const times = suggestedMedicationTimes(m, count);
+   for (let unit = 0; unit < count; unit++) {
+     const id = medicationScheduleKey(i, unit);
+     const savedStatus = status[id];
+     const label = count > 1 ? `Dose ${unit + 1} of ${count}` : 'Scheduled dose';
+     const time = times[unit] || '';
+     html += `<div class="today-med-item ${savedStatus?.taken ? 'taken' : ''}" id="${id}">
+       <div class="today-med-time">${time ? formatMedicationTime(time) : 'Set time'}<small>${label}</small></div>
+       <div>
+         <div class="today-med-name">${escapeHtml(m.medicine)}${m.dose ? ' · ' + escapeHtml(m.dose) : ''}</div>
+         <div class="today-med-meta">${escapeHtml(m.frequency || 'Review schedule')}${m.instructions ? ' · ' + escapeHtml(m.instructions) : ''}</div>
+         <div class="today-med-time-editor">
+           <input type="time" value="${escapeHtml(time)}" data-med-time-index="${i}" data-med-time-unit="${unit}" aria-label="Time for ${escapeHtml(m.medicine)} dose ${unit + 1}">
+           <button type="button" class="n-btn" data-save-med-time="1" data-med-time-index="${i}" data-med-time-unit="${unit}" style="padding:5px 8px;font-size:11px;">Save time</button>
+         </div>
+       </div>
+       <button class="med-action" type="button" data-mark-med="${id}" data-med-name="${escapeHtml(m.medicine)}">${savedStatus?.taken ? `Taken at ${escapeHtml(savedStatus.time || '')}` : 'Mark Taken'}</button>
+     </div>`;
+   }
+ });
+ list.innerHTML = html;
+ list.querySelectorAll('[data-save-med-time]').forEach(btn => btn.addEventListener('click', () => {
+   const i = Number(btn.dataset.medTimeIndex), unit = Number(btn.dataset.medTimeUnit);
+   const inputs = [...list.querySelectorAll(`[data-med-time-index="${i}"]`)];
+   const times = inputs.map(input => input.value);
+   saveMedicationTimes(i, times);
+ }));
+ list.querySelectorAll('[data-mark-med]').forEach(btn => btn.addEventListener('click', () => {
+   window.markMedTaken(btn.dataset.markMed, btn.dataset.medName);
+ }));
+ }
  function restoreMedications() { renderTodayMedications(); }
-
  window.markMedTaken = function(id, name) {
  const el = document.getElementById(id);
  if(!el) return;
  if(el.classList.contains('taken')) return;
- 
  const nowStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
- 
- const meds = JSON.parse(localStorage.getItem('swasth_medStatus')) || {};
+ const meds = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
  meds[id] = { taken: true, time: nowStr, date: new Date().toISOString() };
  localStorage.setItem('swasth_medStatus', JSON.stringify(meds));
  syncCloudState('swasth_medStatus');
-
  el.classList.add('taken');
  const btn = el.querySelector('.med-action');
- if (btn) btn.innerHTML = ` Taken at ${nowStr}`;
- 
+ if (btn) btn.innerHTML = `Taken at ${escapeHtml(nowStr)}`;
  renderRecordMedicationActivity(); renderRecordTimeline();
  showToast('', 'Medication Tracked', `${name} logged successfully.`);
  };
@@ -3375,7 +3481,8 @@ if (supportBtn && !supportBtn.dataset.bound) {
  function renderEditablePrescription(parsed) {
  const rawOcrText = document.getElementById('rawOcrText');
  if (rawOcrText) rawOcrText.innerHTML = `<div style="font-family:monospace;font-size:12px;white-space:pre-wrap;line-height:1.4;color:var(--ink);">${escapeHtml(parsed.rawText.slice(0, 1800))}</div>`;
- document.getElementById('detectedDocName').textContent = parsed.doctor;
+ const physicianField = document.getElementById('detectedDocName');
+ if (physicianField) physicianField.value = parsed.doctor;
  const medsList = document.getElementById('dynamicMedsList');
  medsList.innerHTML = parsed.medicines.map((m, i) => `
  <div class="medicine-row" data-med-index="${i}" style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;">
@@ -3408,7 +3515,7 @@ if (supportBtn && !supportBtn.dataset.bound) {
  return { medicine: get('medicine'), dose: get('dose'), frequency: get('frequency'), instructions: get('instructions') };
  }).filter(m => m.medicine);
  return {
- doctor: document.getElementById('detectedDocName').textContent.trim(),
+ doctor: document.getElementById('detectedDocName')?.value.trim() || 'Not specified',
  medicines,
  rawText: currentPrescription?.rawText || ''
  };
@@ -3847,19 +3954,28 @@ function readNormalAllergiesFromUI() {
 
 function renderMedicineInputRows(medicines=[]) {
   const wrap=document.getElementById('medicineInputRows'); if(!wrap) return;
-  const rows=Array.isArray(medicines)&&medicines.length?medicines:[{name:'',dose:'',schedule:''}];
-  wrap.innerHTML=rows.map((m,i)=>`<div class="medicine-input-row" data-index="${i}">
-    <input type="text" class="medicine-name-input" placeholder="Medicine name" value="${escapeHtml(String(m.name||m.medicine||''))}">
-    <input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 50 mg)" value="${escapeHtml(String(m.dose||''))}">
-    <input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Daily)" value="${escapeHtml(String(m.schedule||m.frequency||''))}">
-    <button type="button" class="medicine-remove-btn" aria-label="Remove medicine" data-remove-medicine="${i}">×</button>
-  </div>`).join('');
+  const rows=Array.isArray(medicines)&&medicines.length?medicines:[{name:'',dose:'',schedule:'',times:[]}];
+  wrap.innerHTML=rows.map((m,i)=>{
+    const count=medicationSlotCount({dose:m.dose||'',frequency:m.schedule||m.frequency||''});
+    const times=suggestedMedicationTimes(m,count);
+    return `<div class="medicine-input-row" data-index="${i}">
+      <input type="text" class="medicine-name-input" placeholder="Medicine name" value="${escapeHtml(String(m.name||m.medicine||''))}">
+      <input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 2 tablets)" value="${escapeHtml(String(m.dose||''))}">
+      <input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Twice daily)" value="${escapeHtml(String(m.schedule||m.frequency||''))}">
+      <button type="button" class="medicine-remove-btn" aria-label="Remove medicine" data-remove-medicine="${i}">×</button>
+      <div class="med-time-editor">
+        <div class="med-time-editor-label">When should each dose be taken?</div>
+        ${times.slice(0,count).map((t,j)=>`<label class="med-time-slot">${count>1?'Dose '+(j+1):'Time'} <input type="time" class="medicine-time-input" data-time-index="${j}" value="${escapeHtml(String(t||''))}"></label>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
 }
 function readMedicineRows() {
   return [...document.querySelectorAll('#medicineInputRows .medicine-input-row')].map(row=>({
     name:row.querySelector('.medicine-name-input')?.value.trim()||'',
     dose:row.querySelector('.medicine-dose-input')?.value.trim()||'',
     schedule:row.querySelector('.medicine-schedule-input')?.value.trim()||'',
+    times:[...row.querySelectorAll('.medicine-time-input')].map(input=>input.value).filter(Boolean),
     reason:''
   })).filter(m=>m.name);
 }
@@ -4555,22 +4671,43 @@ function showEmergencyPublicView(payload) {
 }
 
 async function openEmergencyPayloadFromUrl() {
- const token = new URLSearchParams(location.search).get('emergency');
- if (!token) return;
+ const params = new URLSearchParams(location.search);
+ const token = params.get('emergency') || params.get('token');
+ if (!token) return false;
  const apiBase = (window.SWASTH_API_BASE || ((location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : '')).replace(/\/$/, '');
+ // Show the public shell immediately so a slow backend never leaves a blank page.
+ let overlay = document.getElementById('publicEmergencyOverlay');
+ if (!overlay) { overlay = document.createElement('div'); overlay.id = 'publicEmergencyOverlay'; overlay.className = 'public-emergency-overlay'; document.body.appendChild(overlay); }
+ overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Loading emergency information</h2><p>Verifying the secure emergency QR…</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-item full"><div>Please wait a moment.</div></div></div></div>';
+ overlay.classList.add('show');
  if (apiBase) {
-   try {
-     const res = await fetch(apiBase + '/api/emergency/view?token=' + encodeURIComponent(token), {headers:{'Accept':'application/json'}});
-     const body = await res.json();
-     if (res.ok && body.payload) { showEmergencyPublicView(body.payload); return; }
-   } catch (error) { console.warn('Secure emergency viewer unavailable; trying legacy preview token.', error); }
+  try {
+   const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 4000);
+   const res = await fetch(apiBase + '/api/emergency/view?token=' + encodeURIComponent(token), {headers:{'Accept':'application/json'}, signal:controller.signal});
+   clearTimeout(timer);
+   const body = await res.json();
+   if (res.ok && body.payload) { showEmergencyPublicView(body.payload); return true; }
+  } catch (error) { console.warn('Secure emergency viewer unavailable; trying local token.', error); }
  }
  const payload = decodeEmergencyToken(token);
- if (payload) showEmergencyPublicView(payload);
+ if (payload) { showEmergencyPublicView(payload); return true; }
+ overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency QR unavailable</h2><p>The emergency information could not be verified.</p></div><span class="public-emergency-badge">ERROR</span></div><div class="public-emergency-expired">Ask the patient or caregiver for a newly generated Emergency QR Badge. If this is an active emergency, call 112.</div><div class="public-emergency-actions" style="padding:0 24px 22px;"><a class="emergency-call primary" href="tel:112">Call 112</a></div></div>';
+ return false;
+}
+
+async function ensureJsPdfLoaded() {
+ if (window.jspdf?.jsPDF) return window.jspdf.jsPDF;
+ try {
+  await new Promise((resolve, reject) => {
+   const script = document.createElement('script'); script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; script.async = true;
+   script.onload = resolve; script.onerror = reject; document.head.appendChild(script);
+  });
+ } catch (_) {}
+ return window.jspdf?.jsPDF || null;
 }
 async function downloadEmergencyPDF() {
- const jsPDF = window.jspdf?.jsPDF;
- if (!jsPDF) { alert('The PDF generator has not loaded yet. Please wait a moment and try again.'); return; }
+ const jsPDF = await ensureJsPdfLoaded();
+ if (!jsPDF) { alert('The PDF generator could not be loaded. Please check your internet connection and try again.'); return; }
  const payload = getEmergencyCompactPayload();
  const contact = getEmergencyContact();
  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -4612,7 +4749,8 @@ async function downloadEmergencyPDF() {
  doc.text(note, margin, y); y += note.length*4.5 + 7;
  doc.setDrawColor(...line); doc.line(margin, y, pageW-margin, y); y += 6;
  doc.setTextColor(...muted); doc.setFontSize(8); doc.text('Emergency QR validity: 24 hours from generation. QR is not encrypted.', margin, y);
- const qr = document.querySelector('#realQrContainer canvas, #realQrContainer img');
+ let qr = document.querySelector('#realQrContainer canvas, #realQrContainer img');
+ if (!qr && typeof QRCode !== 'undefined') { try { await generateEmergencyQR(true); qr = document.querySelector('#realQrContainer canvas, #realQrContainer img'); } catch (_) {} }
  if (qr && y < 250) {
    try {
      const src = qr.tagName.toLowerCase() === 'canvas' ? qr.toDataURL('image/png') : qr.src;
@@ -4620,7 +4758,8 @@ async function downloadEmergencyPDF() {
      doc.setFontSize(7); doc.text('Scan for read-only emergency view', pageW-margin-52, y+23, {align:'center', maxWidth:52});
    } catch (_) {}
  }
- doc.save(`SwasthID-Emergency-${String(payload.n).replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'') || 'Passport'}.pdf`);
+ const filename = `SwasthID-Emergency-${String(payload.n).replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'') || 'Passport'}.pdf`;
+ try { doc.save(filename); } catch (e) { console.error('PDF save failed:', e); alert('PDF saving failed in this browser. Please try again.'); }
 }
 
 renderEmergencyContact();
@@ -4639,7 +4778,7 @@ document.getElementById('simulateScanBtn').addEventListener('click', () => {
  alert(`Emergency Scanner Mode:\nParamedic Device Connected.\n\nPatient: ${patientData.name}\nBlood Group: ${patientData.bloodGroup}\nDrug Allergies: ${formatAllergies(patientData.allergies)}\nOther Allergies: ${formatNormalAllergies(patientData.normalAllergies)}\nActive Medicines: ${active}\nEmergency Contact: ${contact.name} (${contact.relation}) ${contact.phone}`);
 });
 
-setTimeout(openEmergencyPayloadFromUrl, 50);
+(async () => { await openEmergencyPayloadFromUrl(); })();
 
  /* Family Registration */
  document.getElementById('registerDepBtn').addEventListener('click', () => {
