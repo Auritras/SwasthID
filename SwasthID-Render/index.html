@@ -7,7 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Work+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Required CDNs for OCR and QR Generation -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+  }
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
@@ -273,7 +280,33 @@
  .med-item .name { font-weight: 600; font-size: 14.5px; }
  .med-item .dose { font-size: 13px; color: var(--muted); margin-top: 1px; }
 
- .med-action {
+ 
+ .today-med-empty {
+ background: var(--surface);
+ border: 1px dashed #c9d8d0;
+ border-radius: var(--radius-md);
+ padding: 18px 20px;
+ color: var(--muted);
+ font-size: 13px;
+ line-height: 1.5;
+ box-shadow: 0 2px 8px rgba(34,58,51,.025);
+ }
+ .activity-empty {
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ min-height:74px;
+ padding:12px 18px;
+ border:1px dashed #c9d8d0;
+ border-radius:var(--radius-md);
+ background:#fbfcfc;
+ color:var(--muted);
+ font-size:13px;
+ text-align:center;
+ box-sizing:border-box;
+ }
+
+.med-action {
  padding: 8px 14px; border-radius: 6px; border: 1px solid var(--amber); color: var(--amber); 
  background: transparent; cursor: pointer; font-size: 12.5px; font-weight: 600; font-family: inherit; transition: 0.2s; white-space: nowrap;
  }
@@ -1051,13 +1084,34 @@
 .profile-field input,.profile-field select,.profile-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:12px 13px;background:var(--surface);color:var(--ink);font:inherit;outline:none;}
 .profile-field textarea{min-height:84px;resize:vertical;}
 .profile-name-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-.medicine-input-header{display:grid;grid-template-columns:1.35fr .85fr 1fr 38px;gap:10px;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--muted);}
-.medicine-input-row{display:grid;grid-template-columns:1.35fr .85fr 1fr 38px;gap:10px;margin-bottom:10px;align-items:start;}
+.medicine-input-header{display:grid;grid-template-columns:1.25fr .75fr .95fr .7fr 38px;gap:10px;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--muted);}
+.medicine-input-row{display:grid;grid-template-columns:1.25fr .75fr .95fr .7fr 38px;gap:10px;margin-bottom:10px;align-items:start;}
 .medicine-input-row input{min-width:0;}
 .med-time-editor{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:8px 10px;background:var(--soft);border:1px solid var(--line);border-radius:8px;}
 .med-time-editor-label{font-size:11px;font-weight:700;color:var(--muted);width:100%;}
 .med-time-slot{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
 .med-time-slot input{padding:6px 7px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);}
+
+.care-journey-section{position:relative;}
+.care-journey-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+.care-journey-status{font-size:11px;font-weight:700;color:var(--ok);background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.22);padding:6px 10px;border-radius:999px;white-space:nowrap;}
+.care-journey{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;background:var(--surface);box-shadow:var(--shadow-sm);}
+.care-step{position:relative;min-width:0;padding:15px 12px 13px;border-right:1px solid var(--line);cursor:pointer;transition:background .18s ease,transform .18s ease;}
+.care-step:last-child{border-right:0;}
+.care-step:hover{background:var(--surface-2);transform:translateY(-1px);}
+.care-step.is-current{background:rgba(20,115,76,.045);box-shadow:inset 0 -3px 0 var(--green,#17824f);}
+.care-step-number{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.care-step-title{font-size:13px;font-weight:750;color:var(--ink);margin-bottom:5px;overflow-wrap:anywhere;}
+.care-step-state{font-size:11px;line-height:1.4;color:var(--muted);min-height:31px;overflow-wrap:anywhere;}
+.care-step-action{display:inline-flex;margin-top:9px;font-size:10px;font-weight:750;color:var(--green,#17824f);}
+.care-step.done .care-step-number{color:var(--ok);}
+.care-step.done .care-step-action{color:var(--ok);}
+.care-journey-next{margin-top:10px;font-size:12px;color:var(--muted);padding:10px 12px;border-left:3px solid var(--green,#17824f);background:var(--surface-2);border-radius:0 var(--radius-sm) var(--radius-sm) 0;}
+.care-journey-next b{color:var(--ink);}
+@media(max-width:1000px){.care-journey{grid-template-columns:repeat(3,minmax(0,1fr));}.care-step:nth-child(3){border-right:0;}.care-step:nth-child(-n+3){border-bottom:1px solid var(--line);}}
+@media(max-width:620px){.care-journey{grid-template-columns:1fr 1fr;}.care-step{border-right:1px solid var(--line);border-bottom:1px solid var(--line)!important;}.care-step:nth-child(even){border-right:0;}.care-step:nth-last-child(-n+2){border-bottom:0!important;}.care-journey-head{align-items:flex-start;}}
+@media(max-width:420px){.care-journey{grid-template-columns:1fr;}.care-step,.care-step:nth-child(even){border-right:0;border-bottom:1px solid var(--line)!important;}.care-step:last-child{border-bottom:0!important;}}
+
 .today-med-empty{padding:18px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);text-align:center;}
 .today-med-item{display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:9px;box-shadow:0 2px 8px rgba(0,0,0,.03);}
 .today-med-time{font-weight:800;font-size:15px;color:var(--ink);}
@@ -1068,6 +1122,27 @@
 .today-med-time-editor input{width:108px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--ink);}
 .today-med-item.taken{opacity:.7;}
 .today-med-item.taken .today-med-time{ text-decoration:line-through;}
+.adherence-panel{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);}
+.adherence-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.adherence-stat{font-size:24px;font-weight:800;color:var(--ink);}
+.adherence-sub{font-size:11px;color:var(--muted);}
+.adherence-chart{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;height:118px;}
+.adherence-day{display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end;}
+.adherence-bar-wrap{width:100%;height:82px;display:flex;align-items:flex-end;justify-content:center;background:var(--soft);border-radius:7px 7px 4px 4px;overflow:hidden;}
+.adherence-bar{width:72%;min-height:3px;border-radius:6px 6px 0 0;background:var(--accent,#1f7a6e);}
+.adherence-day-label{font-size:10px;color:var(--muted);font-weight:700;}
+.adherence-day-pct{font-size:10px;color:var(--ink);font-weight:800;}
+.med-alert{margin-top:10px;padding:12px 14px;border-radius:12px;border:1px solid rgba(185,28,28,.2);background:rgba(185,28,28,.055);}
+.med-alert-title{font-weight:800;color:var(--danger,#b91c1c);font-size:13px;}
+.med-alert-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(185,28,28,.12);font-size:12px;}
+.med-alert-item:last-child{border-bottom:0;}
+.refill-panel{margin-top:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--soft);}
+.refill-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px;}
+.refill-item:last-child{border-bottom:0;}
+.refill-warn{font-weight:800;color:var(--warn,#a16207);}
+.med-time-editor-label{width:100%;}
+@media(max-width:620px){.adherence-chart{gap:4px}.adherence-bar{width:80%}.refill-item,.med-alert-item{align-items:flex-start;flex-direction:column;}}
+
 .medicine-remove-btn{width:38px;height:42px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:18px;line-height:1;}
 .medicine-remove-btn:hover{border-color:var(--accent,#1b5148);color:var(--ink);}
 .medicine-add-btn{margin-top:2px;}
@@ -1081,7 +1156,7 @@
 .normal-allergy-option input{margin:0;accent-color:var(--accent,#1b5148);}
 @media(max-width:620px){.contact-inline-grid{grid-template-columns:1fr;gap:10px;}}
 
-@media(max-width:620px){.profile-name-grid{grid-template-columns:1fr}.medicine-input-header{display:none}.medicine-input-row{grid-template-columns:1fr 1fr 38px;gap:7px}.medicine-input-row .medicine-schedule-input{grid-column:1 / 3}.medicine-input-row input{font-size:12px;padding:10px 9px}.medicine-remove-btn{width:38px}.today-med-item{grid-template-columns:1fr;gap:7px}.today-med-time{font-size:14px}.today-med-item .med-action{justify-self:start}}
+@media(max-width:620px){.profile-name-grid{grid-template-columns:1fr}.medicine-input-header{display:none}.medicine-input-row{grid-template-columns:1fr 1fr 1fr 38px;gap:7px}.medicine-input-row .medicine-schedule-input{grid-column:1 / 3}.medicine-input-row .medicine-pack-input{grid-column:1 / 4}.medicine-input-row input{font-size:12px;padding:10px 9px}.medicine-remove-btn{width:38px}.today-med-item{grid-template-columns:1fr;gap:7px}.today-med-time{font-size:14px}.today-med-item .med-action{justify-self:start}}
 
 .profile-field input:focus,.profile-field select:focus,.profile-field textarea:focus{border-color:var(--accent,#1b5148);box-shadow:0 0 0 3px rgba(27,81,72,.08);}
 .profile-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;flex-wrap:wrap;}
@@ -1197,7 +1272,7 @@
  <option value="हिन्दी">हिन्दी</option>
  <option value="বাংলা">বাংলা</option>
  </select>
- <span id="topHealthId">aditya.sharma@abdm</span>
+ <span id="topHealthId">Signed in</span>
  <span class="logout-link" id="logoutBtn">Log out</span>
  </div>
  </div>
@@ -1219,7 +1294,7 @@
  <!-- ===== HOME PANEL ===== -->
  <div class="panel active" id="panel-home">
  <div class="hero">
- <div class="avatar serif">AS<span class="heartbeat-dot" aria-hidden="true"></span></div>
+ <div class="avatar serif" id="heroAvatar">SI<span class="heartbeat-dot" aria-hidden="true"></span></div>
  <div class="hero-main">
  <h2 class="serif"><span id="heroGreeting">Hi</span>, <span id="dashboardGreetingName">there</span></h2>
  <div class="sub-line" id="heroTime"></div>
@@ -1232,11 +1307,26 @@
  </div>
 
  <div class="content">
+ <section class="care-journey-section">
+ <div class="care-journey-head">
+  <div>
+   <h3>My care journey</h3>
+   <p class="section-sub">Only the steps relevant to your current care needs appear here, and completion reflects real actions rather than simply having data somewhere in SwasthID.</p>
+  </div>
+  <span class="care-journey-status" id="careJourneyStatus">Getting started</span>
+ </div>
+ <div class="care-journey" id="careJourney" aria-live="polite"></div>
+ <div class="care-journey-next" id="careJourneyNext"></div>
+ </section>
+
  <section>
  <h3>Today's medication</h3>
  <p class="section-sub">Reminders set automatically from your uploaded prescriptions.</p>
  
  <div id="todayMedList"></div>
+ <div class="adherence-panel" id="medAdherencePanel" aria-live="polite"></div>
+ <div class="med-alert" id="medMissedDosePanel" style="display:none;" aria-live="assertive"></div>
+ <div class="refill-panel" id="medRefillPanel" aria-live="polite"></div>
  </section>
 
  <section>
@@ -1249,7 +1339,7 @@
  <div class="stat"><div class="num serif" id="homeSleepStat">--</div><div class="label">Sleep duration</div></div>
  <div class="stat"><div class="num serif" id="homeKcalStat">0 kcal</div><div class="label">Calorie intake</div></div>
  </div>
- <div class="bars" id="stepBars"></div>
+ <div class="bars" id="stepBars" aria-live="polite"></div>
  </section>
 
  <section>
@@ -1260,6 +1350,7 @@
  </div>
  <button class="n-btn solid" id="findNearbyBtn" type="button"> Find near me</button>
  </div>
+ <div style="font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:10px;">Healthcare data: © OpenStreetMap contributors</div>
  <div class="nearby-panel">
  <div id="nearbyLoadingState" style="display:none; text-align:center; padding:18px; color:var(--muted);">
  <div style="font-size:20px; margin-bottom:6px;"></div>
@@ -1465,8 +1556,39 @@
  </section>
 
  <section>
+ <h3>Weekly Nutrition Trends</h3>
+ <p class="section-sub">Your last 7 days of logged meals, aggregated from the food log. Days with no entries remain visible so trends are easy to spot.</p>
+ <div class="activity-stats" style="margin-bottom:14px;">
+   <div class="stat"><div class="num serif" id="weeklyAvgKcal">0 kcal</div><div class="label">7-day avg calories</div></div>
+   <div class="stat"><div class="num serif" id="weeklyProtein">0 g</div><div class="label">Avg protein / day</div></div>
+   <div class="stat"><div class="num serif" id="weeklyAdherenceFood">0/7</div><div class="label">Days logged</div></div>
+ </div>
+ <div id="weeklyNutritionChart" style="width:100%;min-height:230px;border:1px solid var(--line);border-radius:10px;padding:12px;box-sizing:border-box;background:var(--paper,#fff);overflow:hidden;"></div>
+ </section>
+
+ <section>
+ <h3>Medication–Food Interaction Flags</h3>
+ <p class="section-sub">SwasthID checks your current medication list against a small set of common food or supplement timing rules. These are informational flags, not a substitute for your prescriber or pharmacist.</p>
+ <div id="nutritionMedicationInteractions"></div>
+ </section>
+
+ <section>
+ <h3>Packaged Food Barcode Scanner</h3>
+ <p class="section-sub">Scan a packaged-food barcode to look up product nutrition data. If your browser does not support camera barcode scanning, you can enter the barcode manually.</p>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+   <button type="button" class="n-btn solid" id="startBarcodeScanBtn">Scan barcode</button>
+   <button type="button" class="n-btn" id="stopBarcodeScanBtn" style="display:none;">Stop scanner</button>
+   <input id="barcodeManualInput" inputmode="numeric" pattern="[0-9]*" maxlength="18" placeholder="Enter barcode (e.g. 890...)" style="flex:1;min-width:180px;padding:10px;border:1px solid var(--line);border-radius:7px;box-sizing:border-box;">
+   <button type="button" class="n-btn" id="lookupBarcodeBtn">Look up</button>
+ </div>
+ <video id="barcodeVideo" playsinline muted style="display:none;width:100%;max-width:520px;border-radius:10px;border:1px solid var(--line);background:#111;max-height:300px;object-fit:cover;"></video>
+ <div id="barcodeStatus" style="font-size:12px;color:var(--muted);margin-top:8px;"></div>
+ <div id="barcodeResult" style="margin-top:12px;"></div>
+ </section>
+
+ <section>
  <h3>Food Data Source</h3>
- <p class="section-sub">Nutrition values are retrieved from USDA FoodData Central when available. Values are reference estimates and can vary by preparation, brand, and portion.</p>
+ <p class="section-sub">Nutrition values are retrieved from USDA FoodData Central when available. Packaged-food barcode results use Open Food Facts when available. Values are reference estimates and can vary by preparation, brand, portion, and product formulation.</p>
  </section>
  </div>
  </div>
@@ -1512,6 +1634,7 @@
  </div>
  <div class="extract-card">
  <div class="extract-head"><h4>Extracted Information</h4><span class="tag resolved" id="ocrConfBadge">98% Confidence</span></div>
+ <div id="rxReviewNote" style="font-size:12px;color:var(--muted);padding:8px 0 4px;line-height:1.4;">Fields marked &quot;Needs review&quot; were not confidently detected. You can edit any extracted field before saving.</div>
  <div class="doctor-line rx-physician-line">
  <label for="detectedDocName"><b>Detected Physician</b></label>
  <input id="detectedDocName" class="rx-physician-field" type="text" value="Dr. Rohan Iyer" placeholder="Enter physician name" aria-label="Detected physician">
@@ -1934,6 +2057,7 @@
  let firebaseUser = null;
  let cloudSyncReady = false;
  let firebaseInitPromise = null;
+ let authLoadSequence = 0;
 
  const CLOUD_KEYS = [
    'swasth_abhaId',
@@ -2013,6 +2137,8 @@
      middleName: '',
      lastName: '',
      email: email || '',
+     ownerUid: firebaseUser?.uid || '',
+     ownerEmail: email || firebaseUser?.email || '',
      occupation: '',
      profileCompleted: false,
      dob: '',
@@ -2085,6 +2211,14 @@ function clearCloudCacheForUserSwitch() {
    return looksLikePrototypePatient || email === 'aditya.sharma@abdm';
  }
 
+ function profileBelongsToCurrentAccount(profile) {
+   if (!profile || typeof profile !== 'object' || !firebaseUser) return false;
+   const ownerUid = String(profile.ownerUid || '').trim();
+   const ownerEmail = String(profile.ownerEmail || profile.email || '').trim().toLowerCase();
+   if (ownerUid) return ownerUid === firebaseUser.uid;
+   return !!ownerEmail && ownerEmail === String(firebaseUser.email || '').trim().toLowerCase();
+ }
+
  function resetAuthenticatedUserToBlankProfile() {
    const email = firebaseUser?.email || '';
    const blankProfile = createBlankPersonalizedProfile(email);
@@ -2096,13 +2230,22 @@ function clearCloudCacheForUserSwitch() {
  }
 
  async function loadCloudState() {
-   const ref = cloudDoc();
-   if (!ref) {
+   const userAtStart = firebaseUser;
+   const uidAtStart = userAtStart?.uid || '';
+   if (!uidAtStart || !db) {
      if (firebaseUser) resetAuthenticatedUserToBlankProfile();
      return false;
    }
+   const loadSequence = ++authLoadSequence;
+   const ref = db.collection('users').doc(uidAtStart);
+
+   // Start every account load from a blank in-memory profile so the previous
+   // account's name and health data can never remain visible during the switch.
+   resetAuthenticatedUserToBlankProfile();
+
    try {
      const snap = await ref.get();
+     if (loadSequence !== authLoadSequence || firebaseUser?.uid !== uidAtStart) return false;
      let data = snap.exists ? snap.data() : {};
      let localState = data.localState || {};
 
@@ -2135,8 +2278,15 @@ function clearCloudCacheForUserSwitch() {
          }
        });
 
-       if (data.profile && typeof data.profile === 'object') {
+       if (data.profile && typeof data.profile === 'object' && profileBelongsToCurrentAccount(data.profile)) {
          Object.assign(patientData, data.profile);
+       } else if (data.profile && typeof data.profile === 'object') {
+         // Reject profile data that is not bound to the authenticated Firebase account.
+         const blankProfile = createBlankPersonalizedProfile(firebaseUser.email || '');
+         Object.keys(patientData).forEach(key => delete patientData[key]);
+         Object.assign(patientData, blankProfile);
+         localState = {};
+         await ref.set({ profile: blankProfile, localState: {}, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
        }
        // If Firestore contains only an old/blank profile (or a previous save failed),
        // restore this account's locally cached profile. This is account-keyed and is
@@ -2169,8 +2319,10 @@ function clearCloudCacheForUserSwitch() {
          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
        }, { merge: true });
      }
+     if (loadSequence !== authLoadSequence || firebaseUser?.uid !== uidAtStart) return false;
      return true;
    } catch (error) {
+     if (loadSequence !== authLoadSequence || firebaseUser?.uid !== uidAtStart) return false;
      console.error('Could not load Firestore data:', error);
 
      // Authentication succeeded, but Firestore may still be unavailable because
@@ -2228,7 +2380,7 @@ function clearCloudCacheForUserSwitch() {
    if (!ref) return false;
    try {
      await ref.set({
-       profile: { ...patientData },
+       profile: { ...patientData, ownerUid: firebaseUser.uid, ownerEmail: firebaseUser.email || '', email: firebaseUser.email || patientData.email || '' },
        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
      }, { merge: true });
      cloudSyncReady = true;
@@ -2304,6 +2456,7 @@ function clearCloudCacheForUserSwitch() {
  }
 
  async function firebaseLogout() {
+   authLoadSequence++;
    if (auth) await auth.signOut();
    firebaseUser = null;
    cloudSyncReady = false;
@@ -2315,49 +2468,7 @@ function clearCloudCacheForUserSwitch() {
  let globalKcal = 0;
  let qrGenerated = false;
 
- const patientData = {
- name: "Aditya Sharma",
- email: "",
- occupation: "",
- profileCompleted: true,
- dob: "1998-09-19",
- bloodGroup: "O+",
- conditions: [
- { name: "Hypothyroidism", status: "Ongoing", year: "2022", details: "Managed with daily oral levothyroxine" },
- { name: "Lower back strain", status: "Intermittent", year: "2024", details: "Requires posture discipline and core exercise" },
- { name: "Iron deficiency anemia", status: "Resolved", year: "2021" },
- { name: "Typhoid", status: "Resolved", year: "2019" }
- ],
- medications: [
- { name: "Thyroxine", dose: "12.5 mcg", schedule: "Daily before/after breakfast", reason: "Thyroid hormone substitution" },
- { name: "Vitamin D3", dose: "1000 IU", schedule: "Weekly on Sunday mornings", reason: "Bone density & deficiency prevention" }
- ],
- allergies: "No known drug allergies (NKDA)",
- lifestyle: { smoking: "No (Non-smoker)", alcohol: "Occasional (Official / Social gatherings only)" },
- vitals: { height: "175 cm", weight: "68 kg", bmi: "22.2 (Normal)" },
- nutrition: { calorieTarget: 2200, targetSource: "Demo profile benchmark" },
- labs: {
- cbcThyroid: { name: "CBC & TSH Panel", daysAgo: 12, result: "TSH 2.1 mIU/L (Optimal normal range 0.4 - 4.0)" },
- t3t4: { name: "Free T3 / T4 Panel", daysAgo: 18, result: "Normal balance" }
- },
- emergencyContact: { name: "Sunita Sharma", relation: "Spouse", phone: "+9198XXXXXXXX" },
- doctors: [
- { name: "Dr. Rohan Iyer", specialty: "Endocrinology", hospital: "Manipal Hospital" },
- { name: "Dr. Meera Nair", specialty: "General Physician", hospital: "Apollo Clinic" },
- { name: "Dr. Priya Das", specialty: "Clinical Nutritionist", hospital: "Apollo Telehealth" }
- ],
- visits: [
- { doctor: "Dr. Meera Nair", specialty: "General Physician", facility: "Apollo Clinic, Whitefield", date: "2026-08-12" },
- { doctor: "Dr. Rohan Iyer", specialty: "Endocrinology", facility: "Manipal Hospital", date: "2026-06-03" },
- { doctor: "Dr. Priya Das", specialty: "Clinical Nutritionist", facility: "Online consult", date: "2026-04-21" }
- ],
- reports: [
- { name: "Blood panel — Comprehensive CBC & TSH", date: "2026-08-28", result: "TSH 2.1 mIU/L (optimal normal range 0.4–4.0)" },
- { name: "Free T3 / Free T4 hormone profile", date: "2026-08-22", result: "Normal balance" },
- { name: "Bone mineral density (DEXA) scan", date: "2025-07-16", result: "Report available" },
- { name: "Electrocardiogram (ECG 12-lead)", date: "2025-01-17", result: "Report available" }
- ]
- };
+ const patientData = createBlankPersonalizedProfile('');
 
  /* =========================================================
  1. AUTHENTICATION, LOGIN WORKFLOW & SESSION
@@ -2384,9 +2495,33 @@ function clearCloudCacheForUserSwitch() {
  let authMode = 'login';
 let profileOnboardingRequired = false;
 
- function performLoginSetup(abhaId) {
-   patientData.email = firebaseUser?.email || abhaId || '';
-   topHealthId.textContent = patientData.email || abhaId;
+ function performLoginSetup(abhaId, options = {}) {
+   const skipProfilePrompt = options?.skipProfilePrompt === true;
+   const currentEmail = String(firebaseUser?.email || abhaId || '').trim();
+   patientData.email = currentEmail;
+   topHealthId.textContent = currentEmail || 'Signed in';
+
+   // Set the account-specific greeting immediately, even before any later render pass.
+   // This prevents the previous user's initials/name from remaining in the DOM during
+   // Firebase account switching or a slow Firestore read.
+   const ownerUid = String(patientData.ownerUid || '').trim();
+   const ownerEmail = String(patientData.ownerEmail || patientData.email || '').trim().toLowerCase();
+   const ownsProfile = !!firebaseUser && (
+     (ownerUid && ownerUid === firebaseUser.uid) ||
+     (!ownerUid && ownerEmail && ownerEmail === currentEmail.toLowerCase())
+   );
+   const storedName = ownsProfile ? String(patientData.name || '').trim() : '';
+   const emailName = currentEmail ? currentEmail.split('@')[0].replace(/[._-]+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase()) : '';
+   const displayName = storedName && storedName !== 'Aditya Sharma' ? storedName : (emailName || 'SwasthID User');
+   const greeting = document.getElementById('dashboardGreetingName');
+   if (greeting) greeting.textContent = displayName.split(/\s+/)[0] || displayName;
+   const initials = displayName.split(/\s+/).filter(Boolean).slice(0,2).map(x => x[0].toUpperCase()).join('') || 'SI';
+   document.querySelectorAll('.hero .avatar').forEach(el => {
+     const dot = el.querySelector('.heartbeat-dot');
+     el.textContent = initials;
+     if (dot) el.appendChild(dot);
+   });
+
    loginScreen.style.display = 'none';
    dashboard.style.display = 'block';
    const aiDock = document.getElementById('aiAssistantDock');
@@ -2400,8 +2535,8 @@ let profileOnboardingRequired = false;
    renderPersonalizedUI();
 
    // Existing sessions with incomplete profiles are guided into onboarding as well.
-   const needsProfile = !isProfileSkippedForCurrentAccount() && (profileOnboardingRequired || !isProfileActuallyComplete());
-   if (needsProfile) {
+   const needsProfile = profileOnboardingRequired || !isProfileActuallyComplete();
+   if (needsProfile && !skipProfilePrompt) {
      setTimeout(() => {
        openProfileModal();
        // A defensive retry handles browsers that restore the page before the modal node is painted.
@@ -2473,7 +2608,7 @@ let profileOnboardingRequired = false;
    if (auth && auth.currentUser) {
      firebaseUser = auth.currentUser;
      cloudSyncReady = await loadCloudState();
-     const savedId = localStorage.getItem('swasth_abhaId') || firebaseUser.email || 'SwasthID User';
+     const savedId = firebaseUser.email || 'SwasthID User';
      profileOnboardingRequired = !isProfileActuallyComplete();
      performLoginSetup(savedId);
      await migrateLocalDataToCloud();
@@ -2527,18 +2662,18 @@ let profileOnboardingRequired = false;
        localStorage.setItem('swasth_abhaId', email);
        // Show the account-created greeting first. The personalization form opens
        // only after the user presses Continue in that greeting.
-       profileOnboardingRequired = false;
-       performLoginSetup(email);
+       profileOnboardingRequired = true;
+       performLoginSetup(email, { skipProfilePrompt: true });
        showAccountCreatedModal(result.cloudReady);
      } else {
        await firebaseLogin(email, password);
        localStorage.setItem('swasth_loggedIn', 'true');
        localStorage.setItem('swasth_abhaId', email);
-       await syncCloudState('swasth_abhaId');
        profileOnboardingRequired = !isProfileActuallyComplete();
        performLoginSetup(email);
+       renderPersonalizedUI();
        setTimeout(() => {
-         showToast('', 'Scheduled Dose', 'Thyroxine 12.5mcg — scheduled for breakfast.');
+         showNextMedicationToast();
        }, 1200);
      }
    } catch (error) {
@@ -2623,19 +2758,26 @@ let profileOnboardingRequired = false;
  updateCalorieDisplays();
 
  const history = Array.isArray(patientData.activityHistory) ? patientData.activityHistory : [];
- const todayEntry = { label:'Today', value:steps };
- const week = [...history.slice(-6), todayEntry];
- const days = week.map(x => x.label || 'Day');
- const vals = week.map(x => Number(x.value || 0));
- const maxVal = Math.max(1, ...vals);
+ const hasActivityHistory = history.some(x => Number(x?.value || 0) > 0) || steps > 0;
  const barsContainer = document.getElementById('stepBars');
  if (barsContainer) {
-   barsContainer.innerHTML = '';
-   week.forEach((entry, i) => {
-     const col = document.createElement('div'); col.className = 'bar-col';
-     col.innerHTML = `<div class="bar" style="height:${Math.max(4, (Number(entry.value||0) / maxVal * 100))}%;"></div><div class="day">${escapeHtml(days[i] || 'Day')}</div>`;
-     barsContainer.appendChild(col);
-   });
+   if (!hasActivityHistory) {
+     barsContainer.className = 'activity-empty';
+     barsContainer.innerHTML = 'No activity history yet. Connect a supported activity source to populate the weekly view.';
+   } else {
+     barsContainer.className = 'bars';
+     const todayEntry = { label:'Today', value:steps };
+     const week = [...history.slice(-6), todayEntry];
+     const days = week.map(x => x.label || 'Day');
+     const vals = week.map(x => Number(x.value || 0));
+     const maxVal = Math.max(1, ...vals);
+     barsContainer.innerHTML = '';
+     week.forEach((entry, i) => {
+       const col = document.createElement('div'); col.className = 'bar-col';
+       col.innerHTML = `<div class="bar" style="height:${Math.max(4, (Number(entry.value||0) / maxVal * 100))}%;"></div><div class="day">${escapeHtml(days[i] || 'Day')}</div>`;
+       barsContainer.appendChild(col);
+     });
+   }
  }
  if (document.getElementById('ageValue')) document.getElementById('ageValue').textContent = calculateAge(patientData.dob) !== null ? `${calculateAge(patientData.dob)} years` : 'Not provided';
  }
@@ -2723,7 +2865,15 @@ let profileOnboardingRequired = false;
  if(btn) setTimeout(() => btn.focus(), 50);
  }
 
- const authSuccessModal = document.getElementById('authSuccessModal');
+ const profileModalEl = document.getElementById('profileModal');
+const profileFormEl = document.getElementById('profileForm');
+const editProfileBtnEl = document.getElementById('editProfileBtn');
+const cancelProfileBtnEl = document.getElementById('cancelProfileBtn');
+if (editProfileBtnEl) editProfileBtnEl.addEventListener('click', () => openProfileModal({force:true}));
+if (cancelProfileBtnEl) cancelProfileBtnEl.addEventListener('click', () => closeProfileModal());
+if (profileModalEl) profileModalEl.addEventListener('click', e => { if (e.target === profileModalEl) closeProfileModal(); });
+
+const authSuccessModal = document.getElementById('authSuccessModal');
  if(authSuccessModal) {
    authSuccessModal.addEventListener('click', (event) => {
      if(event.target === authSuccessModal) authSuccessModal.classList.remove('show');
@@ -2735,7 +2885,13 @@ let profileOnboardingRequired = false;
    }
  });
 
- function showToast(icon, title, body) {
+ function escapeHtml(value) {
+  const div = document.createElement('div');
+  div.textContent = String(value ?? '');
+  return div.innerHTML;
+}
+
+function showToast(icon, title, body) {
  const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
  document.getElementById('toastIconBlock').textContent = icon;
  document.getElementById('toastTitleText').textContent = title;
@@ -2744,6 +2900,63 @@ let profileOnboardingRequired = false;
  const t = document.getElementById('medToast');
  t.classList.add('show');
  setTimeout(() => t.classList.remove('show'), 6500);
+ }
+
+ function getNextMedicationDose() {
+ const meds = getCurrentMedicationList();
+ if (!meds.length) return null;
+
+ const now = new Date();
+ const nowMinutes = now.getHours() * 60 + now.getMinutes();
+ const status = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+ const candidates = [];
+
+ meds.forEach((m, i) => {
+   const count = medicationSlotCount(m);
+   const times = suggestedMedicationTimes(m, count);
+   for (let unit = 0; unit < count; unit++) {
+     const id = medicationScheduleKey(i, unit);
+     const saved = status[id];
+     const takenToday = saved?.taken && saved?.date && new Date(saved.date).toDateString() === now.toDateString();
+     if (takenToday) continue;
+
+     const value = String(times[unit] || '');
+     const match = value.match(/^(\d{1,2}):(\d{2})$/);
+     if (!match) continue;
+     const hours = Number(match[1]);
+     const minutes = Number(match[2]);
+     if (hours > 23 || minutes > 59) continue;
+
+     const scheduledMinutes = hours * 60 + minutes;
+     const overdue = scheduledMinutes < nowMinutes;
+     candidates.push({
+       medicine: m.medicine,
+       dose: m.dose || '',
+       time: value,
+       scheduledMinutes,
+       overdue,
+       id
+     });
+   }
+ });
+
+ if (!candidates.length) return null;
+
+ candidates.sort((a, b) => {
+   if (a.overdue !== b.overdue) return a.overdue ? -1 : 1;
+   if (a.overdue) return a.scheduledMinutes - b.scheduledMinutes;
+   return a.scheduledMinutes - b.scheduledMinutes;
+ });
+
+ return candidates[0];
+ }
+
+ function showNextMedicationToast() {
+ const next = getNextMedicationDose();
+ if (!next) return;
+ const doseText = next.dose ? ` — ${next.dose}` : '';
+ const whenText = next.overdue ? `overdue since ${formatMedicationTime(next.time)}` : `scheduled for ${formatMedicationTime(next.time)}`;
+ showToast('', next.overdue ? 'Medication Due' : 'Next Medication', `${next.medicine}${doseText} — ${whenText}.`);
  }
  document.getElementById('toastClose').addEventListener('click', () => {
  document.getElementById('medToast').classList.remove('show');
@@ -2832,10 +3045,52 @@ if (supportBtn && !supportBtn.dataset.bound) {
  function getCurrentMedicationList() {
  const saved = getSavedPrescriptions();
  const latest = saved[0];
- if (latest && latest.medicines?.length) return latest.medicines;
- return (patientData.medications || []).map(m => ({
-   medicine: m.name, dose: m.dose, frequency: m.schedule, instructions: m.reason || '', times: m.times || []
- }));
+ const profileMeds = Array.isArray(patientData.medications) ? patientData.medications : [];
+ const prescriptionMeds = latest && Array.isArray(latest.medicines) ? latest.medicines : [];
+ const out = [];
+ const key = value => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+ // Build a UNION rather than choosing either Profile or Prescription data.
+ // Profile is where optional pack-size metadata is normally entered; the
+ // prescription supplies the active dose/schedule.
+ profileMeds.forEach(pm => {
+   const name = String(pm?.name || pm?.medicine || '').trim();
+   if (!name) return;
+   out.push({
+     ...pm,
+     medicine: name,
+     dose: pm.dose || '',
+     frequency: pm.schedule || pm.frequency || '',
+     instructions: pm.reason || pm.instructions || '',
+     times: Array.isArray(pm.times) ? pm.times : [],
+     packSize: pm.packSize || pm.pack || ''
+   });
+ });
+
+ prescriptionMeds.forEach(rx => {
+   const name = String(rx?.medicine || rx?.name || '').trim();
+   if (!name) return;
+   const existing = out.find(m => key(m.medicine) === key(name));
+   if (existing) {
+     existing.dose = rx.dose || existing.dose || '';
+     existing.frequency = rx.frequency || rx.schedule || existing.frequency || '';
+     existing.instructions = rx.instructions || rx.reason || existing.instructions || '';
+     existing.times = Array.isArray(rx.times) && rx.times.length ? rx.times : existing.times;
+     // IMPORTANT: preserve the Profile pack size unless the prescription also
+     // explicitly contains one.
+     existing.packSize = rx.packSize || rx.pack || existing.packSize || '';
+   } else {
+     out.push({
+       ...rx,
+       medicine: name,
+       frequency: rx.frequency || rx.schedule || '',
+       instructions: rx.instructions || rx.reason || '',
+       times: Array.isArray(rx.times) ? rx.times : [],
+       packSize: rx.packSize || rx.pack || ''
+     });
+   }
+ });
+ return out;
  }
  function medicationScheduleKey(index, unitIndex) { return `med_${index}_${unitIndex}`; }
  function saveMedicationTimes(index, times) {
@@ -2858,6 +3113,7 @@ if (supportBtn && !supportBtn.dataset.bound) {
    }
  }
  renderTodayMedications();
+ renderCareJourney();
  showToast('', 'Medication time saved', `${target.medicine} schedule updated.`);
  }
  function renderTodayMedications() {
@@ -2904,19 +3160,189 @@ if (supportBtn && !supportBtn.dataset.bound) {
  }));
  }
  function restoreMedications() { renderTodayMedications(); }
+
+ function medicationPackUnits(m) {
+   const text = String(m?.packSize || m?.pack || '').trim().toLowerCase();
+   if (!text) return null;
+   // Accept the common inputs users are likely to type: 30, 30 tablets,
+   // 30 tabs, 10 capsules, strip of 10, pack of 30, etc.
+   const match = text.match(/(?:pack|strip|box|bottle|of)?\s*(\d+(?:\.\d+)?)/i);
+   if (!match) return null;
+   const value = Number(match[1]);
+   return Number.isFinite(value) && value > 0 ? value : null;
+ }
+ function medicationDailyUnits(m) { return Math.max(1, parseMedicationDoseCount(m) * parseMedicationFrequencyCount(m)); }
+ function medicationIsCritical(m) {
+   return /\b(insulin|levothyroxine|thyroxine|euthyrox|insulin pen)\b/i.test(`${m?.medicine||''} ${m?.dose||''}`);
+ }
+ function getMedicationHistory() {
+   const status = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+   if (Array.isArray(status.history)) return status.history;
+   return Object.entries(status).filter(([k,v]) => /^med_\d+_\d+$/.test(k) && v?.taken).map(([id,v]) => ({id,...v,medicine:'Medication'}));
+ }
+ function localDayKey(d) { const x=new Date(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; }
+ function renderMedicationAdherence() {
+   const panel=document.getElementById('medAdherencePanel'); if(!panel) return;
+   const meds=getCurrentMedicationList();
+   if(!meds.length){panel.innerHTML='<b>Adherence</b><div class="adherence-sub" style="margin-top:4px;">Add a medication to start tracking adherence.</div>';return;}
+   const history=getMedicationHistory(); const now=new Date(); const days=[];
+   let totalExpected=0,totalTaken=0;
+   for(let offset=6;offset>=0;offset--){
+     const d=new Date(now); d.setHours(0,0,0,0); d.setDate(d.getDate()-offset);
+     const key=localDayKey(d); const expected=meds.reduce((sum,m)=>sum+medicationSlotCount(m),0);
+     const taken=history.filter(e=>e?.taken && localDayKey(e.date)===key).length;
+     const pct=expected?Math.min(100,Math.round(taken/expected*100)):0;
+     totalExpected+=expected; totalTaken+=Math.min(taken,expected); days.push({d,pct,taken,expected});
+   }
+   const pct=totalExpected?Math.round(totalTaken/totalExpected*100):0;
+   let streak=0;
+   for(let i=days.length-1;i>=0;i--){ if(days[i].expected && days[i].taken>=days[i].expected) streak++; else break; }
+   panel.innerHTML=`<div class="adherence-head"><div><b>Medication adherence</b><div class="adherence-sub">Based on doses you mark as taken. No new tracking input is required.</div></div><div style="text-align:right"><div class="adherence-stat">${pct}%</div><div class="adherence-sub">7-day adherence · ${streak}-day streak</div></div></div><div class="adherence-chart">${days.map(x=>`<div class="adherence-day"><div class="adherence-day-pct">${x.pct}%</div><div class="adherence-bar-wrap"><div class="adherence-bar" style="height:${Math.max(3,x.pct)}%"></div></div><div class="adherence-day-label">${x.d.toLocaleDateString([], {weekday:'short'})}</div></div>`).join('')}</div>`;
+ }
+ function renderMedicationRefills() {
+   const panel=document.getElementById('medRefillPanel');
+   if(!panel) return;
+
+   // Refill reminders are based directly on the medicines currently saved in
+   // the user's Profile. Pack size is optional; only medicines with a valid
+   // user-entered pack size are shown here.
+   let profileMeds = Array.isArray(patientData?.medications) ? patientData.medications : [];
+   // Prefer the exact medication rows saved by the Profile editor. This is
+   // where optional pack sizes are entered and prevents prescription/cloud
+   // state from accidentally replacing them before the refill panel renders.
+   try {
+     const cachedProfileMeds = JSON.parse(localStorage.getItem('swasth_profile_medications') || 'null');
+     if (Array.isArray(cachedProfileMeds)) profileMeds = cachedProfileMeds;
+   } catch(e) {}
+   const prescriptionMeds = getSavedPrescriptions()[0]?.medicines || [];
+   const normalise = v => String(v ?? '').trim().toLowerCase().replace(/\\s+/g,' ');
+   const extractPack = value => {
+     const text=String(value ?? '').trim();
+     if(!text) return null;
+     const m=text.match(/(\d+(?:\.\d+)?)/);
+     if(!m) return null;
+     const n=Number(m[1]);
+     return Number.isFinite(n) && n>0 ? n : null;
+   };
+
+   // Start with Profile medicines so pack size is never lost when a saved
+   // prescription contains the same medicine without pack metadata.
+   const merged=[];
+   profileMeds.forEach(m=>{
+     const name=String(m?.name || m?.medicine || '').trim();
+     if(!name) return;
+     merged.push({
+       ...m,
+       medicine:name,
+       dose:String(m?.dose || '').trim(),
+       frequency:String(m?.schedule || m?.frequency || '').trim(),
+       packSize:String(m?.packSize || m?.pack || '').trim(),
+       times:Array.isArray(m?.times) ? m.times : []
+     });
+   });
+   prescriptionMeds.forEach(rx=>{
+     const name=String(rx?.medicine || rx?.name || '').trim();
+     if(!name) return;
+     const existing=merged.find(m=>normalise(m.medicine)===normalise(name));
+     if(existing){
+       existing.dose=existing.dose || String(rx?.dose || '').trim();
+       existing.frequency=existing.frequency || String(rx?.frequency || rx?.schedule || '').trim();
+       existing.times=existing.times?.length ? existing.times : (Array.isArray(rx?.times) ? rx.times : []);
+       if(!existing.packSize) existing.packSize=String(rx?.packSize || rx?.pack || '').trim();
+     } else {
+       merged.push({...rx, medicine:name, packSize:String(rx?.packSize || rx?.pack || '').trim()});
+     }
+   });
+
+   const items=[];
+   merged.forEach(m=>{
+     const rawPack=String(m?.packSize || '').trim();
+     const pack=extractPack(rawPack);
+     if(!rawPack || pack===null) return;
+     const daily=medicationDailyUnits(m);
+     const days=Math.max(0,Math.floor(pack/daily));
+     items.push({m,days,pack,daily});
+   });
+
+   panel.style.display='block';
+   if(!items.length){
+     panel.innerHTML='<b>Refill reminders</b><div class="adherence-sub" style="margin-top:3px;">No refill reminders yet. Add a pack size to a medicine in your Profile to estimate when it may run out.</div>';
+     return;
+   }
+   panel.innerHTML=`<b>Refill reminders</b><div class="adherence-sub" style="margin-top:3px;margin-bottom:5px;">Only medicines with a pack size entered in your Profile are shown.</div>${items.map(x=>`<div class="refill-item"><div><b>${escapeHtml(x.m.medicine||'Medication')}</b><div class="adherence-sub">${escapeHtml(x.m.packSize)} · ${x.daily} unit${x.daily===1?'':'s'} per day</div></div><div class="refill-warn">${x.days===0?'Refill due now':`~${x.days} day${x.days===1?'':'s'} left`} <button type="button" class="n-btn" style="margin-left:6px;padding:5px 8px;font-size:11px" data-refill-med="${escapeHtml(x.m.medicine||'')}">Reorder</button></div></div>`).join('')}`;
+   panel.querySelectorAll('[data-refill-med]').forEach(btn=>btn.addEventListener('click',()=>{
+     const q=btn.dataset.refillMed||'';
+     localStorage.setItem('swasth_pendingMedicineSearch',q);
+     syncCloudState('swasth_pendingMedicineSearch');
+     document.querySelector('[data-tab="order"]')?.click();
+   }));
+ }
+ function renderMedicationMissedDoses() {
+   const panel = document.getElementById('medMissedDosePanel');
+   if (!panel) return;
+   const meds = getCurrentMedicationList();
+   if (!meds.length) { panel.style.display = 'none'; panel.innerHTML = ''; return; }
+
+   const status = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+   const now = new Date();
+   const nowMinutes = now.getHours() * 60 + now.getMinutes();
+   const missed = [];
+
+   meds.forEach((m, i) => {
+     const count = medicationSlotCount(m);
+     const times = suggestedMedicationTimes(m, count);
+     for (let unit = 0; unit < count; unit++) {
+       const id = medicationScheduleKey(i, unit);
+       const saved = status[id];
+       const takenToday = saved?.taken && saved?.date && new Date(saved.date).toDateString() === now.toDateString();
+       if (takenToday) continue;
+
+       const match = String(times[unit] || '').match(/^(\d{1,2}):(\d{2})$/);
+       if (!match) continue;
+       const scheduledMinutes = Number(match[1]) * 60 + Number(match[2]);
+       if (nowMinutes - scheduledMinutes >= 60) {
+         missed.push({ id, medicine: m.medicine, dose: m.dose || '', time: times[unit], critical: medicationIsCritical(m) });
+       }
+     }
+   });
+
+   if (!missed.length) { panel.style.display = 'none'; panel.innerHTML = ''; return; }
+
+   panel.style.display = 'block';
+   panel.innerHTML = `<div class="med-alert-title">Missed dose${missed.length === 1 ? '' : 's'}</div>` +
+     missed.map(x => `<div class="med-alert-item"><div><b>${escapeHtml(x.medicine)}</b>${x.dose ? ' · ' + escapeHtml(x.dose) : ''} — was due at ${formatMedicationTime(x.time)}${x.critical ? ' <span style="color:var(--danger,#b91c1c);font-weight:700;">(critical)</span>' : ''}</div><button type="button" class="med-action" id="${escapeHtml(x.id)}" data-mark-med="${escapeHtml(x.id)}" data-med-name="${escapeHtml(x.medicine)}">Mark Taken</button></div>`).join('');
+
+   panel.querySelectorAll('[data-mark-med]').forEach(btn =>
+     btn.addEventListener('click', () => window.markMedTaken(btn.dataset.markMed, btn.dataset.medName))
+   );
+ }
+ function renderMedicationInsights(){ renderMedicationAdherence(); renderMedicationRefills(); renderMedicationMissedDoses(); }
  window.markMedTaken = function(id, name) {
  const el = document.getElementById(id);
  if(!el) return;
  if(el.classList.contains('taken')) return;
- const nowStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+ const now = new Date();
+ const nowStr = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
  const meds = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
- meds[id] = { taken: true, time: nowStr, date: new Date().toISOString() };
+ const history = Array.isArray(meds.history) ? meds.history : [];
+ const current = getCurrentMedicationList();
+ const match = String(id).match(/^med_(\d+)_(\d+)$/);
+ const medIndex = match ? Number(match[1]) : -1;
+ const unitIndex = match ? Number(match[2]) : -1;
+ const med = medIndex >= 0 ? current[medIndex] : null;
+ const event = {
+   id, medicine: med?.medicine || name || 'Medication', dose: med?.dose || '',
+   unitIndex, taken: true, time: nowStr, date: now.toISOString()
+ };
+ history.push(event);
+ meds.history = history.slice(-500);
+ meds[id] = { taken: true, time: nowStr, date: now.toISOString() };
  localStorage.setItem('swasth_medStatus', JSON.stringify(meds));
  syncCloudState('swasth_medStatus');
  el.classList.add('taken');
  const btn = el.querySelector('.med-action');
  if (btn) btn.innerHTML = `Taken at ${escapeHtml(nowStr)}`;
- renderRecordMedicationActivity(); renderRecordTimeline();
+ renderRecordMedicationActivity(); renderRecordTimeline(); renderMedicationInsights(); renderCareJourney();
  showToast('', 'Medication Tracked', `${name} logged successfully.`);
  };
 
@@ -3147,19 +3573,33 @@ if (supportBtn && !supportBtn.dataset.bound) {
    'broccoli','cauliflower','artichoke','zucchini','corn','ear','head cabbage','cardoon',
    'potpie','pizza','cheeseburger','hamburger','hotdog','french loaf','bagel','pretzel',
    'burrito','carbonara','meat loaf','mashed potato','guacamole','consomme','red wine','espresso',
-   'cup','ice cream','ice lolly','chocolate sauce','chocolate syrup','trifle','cheesecake',
-   'custard apple','milk','coffee mug','plate','bowl','soup bowl','dining table'
+   'ice cream','ice lolly','chocolate sauce','chocolate syrup','trifle','cheesecake',
+   'custard apple','milk','cake','chocolate cake','bakery','confectionery','food'
  ]);
  const NON_FOOD_LABELS = new Set([
    'cellular telephone','laptop','desktop computer','computer keyboard','mouse','remote control',
    'television','monitor','camera','wallet','purse','backpack','handbag','book jacket','book',
    'envelope','letter opener','pencil box','ballpoint','sunglasses','watch','seat belt','car wheel',
-   'minivan','sports car','jeep','ambulance','bicycle-built-for-two','motor scooter','dog','cat',
-   'goldfish','bird','horse','person','face powder','lipstick','nail','shower cap','running shoe',
-   'jersey','tie','umbrella','guitar','violin','tennis ball','basketball','soccer ball','volleyball',
-   'hammer','screwdriver','power drill','chain saw','vacuum','washing machine','refrigerator',
-   'toilet seat','bathtub','lamp','table lamp','desk','chair','sofa','bed','traffic light','stop sign'
+   'minivan','sports car','jeep','ambulance','car','automobile','vehicle','pickup','pickup truck',
+   'sports utility vehicle','station wagon','convertible','limousine','taxi','bus','school bus','truck',
+   'tow truck','fire engine','motorcycle','motor scooter','bicycle','dog','cat','goldfish','bird','horse',
+   'person','face powder','lipstick','nail','shower cap','running shoe','jersey','tie','umbrella',
+   'guitar','violin','tennis ball','basketball','soccer ball','volleyball','hammer','screwdriver',
+   'power drill','chain saw','vacuum','washing machine','refrigerator','toilet seat','bathtub','lamp',
+   'table lamp','desk','chair','sofa','bed','traffic light','stop sign','parking meter','fire hydrant',
+   'keyboard','printer','printer device','headphones','microphone','clock','watch','door','window',
+   'bottle','water bottle','wine bottle','beer bottle','can opener','spatula','fork','knife','spoon'
  ]);
+ const FOOD_LABEL_PATTERNS = [
+   /\b(cake|bakery|confectionery|bread|pizza|burger|hamburger|sandwich|fruit|vegetable|salad|soup|rice|pasta|noodle|dessert)\b/i
+ ];
+ const NON_FOOD_LABEL_PATTERNS = [
+   /\b(car|automobile|vehicle|truck|bus|van|jeep|motorcycle|scooter|bicycle|wheel)\b/i,
+   /\b(phone|telephone|computer|laptop|keyboard|monitor|camera|television|remote)\b/i,
+   /\b(chair|sofa|couch|bed|desk|table|lamp|door|window|printer)\b/i,
+   /\b(shoe|sneaker|boot|umbrella|guitar|violin|ball|hammer|screwdriver|drill)\b/i,
+   /\b(dog|cat|horse|bird|person)\b/i
+ ];
 
  function setFoodGateStatus(message, type='neutral') {
    if(!foodGateStatus) return;
@@ -3180,14 +3620,25 @@ if (supportBtn && !supportBtn.dataset.bound) {
    let foodScore = 0;
    let nonFoodScore = 0;
    const evidence = [];
+   const nonFoodEvidence = [];
    predictions.forEach(p => {
      const label = String(p.className || '').toLowerCase();
      const confidence = Number(p.probability || 0);
      const words = label.split(',').map(x => x.trim());
-     if(words.some(w => FOOD_LABELS.has(w))) { foodScore = Math.max(foodScore, confidence); evidence.push({label:p.className, confidence}); }
-     if(words.some(w => NON_FOOD_LABELS.has(w))) nonFoodScore = Math.max(nonFoodScore, confidence);
+     const exactFood = words.some(w => FOOD_LABELS.has(w));
+     const exactNonFood = words.some(w => NON_FOOD_LABELS.has(w));
+     const patternFood = FOOD_LABEL_PATTERNS.some(re => re.test(label));
+     const patternNonFood = NON_FOOD_LABEL_PATTERNS.some(re => re.test(label));
+     if(exactFood || patternFood) {
+       foodScore = Math.max(foodScore, confidence);
+       evidence.push({label:p.className, confidence});
+     }
+     if(exactNonFood || patternNonFood) {
+       nonFoodScore = Math.max(nonFoodScore, confidence);
+       nonFoodEvidence.push({label:p.className, confidence});
+     }
    });
-   return {foodScore, nonFoodScore, evidence};
+   return {foodScore, nonFoodScore, evidence, nonFoodEvidence};
  }
 
  const VISION_FOOD_ALIASES = {
@@ -3322,14 +3773,37 @@ if (supportBtn && !supportBtn.dataset.bound) {
    };
  }
 
- function loadImageForGate(file) {
-   return new Promise((resolve, reject) => {
-     const url = URL.createObjectURL(file);
-     const img = new Image();
-     img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('The image could not be read.')); };
-     img.src = url;
+ async function loadImageForGate(file) {
+   if(!file || !file.size) throw new Error('The selected image file is empty or unavailable.');
+
+   // Use a data URL first. This is more reliable than immediately classifying an
+   // object URL in browsers that have not finished decoding a newly selected file.
+   const dataUrl = await new Promise((resolve, reject) => {
+     const reader = new FileReader();
+     reader.onload = () => resolve(reader.result);
+     reader.onerror = () => reject(new Error('The selected image file could not be loaded.'));
+     reader.readAsDataURL(file);
    });
+
+   const img = new Image();
+   img.decoding = 'async';
+   img.src = dataUrl;
+
+   await new Promise((resolve, reject) => {
+     img.onload = resolve;
+     img.onerror = () => reject(new Error('The image could not be decoded by the browser. Try JPG or PNG.'));
+   });
+
+   // Wait for the browser's decoder when supported, so MobileNet receives a fully
+   // decoded image rather than a just-loaded HTMLImageElement.
+   if(typeof img.decode === 'function') {
+     try { await img.decode(); } catch(_) { /* onload already confirmed the image */ }
+   }
+
+   if(!img.naturalWidth || !img.naturalHeight) {
+     throw new Error('The image has no readable dimensions. Try JPG or PNG.');
+   }
+   return img;
  }
 
  async function runFoodGate(file) {
@@ -3344,24 +3818,30 @@ if (supportBtn && !supportBtn.dataset.bound) {
      const topLabel = top ? top.className : 'unknown';
      const topConfidence = top ? top.probability : 0;
 
-     // Strong non-food evidence always blocks the nutrition workflow.
-     if(scored.nonFoodScore >= 0.70 && scored.nonFoodScore > scored.foodScore) {
-       setFoodGateStatus(`<b>This doesn't appear to be a food image.</b><br>Detected: ${escapeFoodText(topLabel)} (${Math.round(topConfidence*100)}%). Please upload a clear photo of food or use food search.`, 'error');
+     // Explicit non-food/object evidence blocks the nutrition workflow even when
+     // MobileNet is not highly confident. This prevents vehicles, electronics,
+     // furniture and animals from passing the permissive fallback below.
+     if(scored.nonFoodScore >= 0.18 && scored.nonFoodScore >= scored.foodScore) {
+       const objectLabel = scored.nonFoodEvidence[0]?.label || topLabel;
+       const objectConfidence = scored.nonFoodEvidence[0]?.confidence || topConfidence;
+       setFoodGateStatus(`<b>This doesn't appear to be a food image.</b><br>Detected object: ${escapeFoodText(objectLabel)} (${Math.round(objectConfidence*100)}%). Please upload a clear food photo or use food search.`, 'error');
        return {accepted:false};
      }
 
      // Strong food evidence passes automatically.
      if(scored.foodScore >= 0.40 && scored.foodScore > scored.nonFoodScore) {
        const evidenceText = scored.evidence.slice(0,2).map(x => `${escapeFoodText(x.label)} ${Math.round(x.confidence*100)}%`).join(', ');
-       const detectedFood = normaliseVisionFoodLabel(topLabel);
+       const detectedFood = normaliseVisionFoodLabel(scored.evidence[0]?.label || topLabel);
        setFoodGateStatus(`<b>Food image detected.</b> ${evidenceText ? `Visual matches: ${evidenceText}.` : ''}`, 'ok');
        return {accepted:true, predictions, detectedFood, confidence:topConfidence};
      }
 
      // MobileNet is an ImageNet classifier, so many real foods do not have a useful exact label.
-     // Allow plausible images through and let the nutrition search identify the exact food.
-     if(scored.nonFoodScore < 0.70 && topConfidence >= 0.12) {
-       setFoodGateStatus(`<b>Possible food image.</b><br>The visual model couldn't identify the exact food, but it does not strongly look like a non-food object. Enter the food name in the search above to continue.`, 'ok');
+     // Only allow the uncertain/manual-search path when the classifier is genuinely ambiguous
+     // and there is no meaningful non-food evidence. A low-confidence car/object prediction
+     // must not be treated as food.
+     if(scored.nonFoodScore < 0.18 && topConfidence >= 0.08) {
+       setFoodGateStatus(`<b>Food photo accepted for manual identification.</b><br>The browser model cannot reliably identify every food, so enter the food name below to get the nutrition record.`, 'ok');
        return {accepted:true, predictions, detectedFood:null, confidence:topConfidence, uncertain:true};
      }
 
@@ -3371,6 +3851,28 @@ if (supportBtn && !supportBtn.dataset.bound) {
      setFoodGateStatus(`<b>Food check unavailable.</b><br>${escapeFoodText(err.message || 'The image could not be classified.')} You can still use the manual food search above.`, 'error');
      return {accepted:false, failed:true};
    }
+ }
+
+ function showManualFoodIdentification() {
+   const existing = document.getElementById('manualFoodPhotoPrompt');
+   if(existing) existing.remove();
+   const wrap = document.createElement('div');
+   wrap.id = 'manualFoodPhotoPrompt';
+   wrap.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);';
+   wrap.innerHTML = `
+     <input id="manualFoodNameFromPhoto" type="text" placeholder="Enter food name, e.g. dragon fruit, cake, dal" style="flex:1 1 260px;min-width:180px;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font:inherit;">
+     <button type="button" id="manualFoodIdentifyBtn" class="n-btn solid">Use food name</button>`;
+   foodGateStatus?.parentElement?.appendChild(wrap);
+   const input = document.getElementById('manualFoodNameFromPhoto');
+   const btn = document.getElementById('manualFoodIdentifyBtn');
+   btn.onclick = () => {
+     const name = (input?.value || '').trim();
+     if(!name) { input?.focus(); return; }
+     closeFoodPortionModal();
+     showFoodPortionMenu(name, 0, null);
+     setFoodGateStatus(`<b>Food name received.</b> Choose the portion to look up nutrition data for <b>${escapeFoodText(name)}</b>.`, 'ok');
+   };
+   input?.focus();
  }
 
  if(foodInput) {
@@ -3395,7 +3897,8 @@ if (supportBtn && !supportBtn.dataset.bound) {
            if(result.detectedFood) {
              showFoodPortionMenu(result.detectedFood, result.confidence || 0, ev.target.result);
            } else {
-             setFoodGateStatus('<b>Food detected.</b><br>Please use the food search above to identify the exact food before logging it.', 'ok');
+             setFoodGateStatus('<b>Food photo accepted.</b><br>Enter the food name below so SwasthID can look up the correct nutrition record.', 'ok');
+             showManualFoodIdentification();
            }
          };
          reader.readAsDataURL(file);
@@ -3415,6 +3918,7 @@ if (supportBtn && !supportBtn.dataset.bound) {
  const rxFileInput = document.getElementById('rxFileInput');
  const scanResults = document.getElementById('scanResults');
  let currentPrescription = null;
+ let rxOcrWorkerPromise = null;
 
  function getSavedPrescriptions() {
  try { return JSON.parse(localStorage.getItem('swasth_prescriptions')) || []; }
@@ -3437,47 +3941,129 @@ if (supportBtn && !supportBtn.dataset.bound) {
  function parsePrescription(text) {
  const raw = cleanOcrText(text);
  const lines = raw.split('\n').map(x => x.trim()).filter(Boolean);
- const commonMedicineNames = [
- 'Paracetamol','Amoxicillin','Thyroxine','Levothyroxine','Vitamin D3','Vitamin D',
- 'Metformin','Aspirin','Ibuprofen','Omeprazole','Azithromycin','Pantoprazole',
- 'Losartan','Atorvastatin','Amlodipine','Cetirizine','Montelukast','Doxycycline',
- 'Prednisolone','Clopidogrel','Rosuvastatin','Glimepiride','Insulin'
- ];
 
- const found = [];
- for (const name of commonMedicineNames) {
- const re = new RegExp('\\b' + name.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&') + '\\b', 'i');
- if (!re.test(raw)) continue;
- const line = lines.find(l => re.test(l)) || name;
- const dose = (line.match(/\b\d+(?:\.\d+)?\s*(?:mg|mcg|µg|ug|g|ml|mL|iu|IU)\b/i) || [])[0] || '';
- let frequency = '';
- if (/\bod\b|once daily|daily|every day/i.test(line)) frequency = 'Once daily';
- else if (/\bbd\b|twice daily|2 times/i.test(line)) frequency = 'Twice daily';
- else if (/\btds\b|thrice daily|3 times/i.test(line)) frequency = 'Three times daily';
- else if (/\bqhs\b|at bedtime|bedtime/i.test(line)) frequency = 'At bedtime';
- else if (/weekly|once a week/i.test(line)) frequency = 'Once weekly';
- else if (/\bprn\b|as needed/i.test(line)) frequency = 'As needed';
- else frequency = 'Review required';
- let instructions = '';
- if (/empty stomach|before breakfast|before food/i.test(line)) instructions = 'Before food';
- else if (/after breakfast|after food|with food/i.test(line)) instructions = 'After/with food';
- else if (/bedtime|at night/i.test(line)) instructions = 'At bedtime';
- found.push({ medicine: name, dose, frequency, instructions, sourceLine: line });
+ const normalizeMedicineName = value => String(value || '')
+   .replace(/^[\-•*]+\s*/, '')
+   .replace(/^(?:rx|medications?|medicines?)\s*[:\-]?\s*/i, '')
+   .replace(/^(?:tab(?:let)?s?|cap(?:sule)?s?|caps?|syr(?:up)?|inj(?:ection)?|injection|cream|ointment|drops?)\.?\s+/i, '')
+   .replace(/\s+\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%|mmol)\b.*$/i, '')
+   .replace(/\s+(?:tablets?|tabs?|capsules?|caps?|syrup|injection|inj\.?|cream|ointment|drops?)\b.*$/i, '')
+   .replace(/\s{2,}/g, ' ')
+   .replace(/\s*[-:]\s*$/, '')
+   .trim();
+
+ const doseFrom = value => (String(value || '').match(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%|mmol)\b/i) || [])[0] || '';
+
+ const frequencyFrom = value => {
+   const line = String(value || '').toLowerCase().replace(/[–—]/g, '-');
+   const every = line.match(/\bevery\s+(\d+(?:\.5)?)\s*(hours?|hrs?|h|minutes?|mins?)\b/i);
+   if (every) return `Every ${every[1]} ${/^h/i.test(every[2]) ? 'hours' : every[2].toLowerCase().replace(/s$/, '') + 's'}`;
+   const q = line.match(/\bq(\d+(?:\.5)?)(?:h|hr|hrs)\b/i);
+   if (q) return `Every ${q[1]} hours`;
+   if (/\b(?:qid|four times daily|4\s*(?:times|x)\s*(?:a\s*)?day|4-?times?\s*daily)\b/i.test(line)) return 'Four times daily';
+   if (/\b(?:tds|tid|thrice daily|three times daily|3\s*(?:times|x)\s*(?:a\s*)?day|3-?times?\s*daily)\b/i.test(line)) return 'Three times daily';
+   if (/\b(?:bd|bid|twice daily|2\s*(?:times|x)\s*(?:a\s*)?day|2-?times?\s*daily)\b/i.test(line)) return 'Twice daily';
+   if (/\b(?:od|qd|once daily|daily|every day|1\s*(?:time|x)\s*(?:a\s*)?day|1-?time\s*daily)\b/i.test(line)) return 'Once daily';
+   if (/\b(?:qhs|hs|at bedtime|bedtime|before bed|at night)\b/i.test(line)) return 'At bedtime';
+   if (/\b(?:weekly|once a week|1\s*(?:time|x)\s*(?:a\s*)?week)\b/i.test(line)) return 'Once weekly';
+   if (/\b(?:monthly|once a month)\b/i.test(line)) return 'Once monthly';
+   if (/\b(?:prn|sos|as needed|when needed)\b/i.test(line)) return 'As needed';
+   return '';
+ };
+
+ const instructionsFrom = value => {
+   const line = String(value || '').replace(/\s+/g, ' ').trim();
+   const action = line.match(/\b(?:take|give|apply|use|inject|inhale|swallow|dissolve|drink)\b[^.]*?(?:\.|$)/i);
+   if (action) return action[0].trim().replace(/[.;]+$/, '');
+   if (/\b(?:on an? empty stomach|empty stomach|before breakfast|before food|before meals?|before meal)\b/i.test(line)) return 'Before food';
+   if (/\b(?:after breakfast|after food|after meals?|after meal|with food|with meals?|with meal)\b/i.test(line)) return 'After/with food';
+   if (/\b(?:at bedtime|bedtime|before bed|at night)\b/i.test(line)) return 'At bedtime';
+   if (/\b(?:as needed|when needed|for pain|for fever)\b/i.test(line)) {
+     const matches = line.match(/\b(?:as needed|when needed|for pain|for fever)\b/ig);
+     return matches ? matches.join('; ') : '';
+   }
+   return '';
+ };
+
+ const durationFrom = value => {
+   const m = String(value || '').match(/\b(?:for|x)\s*(\d+)\s*(days?|weeks?|months?)\b/i);
+   return m ? `for ${m[1]} ${m[2]}` : '';
+ };
+
+ const isInstructionLine = line => /^(?:take|give|apply|use|inject|inhale|swallow|dissolve|drink|instill|place|insert|chew|crush|dilute|mix|administer)\b/i.test(String(line || '').trim());
+ const isAdministrativeLine = line => /^(?:rx|prescription|medications?|medicines?|refills?|quantity|physician|doctor|patient|date|address|phone|license|signature|allerg(?:y|ies)|diagnosis|dob|mrn)\b/i.test(String(line || '').trim());
+ const isLikelyMedicineStart = line => {
+   const l = String(line || '').trim();
+   if (!l || isInstructionLine(l) || isAdministrativeLine(l)) return false;
+   if (/^(?:\d+[.)]|[-•*])\s*$/.test(l)) return false;
+   return /^(?:[-•*]\s*)?(?:tab(?:let)?s?|cap(?:sule)?s?|syr(?:up)?|inj(?:ection)?|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\.?\s+/i.test(l)
+     || /\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%)\b/i.test(l)
+     || /\b(?:tablet|tablets|capsule|capsules|syrup|injection|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\b/i.test(l);
+ };
+
+ const medicineBlocks = [];
+ for (let i = 0; i < lines.length; i++) {
+   if (!isLikelyMedicineStart(lines[i])) continue;
+   let block = lines[i];
+   let j = i + 1;
+   while (j < lines.length && j < i + 6 && !isLikelyMedicineStart(lines[j]) && !isAdministrativeLine(lines[j])) {
+     const candidate = lines[j];
+     if (isInstructionLine(candidate)
+       || /\b(?:times daily|once daily|twice daily|three times daily|four times daily|every\s+\d+|\b(?:od|qd|bd|bid|tid|tds|qid|q\d+h|prn|sos)\b|for\s+\d+\s+(?:days?|weeks?|months?)|before food|after food|with food|at bedtime|as needed|when needed)\b/i.test(candidate)) {
+       block += ' ' + candidate;
+       j++;
+       continue;
+     }
+     break;
+   }
+   medicineBlocks.push({ text: block, index: i });
+   i = j - 1;
  }
 
- // If no known medicine was recognized, preserve the OCR line(s) for manual review.
- if (!found.length) {
- const candidates = lines.filter(l => /\d+\s*(mg|mcg|µg|ml|iu)|\bod\b|\bbd\b|\btds\b|tablet|capsule/i.test(l));
- (candidates.length ? candidates.slice(0, 6) : lines.slice(0, 3)).forEach(line => {
- found.push({ medicine: line.slice(0, 80), dose: '', frequency: 'Review required', instructions: '', sourceLine: line });
+ const found = medicineBlocks.map(({ text }) => {
+   const dose = doseFrom(text);
+   const frequency = frequencyFrom(text);
+   const duration = durationFrom(text);
+   const instructions = instructionsFrom(text);
+   let medicine = normalizeMedicineName(text);
+   medicine = medicine.replace(/\s+(?:take|give|apply|use|swallow|drink|inject|inhale)\b.*$/i, '').trim();
+   medicine = medicine.replace(/\s*[-:]\s*$/, '').trim();
+   if (!medicine) medicine = 'Medicine — verify manually';
+   let finalInstructions = instructions || '';
+   if (duration && !new RegExp(duration.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(finalInstructions)) {
+     finalInstructions = [finalInstructions, duration].filter(Boolean).join('; ');
+   }
+   return {
+     medicine: medicine.slice(0, 100),
+     dose,
+     frequency: frequency || 'Needs review',
+     instructions: finalInstructions,
+     sourceLine: text
+   };
  });
+
+ if (!found.length) {
+   lines.filter(l => !isInstructionLine(l) && /\d+\s*(?:mg|mcg|µg|ug|g|ml|iu|units?)\b|\b(?:tablet|capsule|syrup|injection)\b/i.test(l))
+     .slice(0, 8)
+     .forEach(line => found.push({ medicine: normalizeMedicineName(line).slice(0, 100) || line.slice(0, 100), dose: doseFrom(line), frequency: frequencyFrom(line) || 'Needs review', instructions: instructionsFrom(line), sourceLine: line }));
  }
 
- const doctorLine = lines.find(l => /^(dr\.?|doctor\b)/i.test(l)) || '';
- const doctor = doctorLine || 'Not detected — verify manually';
+ const doctorPatterns = [
+   /^(?:physician|doctor|prescribed\s+by|prescriber)\s*[:\-]?\s*(.+)$/i,
+   /\b((?:Dr\.?|Doctor)\s+[A-Z][^\n]{1,80})/i
+ ];
+ let doctor = '';
+ for (const line of lines) {
+   for (const pattern of doctorPatterns) {
+     const match = line.match(pattern);
+     if (match) { doctor = (match[1] || match[0]).trim(); break; }
+   }
+   if (doctor) break;
+ }
+ if (!doctor) doctor = 'Not detected — verify manually';
+
  return { doctor, medicines: found, rawText: raw };
  }
-
  function renderEditablePrescription(parsed) {
  const rawOcrText = document.getElementById('rawOcrText');
  if (rawOcrText) rawOcrText.innerHTML = `<div style="font-family:monospace;font-size:12px;white-space:pre-wrap;line-height:1.4;color:var(--ink);">${escapeHtml(parsed.rawText.slice(0, 1800))}</div>`;
@@ -3491,7 +4077,7 @@ if (supportBtn && !supportBtn.dataset.bound) {
  <input class="rx-med-field" data-field="medicine" value="${escapeHtml(m.medicine)}" aria-label="Medicine ${i+1}" style="font-weight:700;width:100%;border:1px solid var(--line);border-radius:7px;padding:7px;margin-bottom:5px;">
  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
  <input class="rx-med-field" data-field="dose" value="${escapeHtml(m.dose)}" placeholder="Dose" aria-label="Dose" style="width:100%;border:1px solid var(--line);border-radius:7px;padding:6px;">
- <input class="rx-med-field" data-field="frequency" value="${escapeHtml(m.frequency)}" placeholder="Frequency" aria-label="Frequency" style="width:100%;border:1px solid var(--line);border-radius:7px;padding:6px;">
+ <input class="rx-med-field" data-field="frequency" value="${escapeHtml(m.frequency)}" placeholder="Frequency (review if uncertain)" aria-label="Frequency" style="width:100%;border:1px solid var(--line);border-radius:7px;padding:6px;">
  </div>
  <input class="rx-med-field" data-field="instructions" value="${escapeHtml(m.instructions)}" placeholder="Instructions" aria-label="Instructions" style="width:100%;border:1px solid var(--line);border-radius:7px;padding:6px;margin-top:6px;">
  <button type="button" class="n-btn" data-remove-med="${i}" style="margin-top:6px;padding:4px 8px;font-size:11px;">Remove</button>
@@ -3505,6 +4091,8 @@ if (supportBtn && !supportBtn.dataset.bound) {
 
  currentPrescription = { ...parsed, scannedAt: new Date().toISOString() };
  document.getElementById('ocrConfBadge').textContent = 'Review before saving';
+ const reviewNote = document.getElementById('rxReviewNote');
+ if (reviewNote) reviewNote.textContent = 'Fields marked \"Needs review\" were not confidently detected. You can edit any extracted field before saving.';
  scanResults.classList.add('show');
  scanResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
  }
@@ -3521,31 +4109,148 @@ if (supportBtn && !supportBtn.dataset.bound) {
  };
  }
 
+ function rxProgress(status, progress) {
+ const pct = Math.round((Number(progress) || 0) * 100);
+ if (!chooseRxBtn) return;
+ if (status === 'recognizing text') chooseRxBtn.textContent = `Extracting via OCR… ${pct}%`;
+ else if (status === 'loading language traineddata') chooseRxBtn.textContent = `Loading OCR language… ${pct}%`;
+ else if (status === 'initializing api') chooseRxBtn.textContent = `Starting OCR… ${pct}%`;
+ }
+
+ async function getRxOcrWorker() {
+ if (!window.Tesseract) throw new Error('Tesseract OCR library did not load. Check the internet connection and reload the page.');
+ if (!rxOcrWorkerPromise) {
+   rxOcrWorkerPromise = (async () => {
+     const worker = await Promise.race([
+       Tesseract.createWorker('eng', 1, {
+         workerBlobURL: true,
+         logger: m => rxProgress(m.status, m.progress),
+         errorHandler: err => console.error('Tesseract worker error:', err)
+       }),
+       new Promise((_, reject) => setTimeout(() => reject(new Error('OCR engine took too long to initialize. Check that the browser can access the Tesseract CDN, then hard-refresh the page.')), 45000))
+     ]);
+     await worker.setParameters({
+       tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+       preserve_interword_spaces: '1',
+       user_defined_dpi: '300'
+     });
+     return worker;
+   })().catch(err => {
+     rxOcrWorkerPromise = null;
+     console.error('Tesseract initialization failed:', err);
+     throw err;
+   });
+ }
+ return rxOcrWorkerPromise;
+ }
+
+ function loadImageElementFromDataUrl(dataUrl) {
+ return new Promise((resolve, reject) => {
+   const img = new Image();
+   img.onload = () => resolve(img);
+   img.onerror = () => reject(new Error('The prescription image could not be decoded. Try a JPG or PNG image.'));
+   img.src = dataUrl;
+ });
+ }
+
+ async function preprocessRxImage(file) {
+ if (!file || !file.size) throw new Error('The selected prescription file is empty.');
+ if (!file.type.startsWith('image/')) throw new Error('This file is not an image. PDF files are converted to images automatically; other file types are not supported.');
+ const dataUrl = await new Promise((resolve, reject) => {
+   const reader = new FileReader();
+   reader.onload = () => resolve(reader.result);
+   reader.onerror = () => reject(new Error('The prescription image could not be loaded.'));
+   reader.readAsDataURL(file);
+ });
+ const img = await loadImageElementFromDataUrl(dataUrl);
+ const maxDimension = 3000;
+ const scale = Math.min(3, maxDimension / Math.max(img.naturalWidth, img.naturalHeight));
+ const width = Math.max(1, Math.round(img.naturalWidth * scale));
+ const height = Math.max(1, Math.round(img.naturalHeight * scale));
+ const canvas = document.createElement('canvas');
+ canvas.width = width;
+ canvas.height = height;
+ const ctx = canvas.getContext('2d', { willReadFrequently: true });
+ if (!ctx) throw new Error('The browser could not prepare the prescription image.');
+ ctx.drawImage(img, 0, 0, width, height);
+ const image = ctx.getImageData(0, 0, width, height);
+ const d = image.data;
+ for (let i = 0; i < d.length; i += 4) {
+   const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+   const boosted = Math.max(0, Math.min(255, (gray - 128) * 1.35 + 128));
+   d[i] = d[i + 1] = d[i + 2] = boosted;
+ }
+ ctx.putImageData(image, 0, 0);
+ return canvas.toDataURL('image/png');
+ }
+
+ async function pdfPrescriptionPages(file) {
+ if (!window.pdfjsLib) throw new Error('PDF support did not load. Please use a JPG or PNG prescription image.');
+ const buffer = await file.arrayBuffer();
+ const loadingTask = window.pdfjsLib.getDocument({ data: buffer });
+ const pdf = await loadingTask.promise;
+ const pages = [];
+ const maxPages = Math.min(pdf.numPages, 4);
+ for (let pageNo = 1; pageNo <= maxPages; pageNo++) {
+   const page = await pdf.getPage(pageNo);
+   const base = page.getViewport({ scale: 1 });
+   const scale = Math.min(2.5, 2200 / Math.max(base.width, base.height));
+   const viewport = page.getViewport({ scale: Math.max(1.5, scale) });
+   const canvas = document.createElement('canvas');
+   canvas.width = Math.ceil(viewport.width);
+   canvas.height = Math.ceil(viewport.height);
+   const ctx = canvas.getContext('2d', { willReadFrequently: true });
+   await page.render({ canvasContext: ctx, viewport }).promise;
+   pages.push(canvas.toDataURL('image/png'));
+ }
+ return pages;
+ }
+
+ async function ocrDataUrls(dataUrls) {
+ const worker = await getRxOcrWorker();
+ const texts = [];
+ for (let i = 0; i < dataUrls.length; i++) {
+   if (chooseRxBtn) chooseRxBtn.textContent = dataUrls.length > 1 ? `Extracting page ${i + 1}/${dataUrls.length}…` : 'Extracting via OCR…';
+   const result = await worker.recognize(dataUrls[i]);
+   texts.push(result?.data?.text || '');
+ }
+ return cleanOcrText(texts.join('\n\n'));
+ }
+
+ async function runPrescriptionOCR(file) {
+ const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+ if (isPdf) {
+   const pages = await pdfPrescriptionPages(file);
+   if (!pages.length) throw new Error('The PDF contains no readable pages.');
+   return ocrDataUrls(pages);
+ }
+ const image = await preprocessRxImage(file);
+ return ocrDataUrls([image]);
+ }
+
  chooseRxBtn.addEventListener('click', () => rxFileInput.click());
 
  rxFileInput.addEventListener('change', async (e) => {
  if (!e.target.files.length) return;
  const file = e.target.files[0];
- chooseRxBtn.textContent = '⏳ Extracting via OCR...';
+ chooseRxBtn.textContent = 'Preparing prescription…';
  chooseRxBtn.disabled = true;
  try {
- const result = await Tesseract.recognize(file, 'eng', { logger: m => { if(m.status === 'recognizing text') chooseRxBtn.textContent = `Extracting via OCR… ${Math.round((m.progress || 0) * 100)}%`; }, config: { tessedit_pageseg_mode: '6' } });
- const parsed = parsePrescription(result.data.text);
- let finalParsed = parsed;
- if(parsed.medicines.length === 0 || parsed.medicines.every(m => m.frequency === 'Review required')) {
-   const retry = await Tesseract.recognize(file, 'eng', { logger: m => { if(m.status === 'recognizing text') chooseRxBtn.textContent = `Retrying OCR… ${Math.round((m.progress || 0) * 100)}%`; }, config: { tessedit_pageseg_mode: '11' } });
-   const retryParsed = parsePrescription(retry.data.text);
-   if(retryParsed.rawText.length > finalParsed.rawText.length || retryParsed.medicines.length > finalParsed.medicines.length) finalParsed = retryParsed;
- }
- renderEditablePrescription(finalParsed);
- showToast('', 'OCR Complete', `${finalParsed.medicines.length} medication item(s) extracted. Please verify every field before saving.`);
+   const text = await runPrescriptionOCR(file);
+   if (!text || text.length < 3) {
+     throw new Error('OCR returned no readable text. Use a sharp, well-lit prescription image with the writing facing the camera.');
+   }
+   const parsed = parsePrescription(text);
+   renderEditablePrescription(parsed);
+   showToast('', 'OCR Complete', `${parsed.medicines.length} medication item(s) extracted. Please verify every field before saving.`);
  } catch (err) {
- console.error(err);
- showToast('', 'OCR Failed', 'Could not read this file. Try a clearer prescription image.');
+   console.error('Prescription OCR failed:', err);
+   showToast('', 'OCR Failed', err?.message || 'Could not read this prescription.');
+   if (document.getElementById('ocrConfBadge')) document.getElementById('ocrConfBadge').textContent = 'OCR failed — try another image';
  } finally {
- chooseRxBtn.textContent = ' Choose Prescription';
- chooseRxBtn.disabled = false;
- rxFileInput.value = '';
+   chooseRxBtn.textContent = ' Choose Prescription';
+   chooseRxBtn.disabled = false;
+   rxFileInput.value = '';
  }
  });
 
@@ -3571,7 +4276,7 @@ if (supportBtn && !supportBtn.dataset.bound) {
  };
  saved.unshift(record);
  savePrescriptions(saved);
- renderSavedPrescriptions(); renderTodayMedications(); renderRecordTimeline();
+ renderSavedPrescriptions(); renderTodayMedications(); renderRecordTimeline(); renderCareJourney();
  this.textContent = ' Added to Health Records';
  this.disabled = true;
  showToast('', 'Prescription Saved', `${record.medicines.length} medication(s) added to your records.`);
@@ -3684,7 +4389,94 @@ function setText(id, value, fallback = 'Not provided') {
   const el = document.getElementById(id);
   if (el) el.textContent = value === undefined || value === null || String(value).trim() === '' ? fallback : String(value);
 }
+function careJourneyKey() {
+  const email = String(firebaseUser?.email || patientData.email || '').trim().toLowerCase();
+  return email ? `swasth_care_journey_${encodeURIComponent(email)}` : '';
+}
+function getCareJourneyPrefs() {
+  const key = careJourneyKey();
+  if (!key) return {};
+  return safeJsonParse(localStorage.getItem(key) || '{}', {}) || {};
+}
+function saveCareJourneyPrefs(prefs) {
+  const key = careJourneyKey();
+  if (!key) return;
+  try { localStorage.setItem(key, JSON.stringify(prefs || {})); } catch (_) {}
+}
+function isRiskScreeningCurrent(riskResult, riskInputs) {
+  if (!riskResult || !riskInputs) return false;
+  const current = clinicalRiskPayload();
+  const keys = ['age','bmi','sex','sbp','totalCholesterol','hdlCholesterol','egfr','diabetes','currentSmoker','bpTreatment','statin'];
+  return keys.every(key => String(current[key] ?? '') === String(riskInputs[key] ?? ''));
+}
+function getCareJourneyState() {
+  const profileDone = isProfileActuallyComplete();
+  const riskInputs = safeJsonParse(localStorage.getItem('swasth_riskInputs') || 'null', null);
+  const riskResult = safeJsonParse(localStorage.getItem('swasth_clinicalRiskResult') || 'null', null);
+  const prescriptions = getSavedPrescriptions();
+  const meds = getCurrentMedicationList();
+  const contact = patientData.emergencyContact || {};
+  const prefs = getCareJourneyPrefs();
+  const medicationRelevant = meds.length > 0 || prescriptions.length > 0;
+  const medicationScheduleReady = meds.length > 0 && meds.every(m => {
+    const count = medicationSlotCount(m);
+    const times = Array.isArray(m.times) ? m.times.filter(Boolean) : [];
+    return times.length >= count;
+  });
+  const riskCurrent = isRiskScreeningCurrent(riskResult, riskInputs);
+  const emergencyReady = !!(contact.name && contact.phone);
+
+  const steps = [
+    {
+      key:'profile', title:'Build profile',
+      state:profileDone ? 'Personal profile is saved' : 'Add your core health details',
+      done:profileDone, tab:'profile', action:profileDone ? 'Review profile' : 'Complete profile'
+    },
+    {
+      key:'risk', title:'Screen risk',
+      state:riskCurrent ? 'Current reference screening' : (riskResult ? 'Screening is out of date' : 'Run an informational screening'),
+      done:riskCurrent, tab:'predict', action:riskCurrent ? 'Review screening' : 'Update screening'
+    },
+    {
+      key:'prescription', title:'Capture prescription',
+      state:prescriptions.length ? `${prescriptions.length} confirmed prescription${prescriptions.length === 1 ? '' : 's'}` : 'Scan and verify medicines',
+      done:prescriptions.length > 0, tab:'scan', action:prescriptions.length ? 'Review prescription' : 'Scan prescription',
+      conditional: true, relevant: medicationRelevant || !!prefs.prescriptionRelevant
+    },
+    {
+      key:'medication', title:'Manage medication',
+      state:medicationScheduleReady ? `${meds.length} medicine${meds.length === 1 ? '' : 's'} with dose times set` : meds.length ? 'Dose times still need review' : 'Medication tracking is not applicable',
+      done:medicationScheduleReady, tab:'home', action:medicationScheduleReady ? 'View today' : 'Set dose times',
+      conditional: true, relevant: medicationRelevant && !prefs.medicationNotApplicable
+    },
+    {
+      key:'emergency', title:'Secure emergency info',
+      state:emergencyReady ? 'Emergency contact is ready' : 'Add an emergency contact',
+      done:emergencyReady, tab:'emergency', action:emergencyReady ? 'Open Emergency' : 'Set emergency contact'
+    }
+  ].filter(step => !step.conditional || step.relevant);
+
+  return { steps };
+}
+function renderCareJourney() {
+  const wrap=document.getElementById('careJourney'); const nextEl=document.getElementById('careJourneyNext'); const statusEl=document.getElementById('careJourneyStatus');
+  if(!wrap) return;
+  const journey=getCareJourneyState();
+  if (!journey.steps.length) { wrap.innerHTML=''; return; }
+  const nextIndex=journey.steps.findIndex(step=>!step.done); const currentIndex=nextIndex>=0?nextIndex:journey.steps.length-1; const completed=journey.steps.filter(step=>step.done).length;
+  wrap.innerHTML=journey.steps.map((step,index)=>`<div class="care-step ${step.done?'done':''} ${index===currentIndex?'is-current':''}" data-care-tab="${escapeHtml(step.tab)}" data-care-key="${escapeHtml(step.key)}" role="button" tabindex="0"><div class="care-step-number">Step ${index+1}${step.done?' · Complete':''}</div><div class="care-step-title">${escapeHtml(step.title)}</div><div class="care-step-state">${escapeHtml(step.state)}</div><span class="care-step-action">${escapeHtml(step.action)} →</span>${step.key==='medication'&&!step.done?'<button type="button" class="care-step-skip" data-care-skip="medication">Not applicable</button>':''}</div>`).join('');
+  if(statusEl) statusEl.textContent=completed===journey.steps.length?'Care journey complete':`${completed} of ${journey.steps.length} relevant steps ready`;
+  if(nextEl){
+    if(nextIndex>=0){const next=journey.steps[nextIndex]; nextEl.innerHTML=`<b>Next:</b> ${escapeHtml(next.action)} to ${escapeHtml(next.title.toLowerCase())}.` + (next.key==='medication' ? ' If you do not take medication, you can mark this as not applicable.' : '');}
+    else nextEl.innerHTML='<b>Journey ready:</b> Your relevant SwasthID workflow is up to date.';
+  }
+}
+function openCareJourneyStep(tab){ const btn=document.querySelector(`.tab-btn[data-tab="${tab}"]`); if(btn) btn.click(); if(tab==='home') document.getElementById('todayMedList')?.scrollIntoView({behavior:'smooth',block:'center'}); }
+document.addEventListener('click',e=>{ const skip=e.target.closest('[data-care-skip]'); if(skip){ e.preventDefault(); e.stopPropagation(); const prefs=getCareJourneyPrefs(); prefs.medicationNotApplicable=true; saveCareJourneyPrefs(prefs); renderCareJourney(); return; } const step=e.target.closest('[data-care-tab]'); if(step) openCareJourneyStep(step.dataset.careTab); });
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return; if(e.target.closest('[data-care-skip]')) return; const step=e.target.closest('[data-care-tab]'); if(!step)return; e.preventDefault(); openCareJourneyStep(step.dataset.careTab);});
+
 function renderPersonalizedUI() {
+  renderCareJourney();
   const email = patientData.email || firebaseUser?.email || localStorage.getItem('swasth_abhaId') || '';
   const name = patientData.name || 'there';
   setText('topHealthId', email, 'Signed in');
@@ -3795,6 +4587,7 @@ async function calculateClinicalRisk() {
    const res=await fetch(base+'/prevent',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)});
    const body=await res.json();
    if(!res.ok) throw new Error(body.error || 'Risk service error');
+   body._swasthInputSnapshot = data; body._swasthCalculatedAt = new Date().toISOString();
    localStorage.setItem('swasth_clinicalRiskResult',JSON.stringify(body));
    if(typeof syncCloudState==='function') syncCloudState('swasth_clinicalRiskResult');
    if(result){ result.style.display='block'; result.innerHTML=`<div class="summary-label blue">REFERENCE CARDIOVASCULAR RISK</div><p style="margin:8px 0 4px;"><b>10-year total CVD:</b> ${Number(body.tenYearCvd).toFixed(1)}% &nbsp; <b>10-year ASCVD:</b> ${Number(body.tenYearAscvd).toFixed(1)}% &nbsp; <b>10-year HF:</b> ${Number(body.tenYearHf).toFixed(1)}%</p><p style="margin:4px 0;color:var(--muted);font-size:12px;">${escapeHtml(body.note || 'Reference estimate only. Review with a qualified clinician.')}</p>`; }
@@ -3829,9 +4622,12 @@ function isProfileActuallyComplete() {
   return !!name && name !== 'SwasthID User' && !looksLikeDemo && patientData.profileCompleted === true;
 }
 
-function openProfileModal(options = {}) {
+window.openProfileModal = function openProfileModal(options = {}) {
+  try {
   const force = options === true || options.force === true;
-  if (!force && isProfileSkippedForCurrentAccount() && !profileOnboardingRequired) return;
+  // An incomplete profile must always be offered on login. Do not let an old
+  // per-account skip flag suppress the onboarding form indefinitely. The user can
+  // close it for now, and it will be offered again on the next login.
   const modal = document.getElementById('profileModal'); if (!modal) return;
   const fullName = patientData.name || '';
   const nameParts = {
@@ -3851,9 +4647,15 @@ function openProfileModal(options = {}) {
   const firstNameEl=document.getElementById('profileFirstNameInput'); if(firstNameEl) firstNameEl.value=nameParts.first;
   const middleNameEl=document.getElementById('profileMiddleNameInput'); if(middleNameEl) middleNameEl.value=nameParts.middle;
   const lastNameEl=document.getElementById('profileLastNameInput'); if(lastNameEl) lastNameEl.value=nameParts.last;
-  renderMedicineInputRows(patientData.medications || []);
-  renderAllergyOptions(patientData.allergies);
-  renderNormalAllergyOptions(patientData.normalAllergies);
+  // Render each dynamic profile section independently so one bad medication row
+  // can never prevent the allergy checkboxes or the rest of the editor from loading.
+  try { renderAllergyOptions(patientData.allergies || []); } catch (err) { console.error('Drug allergy UI error:', err); }
+  try { renderNormalAllergyOptions(patientData.normalAllergies || []); } catch (err) { console.error('Other allergy UI error:', err); }
+  try { renderMedicineInputRows(patientData.medications || []); } catch (err) {
+    console.error('Medicine editor error:', err);
+    const medicineWrap = document.getElementById('medicineInputRows');
+    if (medicineWrap) medicineWrap.innerHTML = '<div class="medicine-input-row" data-index="0"><input type="text" class="medicine-name-input" placeholder="Medicine name"><input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 2 tablets)"><input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Twice daily)"><input type="text" class="medicine-pack-input" placeholder="Pack size (optional, e.g. 30 tablets)"><button type="button" class="medicine-remove-btn" data-remove-medicine="0">×</button></div>';
+  }
   const title = document.getElementById('profileModalTitle');
   const subtitle = document.getElementById('profileModalSubtitle');
   const cancel = document.getElementById('cancelProfileBtn');
@@ -3867,28 +4669,34 @@ function openProfileModal(options = {}) {
     if (cancel) cancel.textContent = 'Cancel';
   }
   modal.classList.add('show');
-  setTimeout(() => document.getElementById('profileNameInput')?.focus(), 50);
+  modal.style.display = 'flex';
+  document.body.classList.add('profile-modal-open');
+  setTimeout(() => document.getElementById('profileFirstNameInput')?.focus(), 50);
+  } catch (err) {
+    console.error('SwasthID profile editor failed to open:', err);
+    const modal = document.getElementById('profileModal');
+    if (modal) {
+      modal.classList.add('show');
+      modal.style.display = 'flex';
+      document.body.classList.add('profile-modal-open');
+    }
+  }
 }
 async function closeProfileModal() {
   const modal = document.getElementById('profileModal');
   if (!modal) return;
   const incomplete = !isProfileActuallyComplete();
   if (incomplete) {
-    // The onboarding Cancel button is intentionally a real "Skip for now" action.
-    // Persist the choice per Firebase account so future logins do not reopen it.
-    setProfileSkippedForCurrentAccount(true);
-    profileOnboardingRequired = false;
-    if (cloudSyncReady && firebaseUser && db) {
-      try {
-        await cloudDoc().set({
-          profile: { onboardingSkipped: true },
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-      } catch (error) { console.warn('Could not persist onboarding skip to Firestore:', error); }
-    }
+    // Closing an incomplete onboarding form only dismisses it for this session.
+    // Never persist a skip flag that can prevent future account logins from
+    // offering personalization again.
+    profileOnboardingRequired = true;
   }
   modal.classList.remove('show');
+  modal.style.display = 'none';
+  document.body.classList.remove('profile-modal-open');
 }
+window.closeProfileModal = closeProfileModal;
 function parseProfileConditions(text) { return String(text||'').split('\n').map(x=>x.trim()).filter(Boolean).map(name=>({name,status:'Ongoing'})); }
 function parseProfileMeds(text) { return String(text||'').split('\n').map(x=>x.trim()).filter(Boolean).map(line=>{ const p=line.split('|').map(x=>x.trim()); return {name:p[0],dose:p[1]||'',schedule:p[2]||'Review schedule',reason:''}; }); }
 function normalizeAllergies(value) {
@@ -3954,7 +4762,7 @@ function readNormalAllergiesFromUI() {
 
 function renderMedicineInputRows(medicines=[]) {
   const wrap=document.getElementById('medicineInputRows'); if(!wrap) return;
-  const rows=Array.isArray(medicines)&&medicines.length?medicines:[{name:'',dose:'',schedule:'',times:[]}];
+  const rows=Array.isArray(medicines)&&medicines.length?medicines:[{name:'',dose:'',schedule:'',packSize:'',times:[]}];
   wrap.innerHTML=rows.map((m,i)=>{
     const count=medicationSlotCount({dose:m.dose||'',frequency:m.schedule||m.frequency||''});
     const times=suggestedMedicationTimes(m,count);
@@ -3962,6 +4770,7 @@ function renderMedicineInputRows(medicines=[]) {
       <input type="text" class="medicine-name-input" placeholder="Medicine name" value="${escapeHtml(String(m.name||m.medicine||''))}">
       <input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 2 tablets)" value="${escapeHtml(String(m.dose||''))}">
       <input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Twice daily)" value="${escapeHtml(String(m.schedule||m.frequency||''))}">
+      <input type="text" class="medicine-pack-input" placeholder="Pack size (optional, e.g. 30 tablets)" value="${escapeHtml(String(m.packSize||m.pack||''))}">
       <button type="button" class="medicine-remove-btn" aria-label="Remove medicine" data-remove-medicine="${i}">×</button>
       <div class="med-time-editor">
         <div class="med-time-editor-label">When should each dose be taken?</div>
@@ -3975,6 +4784,7 @@ function readMedicineRows() {
     name:row.querySelector('.medicine-name-input')?.value.trim()||'',
     dose:row.querySelector('.medicine-dose-input')?.value.trim()||'',
     schedule:row.querySelector('.medicine-schedule-input')?.value.trim()||'',
+    packSize:row.querySelector('.medicine-pack-input')?.value.trim()||'',
     times:[...row.querySelectorAll('.medicine-time-input')].map(input=>input.value).filter(Boolean),
     reason:''
   })).filter(m=>m.name);
@@ -3987,38 +4797,69 @@ async function savePersonalizedProfile() {
   patientData.firstName=first; patientData.middleName=middle; patientData.lastName=last;
   patientData.name=[first,middle,last].filter(Boolean).join(' ') || patientData.name || 'SwasthID User';
   patientData.email=firebaseUser?.email || localStorage.getItem('swasth_abhaId') || '';
+  patientData.ownerUid=firebaseUser?.uid || '';
+  patientData.ownerEmail=firebaseUser?.email || patientData.email || '';
   patientData.dob=get('profileDobInput'); patientData.bloodGroup=get('profileBloodInput'); patientData.occupation=get('profileOccupationInput');
   patientData.vitals={...(patientData.vitals||{}),height:height,weight:weight,bmi:h>0&&w>0?(w/Math.pow(h/100,2)).toFixed(1):''};
   patientData.lifestyle={smoking:get('profileSmokingInput'),alcohol:get('profileAlcoholInput')};
   patientData.conditions=parseProfileConditions(get('profileConditionsInput'));
   patientData.medications=readMedicineRows();
+  // Keep the profile medication editor as the authoritative local source for
+  // optional pack-size metadata. This makes refill reminders independent of
+  // prescription records and resilient to cloud-sync timing.
+  try { localStorage.setItem('swasth_profile_medications', JSON.stringify(patientData.medications)); } catch(e) { console.warn('Could not cache profile medicines', e); }
+  const journeyPrefs = getCareJourneyPrefs();
+  if (patientData.medications.length) journeyPrefs.medicationNotApplicable = false;
+  saveCareJourneyPrefs(journeyPrefs);
   patientData.allergies=readAllergiesFromUI();
   patientData.normalAllergies=readNormalAllergiesFromUI();
   const kcal=Number(get('profileCalorieInput'));
-  if(Number.isFinite(kcal)&&kcal>=800&&kcal<=6000){ patientData.nutrition={...(patientData.nutrition||{}),calorieTarget:kcal,targetSource:'User profile benchmark'}; localStorage.setItem('swasth_calorieTarget',String(kcal)); await syncCloudState('swasth_calorieTarget'); }
+  if(Number.isFinite(kcal)&&kcal>=800&&kcal<=6000){ patientData.nutrition={...(patientData.nutrition||{}),calorieTarget:kcal,targetSource:'User profile benchmark'}; localStorage.setItem('swasth_calorieTarget',String(kcal)); Promise.resolve().then(()=>syncCloudState('swasth_calorieTarget')).catch(()=>{}); }
   patientData.emergencyContact={name:get('profileEmergencyNameInput'),relation:get('profileEmergencyRelationInput'),phone:get('profileEmergencyPhoneInput')};
   patientData.profileCompleted=true;
   patientData.onboardingSkipped=false;
   profileOnboardingRequired=false;
   setProfileSkippedForCurrentAccount(false);
   cacheProfileLocally();
-  const profileCloudSaved = await syncProfileToCloud();
-  if (!profileCloudSaved) console.warn('Profile is cached locally for this account; Firestore save will retry on the next successful Firebase connection.');
+  // Local state is the immediate source of truth. Close the editor before any
+  // asynchronous cloud work can delay the visible UI response.
   renderPersonalizedUI();
-  closeProfileModal();
+  renderTodayMedications();
+  renderMedicationInsights();
+  const profileModalNow = document.getElementById('profileModal');
+  if (profileModalNow) { profileModalNow.classList.remove('show'); profileModalNow.style.display='none'; }
+  document.body.classList.remove('profile-modal-open');
   showToast('', 'Profile updated', 'Your SwasthID dashboard has been personalized.');
+  Promise.resolve().then(() => syncProfileToCloud()).then(profileCloudSaved => {
+    if (!profileCloudSaved) console.warn('Profile is cached locally for this account; Firestore save will retry on the next successful Firebase connection.');
+  }).catch(err => console.warn('Cloud profile sync failed; local profile remains saved.', err));
 }
+window.savePersonalizedProfile = savePersonalizedProfile;
 
 document.addEventListener('click', e => {
-  const addMed=e.target.closest('#addMedicineRowBtn');
+  const target = e.target instanceof Element ? e.target : null;
+  if (target && target.id === 'editProfileBtn') {
+    e.preventDefault();
+    e.stopPropagation();
+    window.openProfileModal({force:true});
+    return;
+  }
+  const addMed=target?.closest('#addMedicineRowBtn');
   if(addMed){
-    const current=readMedicineRows();
-    current.push({name:'',dose:'',schedule:'',reason:''});
+    const current=[...document.querySelectorAll('#medicineInputRows .medicine-input-row')].map(row=>({
+      name:row.querySelector('.medicine-name-input')?.value.trim()||'',
+      dose:row.querySelector('.medicine-dose-input')?.value.trim()||'',
+      schedule:row.querySelector('.medicine-schedule-input')?.value.trim()||'',
+      packSize:row.querySelector('.medicine-pack-input')?.value.trim()||'',
+      times:[...row.querySelectorAll('.medicine-time-input')].map(input=>input.value).filter(Boolean),
+      reason:''
+    }));
+    current.push({name:'',dose:'',schedule:'',packSize:'',times:[],reason:''});
     renderMedicineInputRows(current);
     setTimeout(()=>document.querySelector('#medicineInputRows .medicine-input-row:last-child .medicine-name-input')?.focus(),30);
     return;
   }
-  const removeMed=e.target.closest('[data-remove-medicine]');
+  const removeMed=target?.closest('[data-remove-medicine]');
   if(removeMed){
     const current=readMedicineRows();
     const idx=Number(removeMed.dataset.removeMedicine);
@@ -4026,7 +4867,7 @@ document.addEventListener('click', e => {
     renderMedicineInputRows(current);
     return;
   }
-  const allergyCheck=e.target.closest('#allergyOptions input[type="checkbox"]');
+  const allergyCheck=target?.closest('#allergyOptions input[type="checkbox"]');
   if(allergyCheck){
     const checks=[...document.querySelectorAll('#allergyOptions input[type="checkbox"]')];
     const none=checks.find(c=>c.value==='__NONE__');
@@ -4034,7 +4875,7 @@ document.addEventListener('click', e => {
     if(allergyCheck.value!=='__NONE__' && allergyCheck.checked && none) none.checked=false;
     return;
   }
-  const normalAllergyCheck=e.target.closest('#normalAllergyOptions input[type="checkbox"]');
+  const normalAllergyCheck=target?.closest('#normalAllergyOptions input[type="checkbox"]');
   if(normalAllergyCheck){
     const checks=[...document.querySelectorAll('#normalAllergyOptions input[type="checkbox"]')];
     const none=checks.find(c=>c.value==='__NONE__');
@@ -4042,10 +4883,16 @@ document.addEventListener('click', e => {
     if(normalAllergyCheck.value!=='__NONE__' && normalAllergyCheck.checked && none) none.checked=false;
     return;
   }
-  if (e.target.closest('#editProfileBtn')) openProfileModal({force:true});
-  if (e.target.closest('#cancelProfileBtn')) closeProfileModal();
-  if (e.target.id === 'profileModal') closeProfileModal();
-  if (e.target.closest('#authSuccessContinue')) {
+  const editProfileButton = target?.closest('#editProfileBtn');
+  if (editProfileButton) return;
+  const cancelProfileButton = target?.closest('#cancelProfileBtn');
+  if (cancelProfileButton) {
+    e.preventDefault();
+    closeProfileModal();
+    return;
+  }
+  if (target?.id === 'profileModal') closeProfileModal();
+  if (target?.closest('#authSuccessContinue')) {
     const modal = document.getElementById('authSuccessModal');
     if (modal) modal.classList.remove('show');
     setTimeout(() => openProfileModal({force:true}), 180);
@@ -4078,13 +4925,8 @@ function renderEmergencyQRIfReady(){
    try { return JSON.parse(localStorage.getItem('swasth_foodLogs') || '[]'); } catch (e) { return []; }
  }
  function getRecordMedicationActivity() {
-   let status = {};
-   try { status = JSON.parse(localStorage.getItem('swasth_medStatus') || '{}'); } catch (e) {}
-   const meds = getCurrentMedicationList();
-   return Object.entries(status).filter(([, value]) => value?.taken).map(([id, value]) => {
-     const match = meds.find((m, i) => `med_${i}_${m.medicine.replace(/[^a-z0-9]/gi,'').toLowerCase()}` === id);
-     return { id, medicine: match ? `${match.medicine}${match.dose ? ' ' + match.dose : ''}` : 'Medication', time: value.time || 'Time unavailable', date: value.date || new Date().toISOString() };
-   });
+   const history=getMedicationHistory();
+   return history.filter(x=>x?.taken).map((item,index)=>({id:item.id||`history_${index}`,medicine:`${item.medicine||'Medication'}${item.dose?' '+item.dose:''}`,time:item.time||'Time unavailable',date:item.date||new Date().toISOString()}));
  }
  function renderHistory(containerId){
    const el = document.getElementById(containerId); if(!el) return;
@@ -4132,7 +4974,7 @@ function renderEmergencyQRIfReady(){
    el.innerHTML=events.slice(0,30).map(event=>`<div class="history-item"><div><div class="h-name">${escapeHtml(event.title)}</div><div class="h-meta">${escapeHtml(event.type)} · ${formatRecordDate(event.date)}${event.meta?' · '+escapeHtml(event.meta):''}</div></div><span class="tag ongoing">Recorded</span></div>`).join('');
  }
  function renderAllRecords(){renderHistory('historyListRecords');renderVisits();renderReports();renderSavedPrescriptions();renderRecordFoodLogs();renderRecordMedicationActivity();renderRecordTimeline();}
- renderAllRecords(); renderTodayMedications();
+ renderAllRecords(); renderTodayMedications(); renderMedicationInsights();
 
  /* Medicine search / pharmacy handoff */
  const MEDICINE_API_BASE = window.SWASTH_MEDICINE_API_BASE || ((location.protocol === 'http:' || location.protocol === 'https:') ? location.origin + '/api/medicines' : 'local');
@@ -4387,149 +5229,158 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 }
 
 async function fetchNearbyHospitals(lat, lon) {
- const query = `[out:json][timeout:20];
+ const safeLat = Number(lat);
+ const safeLon = Number(lon);
+ if(!Number.isFinite(safeLat) || !Number.isFinite(safeLon)) throw new Error('Invalid location coordinates.');
+
+ // Keep the query intentionally small. Public Overpass servers can be busy, and
+ // a broad unbounded healthcare query is much more likely to time out.
+ const query = `[out:json][timeout:18];
  (
- node["amenity"="hospital"](around:7000,${lat},${lon});
- way["amenity"="hospital"](around:7000,${lat},${lon});
- relation["amenity"="hospital"](around:7000,${lat},${lon});
- node["amenity"="clinic"](around:5000,${lat},${lon});
- way["amenity"="clinic"](around:5000,${lat},${lon});
+   nwr["amenity"="hospital"](around:8000,${safeLat},${safeLon});
+   nwr["amenity"="clinic"](around:5000,${safeLat},${safeLon});
+   nwr["amenity"="doctors"](around:5000,${safeLat},${safeLon});
+   nwr["healthcare"~"^(hospital|clinic|doctor|centre|center|polyclinic)$"](around:5000,${safeLat},${safeLon});
  );
- out center tags;`;
+ out center tags qt;`;
 
- const res = await fetch('https://overpass-api.de/api/interpreter', {
- method: 'POST',
- headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
- body: query
+ const endpoints = [
+   'https://overpass-api.de/api/interpreter',
+   'https://overpass.private.coffee/api/interpreter'
+ ];
+ let lastError = null;
+
+ for(const endpoint of endpoints) {
+   const controller = new AbortController();
+   const timer = setTimeout(() => controller.abort(), 20000);
+   try {
+     const url = `${endpoint}?data=${encodeURIComponent(query)}`;
+     const res = await fetch(url, {
+       method:'GET',
+       signal:controller.signal,
+       headers:{'Accept':'application/json'}
+     });
+     if(!res.ok) throw new Error(`${endpoint} returned HTTP ${res.status}`);
+     const data = await res.json();
+     const seen = new Set();
+     const results = (data.elements || [])
+       .map(el => {
+         const elLat = el.lat ?? el.center?.lat;
+         const elLon = el.lon ?? el.center?.lon;
+         const tags = el.tags || {};
+         if(elLat == null || elLon == null || !tags.name) return null;
+         const latNum = Number(elLat), lonNum = Number(elLon);
+         if(!Number.isFinite(latNum) || !Number.isFinite(lonNum)) return null;
+         const key = `${String(tags.name).toLowerCase()}|${latNum.toFixed(5)}|${lonNum.toFixed(5)}`;
+         if(seen.has(key)) return null;
+         seen.add(key);
+         const amenity = String(tags.amenity || '').toLowerCase();
+         const healthcare = String(tags.healthcare || '').toLowerCase();
+         return {
+           id: el.id,
+           name: tags.name,
+           lat: latNum,
+           lon: lonNum,
+           dist: haversineKm(safeLat, safeLon, latNum, lonNum),
+           type: amenity === 'hospital' || healthcare === 'hospital' ? 'Hospital' :
+                 amenity === 'clinic' || healthcare === 'clinic' || healthcare === 'polyclinic' ? 'Clinic' :
+                 amenity === 'doctors' || healthcare === 'doctor' ? 'Doctor' : 'Healthcare centre',
+           emergency: tags.emergency === 'yes' || tags.emergency === '24/7',
+           govt: tags.operator_type === 'government' || /government|govt|state|district hospital/i.test(`${tags.operator || ''} ${tags.name}`),
+           phone: tags.phone || tags['contact:phone'] || null,
+           address: tags['addr:street'] || tags['addr:full'] || ''
+         };
+       })
+       .filter(Boolean)
+       .sort((a,b) => a.dist - b.dist)
+       .slice(0,10);
+     return results;
+   } catch(err) {
+     lastError = err;
+     console.warn(`Nearby healthcare endpoint failed: ${endpoint}`, err);
+   } finally {
+     clearTimeout(timer);
+   }
+ }
+ throw lastError || new Error('All nearby healthcare services failed');
+}
+
+function requestNearbyPosition(highAccuracy=false) {
+ return new Promise((resolve, reject) => {
+   navigator.geolocation.getCurrentPosition(resolve, reject, {
+     enableHighAccuracy: highAccuracy,
+     timeout: highAccuracy ? 12000 : 10000,
+     maximumAge: highAccuracy ? 60000 : 300000
+   });
  });
- if (!res.ok) throw new Error('Nearby healthcare search failed');
- const data = await res.json();
-
- const seen = new Set();
- return data.elements
- .map(el => {
- const elLat = el.lat ?? el.center?.lat;
- const elLon = el.lon ?? el.center?.lon;
- const tags = el.tags || {};
- if (elLat == null || elLon == null || !tags.name) return null;
-
- const key = `${tags.name}|${Number(elLat).toFixed(5)}|${Number(elLon).toFixed(5)}`;
- if (seen.has(key)) return null;
- seen.add(key);
-
- return {
- id: el.id,
- name: tags.name,
- lat: Number(elLat),
- lon: Number(elLon),
- dist: haversineKm(lat, lon, Number(elLat), Number(elLon)),
- type: tags.amenity === 'hospital' ? 'Hospital' : 'Clinic',
- emergency: tags.emergency === 'yes' || tags.emergency === '24/7',
- govt: tags.operator_type === 'government' ||
- /government|govt|state|district hospital/i.test(`${tags.operator || ''} ${tags.name}`),
- phone: tags.phone || tags['contact:phone'] || null,
- address: tags['addr:street'] || tags['addr:full'] || ''
- };
- })
- .filter(Boolean)
- .sort((a, b) => a.dist - b.dist)
- .slice(0, 8);
 }
 
-function renderNearbyList(hospitals, userLat, userLon) {
- const list = document.getElementById('nearbyItemsList');
- const subtitle = document.getElementById('nearbySubtitle');
-
- if (!hospitals.length) {
- list.innerHTML = `<div style="text-align:center; padding:18px; font-size:13px; color:var(--muted);">No hospitals or clinics were found within the search area.</div>`;
- return;
- }
-
- subtitle.textContent = `Real-time search around your current location • ${hospitals.length} nearby centers found.`;
-
- list.innerHTML = hospitals.map(h => {
- const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLon}&destination=${h.lat},${h.lon}&travelmode=driving`;
- const safePhone = h.phone ? h.phone.replace(/[^+0-9]/g, '') : '';
- return `
- <div class="nearby-item">
- <div style="min-width:0;">
- <div class="n-name">${escapeHtml(h.name)}</div>
- <div class="n-meta">
- <span class="n-badge dist">${h.dist.toFixed(1)} km</span>
- ${h.emergency ? '<span class="n-badge er">Emergency</span>' : ''}
- ${h.govt ? '<span class="n-badge govt">Govt.</span>' : ''}
- ${escapeHtml(h.type)}
- </div>
- </div>
- <div class="nearby-actions">
- <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="n-btn"> Directions</a>
- ${safePhone
- ? `<a href="tel:${safePhone}" class="n-btn solid"> Call</a>`
- : ''}
- </div>
- </div>`;
- }).join('');
-}
-
-function escapeHtml(value) {
- return String(value).replace(/[&<>'"]/g, ch => ({
- '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
- }[ch]));
-}
-
-function setNearbyLoading(isLoading) {
- document.getElementById('nearbyLoadingState').style.display = isLoading ? 'block' : 'none';
- document.getElementById('nearbyFallback').style.display = 'none';
- document.getElementById('findNearbyBtn').disabled = isLoading;
-}
-
-function showNearbyError(message) {
- const list = document.getElementById('nearbyItemsList');
- const fallback = document.getElementById('nearbyFallback');
- document.getElementById('nearbyLoadingState').style.display = 'none';
- document.getElementById('findNearbyBtn').disabled = false;
- fallback.style.display = 'block';
- list.innerHTML = `<div style="text-align:center; padding:10px 18px 18px; font-size:12px; color:var(--muted);">${escapeHtml(message)}</div>`;
-}
-
-function loadNearbyHospitals() {
- setNearbyLoading(true);
-
- if (!window.isSecureContext) {
- showNearbyError('Location access requires HTTPS. Deploy the site on Render (or use localhost during development) and try again.');
- return;
- }
-
- if (!navigator.geolocation) {
- showNearbyError('This browser does not support location services.');
- return;
- }
-
- navigator.geolocation.getCurrentPosition(
- async (pos) => {
- const { latitude, longitude, accuracy } = pos.coords;
+async function requestApproximateNetworkPosition() {
+ const controller = new AbortController();
+ const timer = setTimeout(() => controller.abort(), 8000);
  try {
- const hospitals = await fetchNearbyHospitals(latitude, longitude);
- setNearbyLoading(false);
- document.getElementById('nearbyFallback').style.display = 'none';
- renderNearbyList(hospitals, latitude, longitude);
- document.getElementById('nearbySubtitle').title = `Location accuracy: approximately ${Math.round(accuracy)} m`;
- } catch (err) {
- console.error('Nearby hospital search:', err);
- showNearbyError('We could not load nearby healthcare centers right now. Please try again.');
+   const res = await fetch('https://ipwho.is/', { signal:controller.signal, cache:'no-store' });
+   if(!res.ok) throw new Error(`Network location HTTP ${res.status}`);
+   const data = await res.json();
+   const lat = Number(data.latitude), lon = Number(data.longitude);
+   if(!data.success || !Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error('Network location was not available.');
+   return { coords:{ latitude:lat, longitude:lon, accuracy:5000 }, approximate:true };
+ } finally {
+   clearTimeout(timer);
  }
- },
- (err) => {
- console.warn('Geolocation error:', err);
- const messages = {
- 1: 'Location permission was denied. Allow location access for SwasthID and try again.',
- 2: 'Your location could not be determined. Check your device location settings and try again.',
- 3: 'Location request timed out. Please try again.'
- };
- showNearbyError(messages[err.code] || 'Unable to determine your location. Please try again.');
- },
- { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
- );
+}
+
+async function loadNearbyHospitals() {
+ setNearbyLoading(true);
+ if (!navigator.geolocation) {
+   try {
+     const networkPos = await requestApproximateNetworkPosition();
+     const hospitals = await fetchNearbyHospitals(networkPos.coords.latitude, networkPos.coords.longitude);
+     setNearbyLoading(false);
+     renderNearbyList(hospitals, networkPos.coords.latitude, networkPos.coords.longitude);
+     document.getElementById('nearbySubtitle').textContent = `Approximate network location • ${hospitals.length} nearby centers found.`;
+     return;
+   } catch(err) {
+     showNearbyError('This browser has no location service and approximate network location was unavailable.');
+     return;
+   }
+ }
+
+ try {
+   let pos;
+   try {
+     pos = await requestNearbyPosition(false);
+   } catch(firstErr) {
+     if(firstErr?.code === 1) throw firstErr;
+     try {
+       pos = await requestNearbyPosition(true);
+     } catch(secondErr) {
+       // If GPS/network browser positioning fails, use an approximate IP location
+       // rather than leaving the feature completely unusable.
+       pos = await requestApproximateNetworkPosition();
+     }
+   }
+
+   const { latitude, longitude, accuracy } = pos.coords;
+   const hospitals = await fetchNearbyHospitals(latitude, longitude);
+   setNearbyLoading(false);
+   document.getElementById('nearbyFallback').style.display = 'none';
+   renderNearbyList(hospitals, latitude, longitude);
+   document.getElementById('nearbySubtitle').title = `Location accuracy: approximately ${Math.round(accuracy || 5000)} m${pos.approximate ? ' (network estimate)' : ''}`;
+   if(pos.approximate) document.getElementById('nearbySubtitle').textContent = `Approximate network location • ${hospitals.length} nearby centers found.`;
+ } catch(err) {
+   console.error('Nearby hospital search:', err);
+   if(err && err.code) {
+     const messages = {
+       1: 'Location permission was denied. Allow location access for SwasthID and try again. If you prefer, enable browser location and retry.',
+       2: 'Your exact location could not be determined. SwasthID also tried an approximate network location.',
+       3: 'Location request timed out. SwasthID also tried an approximate network location.'
+     };
+     showNearbyError(messages[err.code] || 'Unable to determine your location. Please try again.');
+   } else {
+     showNearbyError('Nearby healthcare search is temporarily unavailable. We tried the current public OpenStreetMap Overpass servers. Please retry in a few seconds.');
+   }
+ }
 }
 
 document.getElementById('findNearbyBtn')?.addEventListener('click', loadNearbyHospitals);
@@ -5272,7 +6123,7 @@ document.getElementById('simulateScanBtn').addEventListener('click', () => {
   <div class="profile-modal">
     <h2 id="profileModalTitle">Personalize your SwasthID</h2>
     <p class="modal-sub" id="profileModalSubtitle">Tell us a little about yourself. These details personalize your dashboard, nutrition target, emergency information and health insights.</p>
-    <form id="profileForm">
+    <form id="profileForm" onsubmit="return window.__saveProfileForm(event)">
       <div class="profile-form-grid">
         <div class="profile-field full">
           <label>Your name</label>
@@ -5294,26 +6145,391 @@ Asthma
 Hypothyroidism"></textarea><div class="personalization-note">You can leave this blank and add conditions later through your records.</div></div>
         <div class="profile-field full">
           <label>Current medicines</label>
-          <div class="medicine-input-header"><span>Medicine name</span><span>Dose</span><span>Schedule</span><span></span></div>
+          <div class="medicine-input-header"><span>Medicine name</span><span>Dose</span><span>Schedule</span><span>Pack size (optional)</span><span></span></div>
           <div id="medicineInputRows"></div>
-          <button type="button" class="n-btn medicine-add-btn" id="addMedicineRowBtn">+ Add another medicine</button>
+          <button type="button" class="n-btn medicine-add-btn" id="addMedicineRowBtn" onclick="return window.__addMedicineRow(event)">+ Add another medicine</button>
           <div class="personalization-note">Keep each medicine in its own row so the name, dose and schedule stay clear and structured.</div>
         </div>
         <div class="profile-field full">
           <label>Known drug allergies</label>
-          <div id="allergyOptions" class="allergy-options"></div>
+          <div id="allergyOptions" class="allergy-options">
+            <label class="allergy-option"><input type="checkbox" value="__NONE__" checked> None / no known drug allergies</label>
+            <label class="allergy-option"><input type="checkbox" value="Penicillin"> Penicillin</label>
+            <label class="allergy-option"><input type="checkbox" value="Amoxicillin"> Amoxicillin</label>
+            <label class="allergy-option"><input type="checkbox" value="Sulfa drugs"> Sulfa drugs</label>
+            <label class="allergy-option"><input type="checkbox" value="Aspirin / NSAIDs"> Aspirin / NSAIDs</label>
+            <label class="allergy-option"><input type="checkbox" value="Ibuprofen"> Ibuprofen</label>
+            <label class="allergy-option"><input type="checkbox" value="Paracetamol"> Paracetamol</label>
+            <label class="allergy-option"><input type="checkbox" value="__CUSTOM__" id="customAllergyToggle"> Other</label>
+          </div>
           <input id="profileAllergyCustomInput" class="allergy-custom" maxlength="300" placeholder="Other drug allergies, separated by commas">
           <div class="personalization-note">You can select more than one. Choose “None” if you have no known drug allergies.</div>
         </div>
         <div class="profile-field"><label for="profileCalorieInput">Daily calorie benchmark (kcal)</label><input id="profileCalorieInput" type="number" min="800" max="6000" step="50" placeholder="e.g. 2200"></div>
         <div class="profile-field full"><label>Emergency contact</label><div class="contact-inline-grid"><input id="profileEmergencyNameInput" maxlength="80" placeholder="Contact name"><select id="profileEmergencyRelationInput"><option value="">Select relationship</option><option>Parent</option><option>Mother</option><option>Father</option><option>Spouse</option><option>Partner</option><option>Son</option><option>Daughter</option><option>Sibling</option><option>Brother</option><option>Sister</option><option>Grandparent</option><option>Grandmother</option><option>Grandfather</option><option>Uncle</option><option>Aunt</option><option>Cousin</option><option>Friend</option><option>Other relative</option><option>Other</option></select></div></div>
         <div class="profile-field full"><label for="profileEmergencyPhoneInput">Emergency contact phone</label><input id="profileEmergencyPhoneInput" type="tel" maxlength="25" placeholder="Phone number"></div>
-        <div class="profile-field full"><label>Other known allergies</label><div id="normalAllergyOptions" class="normal-allergy-options"></div><input id="profileNormalAllergyCustomInput" class="allergy-custom" maxlength="300" placeholder="Other allergies, separated by commas"><div class="personalization-note">For allergies such as dust, pollen, pet dander or latex. You can select more than one, or choose “None”.</div></div>
+        <div class="profile-field full"><label>Other known allergies</label><div id="normalAllergyOptions" class="normal-allergy-options">
+            <label class="normal-allergy-option"><input type="checkbox" value="__NONE__" checked> None / no known allergies</label>
+            <label class="normal-allergy-option"><input type="checkbox" value="Dust"> Dust</label>
+            <label class="normal-allergy-option"><input type="checkbox" value="Pollen"> Pollen</label>
+            <label class="normal-allergy-option"><input type="checkbox" value="Pet dander"> Pet dander</label>
+            <label class="normal-allergy-option"><input type="checkbox" value="Mold"> Mold</label>
+            <label class="normal-allergy-option"><input type="checkbox" value="Latex"> Latex</label>
+            <label class="normal-allergy-option"><input type="checkbox" value="Insect stings"> Insect stings</label>
+            <label class="normal-allergy-option"><input type="checkbox" value="Fragrances / perfumes"> Fragrances / perfumes</label>
+            <label class="normal-allergy-option"><input type="checkbox" value="__CUSTOM__" id="customNormalAllergyToggle"> Other</label>
+          </div><input id="profileNormalAllergyCustomInput" class="allergy-custom" maxlength="300" placeholder="Other allergies, separated by commas"><div class="personalization-note">For allergies such as dust, pollen, pet dander or latex. You can select more than one, or choose “None”.</div></div>
       </div>
       <div class="profile-modal-actions"><button type="button" class="n-btn" id="cancelProfileBtn">Cancel</button><button type="submit" class="n-btn solid" id="saveProfileBtn">Save profile</button></div>
     </form>
   </div>
 </div>
 
+<script>
+(function () {
+  function showProfileEditor() {
+    try {
+      if (typeof window.openProfileModal === 'function') {
+        window.openProfileModal({force:true});
+        return;
+      }
+      const modal = document.getElementById('profileModal');
+      if (modal) { modal.classList.add('show'); modal.style.display = 'flex'; }
+    } catch (err) {
+      console.error('Could not open profile editor:', err);
+      const modal = document.getElementById('profileModal');
+      if (modal) { modal.classList.add('show'); modal.style.display = 'flex'; }
+    }
+  }
+
+  window.__addMedicineRow = function (event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    try {
+      const rows = [...document.querySelectorAll('#medicineInputRows .medicine-input-row')].map(row => ({
+        name: row.querySelector('.medicine-name-input')?.value || '',
+        dose: row.querySelector('.medicine-dose-input')?.value || '',
+        schedule: row.querySelector('.medicine-schedule-input')?.value || '',
+        packSize: row.querySelector('.medicine-pack-input')?.value || '',
+        times: [...row.querySelectorAll('.medicine-time-input')].map(input => input.value || ''),
+        reason: ''
+      }));
+      if (!rows.length) rows.push({name:'', dose:'', schedule:'', packSize:'', times:[], reason:''});
+      rows.push({name:'', dose:'', schedule:'', packSize:'', times:[], reason:''});
+      renderMedicineInputRows(rows);
+      const last = document.querySelector('#medicineInputRows .medicine-input-row:last-child .medicine-name-input');
+      if (last) { last.focus(); last.scrollIntoView({block:'nearest'}); }
+    } catch (err) {
+      console.error('Add medicine failed:', err);
+      const wrap = document.getElementById('medicineInputRows');
+      if (wrap) {
+        const row = document.createElement('div');
+        row.className = 'medicine-input-row';
+        row.innerHTML = '<input type="text" class="medicine-name-input" placeholder="Medicine name"><input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 2 tablets)"><input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Twice daily)"><input type="text" class="medicine-pack-input" placeholder="Pack size (optional, e.g. 30 tablets)"><button type="button" class="medicine-remove-btn" data-remove-medicine="0">×</button>';
+        wrap.appendChild(row);
+        row.querySelector('.medicine-name-input')?.focus();
+      }
+    }
+    return false;
+  };
+
+  window.__saveProfileForm = async function (event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const button = document.getElementById('saveProfileBtn');
+    if (button) { button.disabled = true; button.textContent = 'Saving…'; }
+    try {
+      await window.savePersonalizedProfile();
+      return false;
+    } catch (err) {
+      console.error('Profile save failed:', err);
+      alert('We could not save your profile right now. Please try again.');
+      return false;
+    } finally {
+      if (button) { button.disabled = false; button.textContent = 'Save profile'; }
+    }
+  };
+
+  function bindProfileControls() {
+    const edit = document.getElementById('editProfileBtn');
+    if (edit && edit.dataset.profileEditorBound !== '1') {
+      edit.dataset.profileEditorBound = '1';
+      edit.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        showProfileEditor();
+      });
+    }
+
+    const cancel = document.getElementById('cancelProfileBtn');
+    if (cancel && cancel.dataset.profileCancelBound !== '1') {
+      cancel.dataset.profileCancelBound = '1';
+      cancel.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof window.closeProfileModal === 'function') window.closeProfileModal();
+        else { const modal=document.getElementById('profileModal'); if(modal){modal.classList.remove('show');modal.style.display='none';} }
+      });
+    }
+
+    const add = document.getElementById('addMedicineRowBtn');
+    if (add && add.dataset.medicineAddBound !== '1') {
+      add.dataset.medicineAddBound = '1';
+      add.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        try {
+          const rows = [...document.querySelectorAll('#medicineInputRows .medicine-input-row')].map(row => ({
+            name: row.querySelector('.medicine-name-input')?.value.trim() || '',
+            dose: row.querySelector('.medicine-dose-input')?.value.trim() || '',
+            schedule: row.querySelector('.medicine-schedule-input')?.value.trim() || '',
+            packSize: row.querySelector('.medicine-pack-input')?.value.trim() || '',
+            times: [...row.querySelectorAll('.medicine-time-input')].map(input => input.value).filter(Boolean),
+            reason: ''
+          }));
+          rows.push({name:'',dose:'',schedule:'',packSize:'',times:[],reason:''});
+          if (typeof renderMedicineInputRows === 'function') renderMedicineInputRows(rows);
+          document.querySelector('#medicineInputRows .medicine-input-row:last-child .medicine-name-input')?.focus();
+        } catch (err) { console.error('Could not add medicine row:', err); }
+      });
+    }
+
+    const form = document.getElementById('profileForm');
+    if (form && form.dataset.profileSaveBound !== '1') {
+      form.dataset.profileSaveBound = '1';
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const button=document.getElementById('saveProfileBtn');
+        if(button){button.disabled=true;button.textContent='Saving…';}
+        try {
+          if (typeof window.savePersonalizedProfile === 'function') await window.savePersonalizedProfile();
+          else if (typeof savePersonalizedProfile === 'function') await savePersonalizedProfile();
+        } catch(err) {
+          console.error('Profile save failed:',err);
+          alert('We could not save your profile right now. Please try again.');
+        } finally {
+          if(button){button.disabled=false;button.textContent='Save profile';}
+        }
+      });
+    }
+
+    const modal=document.getElementById('profileModal');
+    if(modal && modal.dataset.profileBackdropBound !== '1'){
+      modal.dataset.profileBackdropBound='1';
+      modal.addEventListener('click',function(event){
+        if(event.target===modal){
+          if(typeof window.closeProfileModal==='function') window.closeProfileModal();
+          else {modal.classList.remove('show');modal.style.display='none';}
+        }
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindProfileControls, {once:true});
+  else bindProfileControls();
+  // The profile panel can be rendered/replaced after login, so retry binding once more.
+  setTimeout(bindProfileControls, 100);
+  setTimeout(bindProfileControls, 500);
+})();
+</script>
+
+
+<script>
+/* =========================================================
+   NUTRITION UPGRADE: WEEKLY TRENDS, MEDICATION-FOOD FLAGS & BARCODE LOOKUP
+   ========================================================= */
+(function(){
+  const WEEK_DAYS = 7;
+
+  function nLogData(){
+    try { return JSON.parse(localStorage.getItem('swasth_foodLogs') || '[]'); }
+    catch(e){ return []; }
+  }
+  function dayKeyOffset(offset){
+    const d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()-offset);
+    return d.toISOString().slice(0,10);
+  }
+  function safeNum(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
+  function safeFood(v){
+    return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderWeeklyNutritionTrends(){
+    const chart=document.getElementById('weeklyNutritionChart');
+    if(!chart) return;
+    const logs=nLogData();
+    const days=[];
+    for(let i=WEEK_DAYS-1;i>=0;i--){
+      const key=dayKeyOffset(i);
+      const dayLogs=logs.filter(x=>x.date===key);
+      days.push({
+        key,
+        label:new Date(key+'T12:00:00').toLocaleDateString([], {weekday:'short'}),
+        kcal:dayLogs.reduce((a,x)=>a+safeNum(x.kcal),0),
+        protein:dayLogs.reduce((a,x)=>a+safeNum(x.protein),0),
+        carbs:dayLogs.reduce((a,x)=>a+safeNum(x.carbs),0),
+        fat:dayLogs.reduce((a,x)=>a+safeNum(x.fat),0)
+      });
+    }
+    const avg=days.reduce((a,d)=>a+d.kcal,0)/WEEK_DAYS;
+    const avgProtein=days.reduce((a,d)=>a+d.protein,0)/WEEK_DAYS;
+    const logged=days.filter(d=>d.kcal>0).length;
+    const avgEl=document.getElementById('weeklyAvgKcal');
+    const protEl=document.getElementById('weeklyProtein');
+    const loggedEl=document.getElementById('weeklyAdherenceFood');
+    if(avgEl) avgEl.textContent=Math.round(avg)+' kcal';
+    if(protEl) protEl.textContent=avgProtein.toFixed(1)+' g';
+    if(loggedEl) loggedEl.textContent=logged+'/7';
+
+    const max=Math.max(1,...days.map(d=>d.kcal));
+    const width=Math.max(560,days.length*82), height=190, padL=46,padR=12,padT=18,padB=34;
+    const innerW=width-padL-padR, innerH=height-padT-padB;
+    const bars=days.map((d,i)=>{
+      const bw=Math.min(46,innerW/days.length*0.56);
+      const x=padL+i*(innerW/days.length)+(innerW/days.length-bw)/2;
+      const bh=d.kcal ? Math.max(3,(d.kcal/max)*innerH) : 2;
+      const y=padT+innerH-bh;
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="4" fill="currentColor" opacity=".82"><title>${d.label}: ${Math.round(d.kcal)} kcal · P ${d.protein.toFixed(1)}g · C ${d.carbs.toFixed(1)}g · F ${d.fat.toFixed(1)}g</title></rect>`+
+        `<text x="${(x+bw/2).toFixed(1)}" y="${height-12}" text-anchor="middle" font-size="11" fill="currentColor" opacity=".72">${d.label}</text>`+
+        `<text x="${(x+bw/2).toFixed(1)}" y="${Math.max(12,y-5).toFixed(1)}" text-anchor="middle" font-size="10" fill="currentColor">${d.kcal?Math.round(d.kcal):'—'}</text>`;
+    }).join('');
+    const grid=[0,.25,.5,.75,1].map(r=>{
+      const y=padT+innerH-r*innerH;
+      return `<line x1="${padL}" y1="${y}" x2="${width-padR}" y2="${y}" stroke="currentColor" opacity=".10"/>`;
+    }).join('');
+    chart.innerHTML=`<div style="overflow-x:auto;width:100%;"><svg viewBox="0 0 ${width} ${height}" style="display:block;width:100%;min-width:${width}px;height:210px;color:var(--ink);" role="img" aria-label="Seven day calorie trend">${grid}${bars}</svg></div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Bars show logged calories per day. Hover a bar for calories and macros.</div>`;
+  }
+
+  const FOOD_MED_RULES=[
+    {match:/thyroxine|levothyroxine|thyronorm/i, name:'Thyroxine / levothyroxine', flags:[
+      'Calcium-rich foods and calcium supplements can reduce absorption; keep them separated from the dose according to your clinician or pharmacist’s instructions.',
+      'Iron supplements can also interfere with absorption; separate them from the dose according to professional advice.',
+      'Soy and very high-fiber meals may affect absorption in some people; keep the medication routine consistent and follow your prescriber’s instructions.'
+    ]},
+    {match:/ciprofloxacin|ciplox/i, name:'Ciprofloxacin', flags:['Calcium, iron and other mineral-containing supplements can reduce absorption; follow the spacing instructions on your prescription or from your pharmacist.']},
+    {match:/doxycycline|tetracycline/i, name:'Tetracycline-class antibiotic', flags:['Calcium, iron and other mineral-containing products can reduce absorption; follow the spacing instructions supplied with your medicine.']},
+    {match:/warfarin|coumadin/i, name:'Warfarin', flags:['Keep vitamin-K-rich foods consistent rather than making sudden large dietary changes, and follow your anticoagulation team’s advice.']}
+  ];
+
+  function getActiveMedsForNutrition(){
+    try{
+      if(typeof getCurrentMedicationList==='function') return getCurrentMedicationList().filter(m=>String(m.medicine||'').trim());
+    }catch(e){}
+    const p=window.patientData||{};
+    return Array.isArray(p.medications)?p.medications.filter(m=>String(m.medicine||m.name||'').trim()).map(m=>({...m,medicine:m.medicine||m.name})):[];
+  }
+
+  function renderMedicationFoodInteractions(){
+    const el=document.getElementById('nutritionMedicationInteractions');
+    if(!el) return;
+    const meds=getActiveMedsForNutrition();
+    const matches=[];
+    meds.forEach(m=>{
+      const text=String(m.medicine||m.name||'');
+      FOOD_MED_RULES.forEach(rule=>{ if(rule.match.test(text)) matches.push({med:text,rule}); });
+    });
+    if(!matches.length){
+      el.innerHTML='<div style="padding:14px;border:1px solid var(--line);border-radius:9px;color:var(--muted);font-size:13px;">No medication–food flags were triggered by your current medication list.</div>';
+      return;
+    }
+    el.innerHTML=matches.map(x=>`<div style="border:1px solid var(--line);border-left:4px solid var(--warn,#b7791f);border-radius:9px;padding:13px 14px;margin-bottom:10px;background:var(--paper,#fff);"><div style="font-weight:700;margin-bottom:6px;">${safeFood(x.med)} · ${safeFood(x.rule.name)}</div><ul style="margin:0;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.55;">${x.rule.flags.map(f=>`<li>${safeFood(f)}</li>`).join('')}</ul></div>`).join('')+
+      '<div style="font-size:11px;color:var(--muted);margin-top:6px;">Informational screening only. Medication instructions on your prescription and advice from your pharmacist/clinician take priority.</div>';
+  }
+
+  let barcodeStream=null, barcodeTimer=null, zxingReader=null;
+  const video=()=>document.getElementById('barcodeVideo');
+  const status=()=>document.getElementById('barcodeStatus');
+  const result=()=>document.getElementById('barcodeResult');
+  function setBarcodeStatus(t){ if(status()) status().textContent=t; }
+  function stopBarcodeScanner(){
+    if(barcodeTimer){clearInterval(barcodeTimer);barcodeTimer=null;}
+    if(zxingReader && typeof zxingReader.reset==='function'){try{zxingReader.reset();}catch(e){}}
+    if(barcodeStream){barcodeStream.getTracks().forEach(t=>t.stop());barcodeStream=null;}
+    const v=video(); if(v){v.pause();v.srcObject=null;v.style.display='none';}
+    const b=document.getElementById('stopBarcodeScanBtn'); if(b)b.style.display='none';
+    const start=document.getElementById('startBarcodeScanBtn'); if(start)start.style.display='inline-flex';
+  }
+  function showBarcodeResult(product, barcode){
+    const el=result(); if(!el)return;
+    const p=product||{};
+    const n=p.nutriments||{};
+    const name=p.product_name||p.generic_name||'Packaged food';
+    const brand=p.brands||'Unknown brand';
+    const kcal=safeNum(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0);
+    const protein=safeNum(n.proteins_100g);
+    const carbs=safeNum(n.carbohydrates_100g);
+    const fat=safeNum(n.fat_100g);
+    el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper,#fff);"><div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">${p.image_front_small_url?`<img src="${safeFood(p.image_front_small_url)}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">`:''}<div style="min-width:0;flex:1;"><div style="font-weight:700;">${safeFood(name)}</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">${safeFood(brand)} · barcode ${safeFood(barcode)}</div><div style="font-size:12px;margin-top:8px;">${kcal?Math.round(kcal)+' kcal':''}${protein?' · P '+protein.toFixed(1)+'g':''}${carbs?' · C '+carbs.toFixed(1)+'g':''}${fat?' · F '+fat.toFixed(1)+'g':''} per 100 g</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button type="button" class="n-btn solid" id="barcodeLogBtn">Log 100 g</button><button type="button" class="n-btn" id="barcodeClearBtn">Clear</button></div><div style="font-size:10px;color:var(--muted);margin-top:9px;">Barcode nutrition is provided by Open Food Facts and may be incomplete or user-contributed.</div></div>`;
+    const logBtn=document.getElementById('barcodeLogBtn');
+    if(logBtn) logBtn.addEventListener('click',()=>{
+      if(!kcal){setBarcodeStatus('This product has no usable calorie value, so it cannot be logged automatically.');return;}
+      const factor=1;
+      const logs=nLogData();
+      logs.push({id:Date.now()+Math.random(),date:getTodayKey(),time:new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),name,portion:'100 g',kcal,protein,carbs,fat,source:'Open Food Facts barcode'});
+      if(typeof saveFoodLogs==='function') saveFoodLogs(logs); else localStorage.setItem('swasth_foodLogs',JSON.stringify(logs));
+      if(typeof syncTodayCalories==='function') syncTodayCalories();
+      if(typeof renderTodayFoodLogs==='function') renderTodayFoodLogs();
+      if(typeof renderRecordFoodLogs==='function') renderRecordFoodLogs();
+      if(typeof renderRecordTimeline==='function') renderRecordTimeline();
+      renderWeeklyNutritionTrends();
+      showToast?.('', 'Packaged food logged', `${name} · ${Math.round(kcal)} kcal added to today’s log.`);
+    });
+    const clearBtn=document.getElementById('barcodeClearBtn'); if(clearBtn) clearBtn.addEventListener('click',()=>{el.innerHTML='';});
+  }
+  async function lookupBarcode(raw){
+    const code=String(raw||'').replace(/\D/g,'');
+    if(code.length<8){setBarcodeStatus('Enter a valid barcode with at least 8 digits.');return;}
+    setBarcodeStatus('Looking up packaged-food nutrition data…');
+    try{
+      const r=await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json',{headers:{Accept:'application/json'}});
+      if(!r.ok) throw new Error('Barcode service returned HTTP '+r.status);
+      const data=await r.json();
+      if(Number(data.status)!==1 || !data.product) throw new Error('No packaged-food product was found for this barcode.');
+      showBarcodeResult(data.product,code); setBarcodeStatus('Product found. Review the nutrition values before logging.');
+    }catch(e){setBarcodeStatus(e.message||'Barcode lookup failed. You can try entering the barcode again.');}
+  }
+  async function startBarcodeScanner(){
+    const v=video(); if(!v)return;
+    if(!navigator.mediaDevices?.getUserMedia){setBarcodeStatus('Camera access is not available in this browser. Enter the barcode manually.');return;}
+    try{
+      barcodeStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+      v.srcObject=barcodeStream; v.style.display='block'; await v.play();
+      document.getElementById('startBarcodeScanBtn')?.style.setProperty('display','none');
+      document.getElementById('stopBarcodeScanBtn')?.style.setProperty('display','inline-flex');
+      setBarcodeStatus('Point the camera at the barcode.');
+      if('BarcodeDetector' in window){
+        let formats=[];
+        try{formats=await BarcodeDetector.getSupportedFormats();}catch(e){}
+        const preferred=['ean_13','ean_8','upc_a','upc_e','code_128','code_39'];
+        const use=preferred.filter(x=>!formats.length||formats.includes(x));
+        const detector=new BarcodeDetector({formats:use.length?use:undefined});
+        barcodeTimer=setInterval(async()=>{
+          if(!v.videoWidth)return;
+          try{const codes=await detector.detect(v); if(codes?.length){const val=codes[0].rawValue; stopBarcodeScanner(); document.getElementById('barcodeManualInput').value=val; lookupBarcode(val);}}catch(e){}
+        },450);
+        return;
+      }
+      // Lightweight fallback: dynamically load ZXing only when camera scanning is requested.
+      if(!window.ZXingBrowser){
+        await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js';sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);});
+      }
+      zxingReader=new ZXingBrowser.BrowserMultiFormatReader();
+      zxingReader.decodeFromVideoDevice(undefined,v,(res)=>{
+        if(res){const val=res.getText();stopBarcodeScanner();document.getElementById('barcodeManualInput').value=val;lookupBarcode(val);}
+      });
+    }catch(e){stopBarcodeScanner();setBarcodeStatus('Camera permission was unavailable. Enter the barcode manually instead.');}
+  }
+  document.getElementById('startBarcodeScanBtn')?.addEventListener('click',startBarcodeScanner);
+  document.getElementById('stopBarcodeScanBtn')?.addEventListener('click',stopBarcodeScanner);
+  document.getElementById('lookupBarcodeBtn')?.addEventListener('click',()=>lookupBarcode(document.getElementById('barcodeManualInput')?.value));
+  document.getElementById('barcodeManualInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')lookupBarcode(e.target.value);});
+  window.addEventListener('beforeunload',stopBarcodeScanner);
+
+  window.renderWeeklyNutritionTrends=renderWeeklyNutritionTrends;
+  window.renderMedicationFoodInteractions=renderMedicationFoodInteractions;
+  window.renderNutritionUpgrades=function(){renderWeeklyNutritionTrends();renderMedicationFoodInteractions();};
+  setTimeout(()=>window.renderNutritionUpgrades(),0);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)window.renderNutritionUpgrades();});
+})();
+</script>
 </body>
 </html>
