@@ -1360,7 +1360,7 @@
  <div id="nearbyFallback" style="display:none; text-align:center; padding:18px; color:var(--muted);">
  <div style="font-size:20px; margin-bottom:6px;"></div>
  <b style="color:var(--ink);">Location access is unavailable.</b>
- <div style="font-size:12px; margin:5px 0 12px;">Enable location permission in your browser and try again.</div>
+ <div id="nearbyFallbackMessage" style="font-size:12px; margin:5px 0 12px;">Enable location permission in your browser and try again.</div>
  <button class="n-btn" id="retryLocationBtn" type="button">Try again</button>
  </div>
  <div id="nearbyItemsList">
@@ -1861,9 +1861,37 @@
  <div id="visitList"></div>
  </section>
  <section>
- <h3>Diagnostic Lab Reports</h3>
- <p class="section-sub">Lab records currently available in the patient's profile.</p>
- <div id="reportList"></div>
+ <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+  <div>
+   <h3 style="margin-bottom:4px;">Diagnostic Lab Reports</h3>
+   <p class="section-sub" style="margin-bottom:0;">Lab records currently available in the patient's profile.</p>
+  </div>
+  <button class="n-btn" type="button" id="labTrendBtn">View trends</button>
+ </div>
+ <div id="reportList" style="margin-top:14px;"></div>
+ <div id="labTrendPanel" style="display:none;margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+   <div><b>Lab report trends</b><div class="section-sub" style="margin:3px 0 0;">Structured values detected from your saved report results.</div></div>
+   <select id="labTrendMetric" class="profile-input" style="min-width:150px;padding:8px 10px;"></select>
+  </div>
+  <div id="labTrendChart" style="margin-top:12px;overflow-x:auto;"></div>
+  <div id="labTrendSummary" style="margin-top:8px;font-size:12px;color:var(--muted);"></div>
+  <div style="margin-top:10px;font-size:11px;color:var(--muted);">Trend extraction is informational only. Verify values against the original laboratory report.</div>
+ </div>
+ </section>
+ <section>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+   <div>
+    <h3 style="margin-bottom:4px;">Your Health, Ready to Go</h3>
+    <p class="section-sub" style="margin-bottom:0;">Keep your health information ready when you need it — save it, print it, or share it securely.</p>
+   </div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="n-btn" type="button" id="exportHealthJsonBtn">My Health Vault</button>
+    <button class="n-btn" type="button" id="exportHealthPdfBtn">Health Summary</button>
+    <button class="n-btn solid" type="button" id="shareHealthRecordBtn">Share with Doctor</button>
+   </div>
+  </div>
+  <div id="healthShareStatus" style="margin-top:10px;font-size:12px;color:var(--muted);"></div>
  </section>
  <section>
  <h3>Saved Prescriptions &amp; Medications</h3>
@@ -3125,15 +3153,30 @@ if (supportBtn && !supportBtn.dataset.bound) {
    list.innerHTML = '<div class="today-med-empty">No medications added yet. Add medicines in Profile or upload a prescription.</div>';
    return;
  }
- let html = '';
+ const scheduledDoses = [];
  meds.forEach((m, i) => {
    const count = medicationSlotCount(m);
    const times = suggestedMedicationTimes(m, count);
    for (let unit = 0; unit < count; unit++) {
+     scheduledDoses.push({ m, i, unit, time: times[unit] || '' });
+   }
+ });
+
+ // Keep Today's medication in chronological order, regardless of prescription/profile order.
+ // Doses without a time stay at the end so they can still be configured.
+ scheduledDoses.sort((a, b) => {
+   if (!a.time && !b.time) return a.i - b.i || a.unit - b.unit;
+   if (!a.time) return 1;
+   if (!b.time) return -1;
+   return a.time.localeCompare(b.time) || a.i - b.i || a.unit - b.unit;
+ });
+
+ let html = '';
+ scheduledDoses.forEach(({ m, i, unit, time }) => {
+     const count = medicationSlotCount(m);
      const id = medicationScheduleKey(i, unit);
      const savedStatus = status[id];
      const label = count > 1 ? `Dose ${unit + 1} of ${count}` : 'Scheduled dose';
-     const time = times[unit] || '';
      html += `<div class="today-med-item ${savedStatus?.taken ? 'taken' : ''}" id="${id}">
        <div class="today-med-time">${time ? formatMedicationTime(time) : 'Set time'}<small>${label}</small></div>
        <div>
@@ -3146,8 +3189,7 @@ if (supportBtn && !supportBtn.dataset.bound) {
        </div>
        <button class="med-action" type="button" data-mark-med="${id}" data-med-name="${escapeHtml(m.medicine)}">${savedStatus?.taken ? `Taken at ${escapeHtml(savedStatus.time || '')}` : 'Mark Taken'}</button>
      </div>`;
-   }
- });
+   });
  list.innerHTML = html;
  list.querySelectorAll('[data-save-med-time]').forEach(btn => btn.addEventListener('click', () => {
    const i = Number(btn.dataset.medTimeIndex), unit = Number(btn.dataset.medTimeUnit);
@@ -4973,6 +5015,88 @@ function renderEmergencyQRIfReady(){
    if(!events.length){el.innerHTML='<div class="record-empty">Your cross-module activity will appear here as you use SwasthID.</div>';return;}
    el.innerHTML=events.slice(0,30).map(event=>`<div class="history-item"><div><div class="h-name">${escapeHtml(event.title)}</div><div class="h-meta">${escapeHtml(event.type)} · ${formatRecordDate(event.date)}${event.meta?' · '+escapeHtml(event.meta):''}</div></div><span class="tag ongoing">Recorded</span></div>`).join('');
  }
+ function buildSwasthHealthBundle(){
+   const profile=patientData||{};
+   const meds=getCurrentMedicationList ? getCurrentMedicationList() : (Array.isArray(profile.medications)?profile.medications:[]);
+   const prescriptions=getSavedPrescriptions();
+   const visits=Array.isArray(profile.visits)?profile.visits:[];
+   const reports=Array.isArray(profile.reports)?profile.reports:[];
+   const conditions=Array.isArray(profile.conditions)?profile.conditions:[];
+   const labs=profile.labs && typeof profile.labs==='object' ? profile.labs : {};
+   const bundle={
+     resourceType:'Bundle', type:'collection', generatedAt:new Date().toISOString(),
+     meta:{profile:'SwasthID Health Summary', format:'FHIR-ish portable prototype bundle', prototype:true},
+     patient:{resourceType:'Patient', id:profile.ownerUid||profile.email||'patient', name:profile.name||'', birthDate:profile.dob||'', bloodGroup:profile.bloodGroup||'', telecom:profile.email?[{system:'email',value:profile.email}]:[]},
+     conditions:conditions.map((c,i)=>({resourceType:'Condition',id:`condition-${i+1}`,code:{text:c.name||''},clinicalStatus:{text:c.status||''},onsetYear:c.year||'',note:c.details||''})),
+     medications:meds.map((m,i)=>({resourceType:'MedicationStatement',id:`medication-${i+1}`,medication:{text:m.name||m.medicine||''},dose:{text:m.dose||''},frequency:{text:m.frequency||''},instructions:m.instructions||''})),
+     prescriptions:prescriptions.map(r=>({resourceType:'MedicationRequest',id:r.id||`rx-${Date.now()}`,authoredOn:r.date||'',requester:{display:r.doctor||''},medications:r.medicines||[]})),
+     encounters:visits.map((v,i)=>({resourceType:'Encounter',id:`encounter-${i+1}`,date:v.date||'',provider:v.doctor||'',specialty:v.specialty||'',facility:v.facility||''})),
+     diagnosticReports:reports.map((r,i)=>({resourceType:'DiagnosticReport',id:`report-${i+1}`,date:r.date||'',code:{text:r.name||''},result:{text:r.result||''}})),
+     emergencyContact:profile.emergencyContact||{},
+     vitals:profile.vitals||{},
+     lifestyle:profile.lifestyle||{},
+     nutrition:profile.nutrition||{},
+     labs
+   };
+   return bundle;
+ }
+ function downloadTextFile(filename,text,mime='application/json'){
+   const blob=new Blob([text],{type:mime}); const url=URL.createObjectURL(blob); const a=document.createElement('a');
+   a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+ }
+ function safeHealthName(){return String(patientData?.name||'Patient').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')||'Patient';}
+ function setHealthShareStatus(text,error=false){const el=document.getElementById('healthShareStatus');if(el){el.textContent=text;el.style.color=error?'#8f2d24':'var(--muted)';}}
+ async function exportHealthSummaryPDF(){
+   const btn=document.getElementById('exportHealthPdfBtn'); if(btn)btn.disabled=true;
+   try{
+     const jsPDF=await ensureJsPdfLoaded(); if(!jsPDF)throw new Error('PDF generator could not be loaded.');
+     const b=buildSwasthHealthBundle(); const doc=new jsPDF({unit:'mm',format:'a4',compress:true});
+     const W=210,H=297,M=15,CW=W-2*M; let y=15;
+     const dark=[28,43,39],muted=[101,115,108],line=[214,224,219],light=[247,249,248],accent=[47,105,86];
+     const text=v=>String(v??'').trim()||'Not provided';
+     const pageBreak=need=>{if(y+need>H-20){doc.addPage();y=15;}};
+     const heading=(t)=>{pageBreak(18);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(...dark);doc.text(t,M,y);y+=8;};
+     const row=(label,value)=>{pageBreak(13);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...muted);doc.text(label.toUpperCase(),M,y);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...dark);const lines=doc.splitTextToSize(text(value),CW-45);doc.text(lines,M+45,y);y+=Math.max(7,lines.length*4.5)+2;};
+     doc.setFillColor(...accent);doc.roundedRect(M,y,CW,27,4,4,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('SWASTHID',M+8,y+11);doc.setFontSize(11);doc.text('Portable Health Summary',M+8,y+19);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text('Patient-controlled prototype record',W-M-8,y+11,{align:'right'});y+=35;
+     doc.setTextColor(...dark);doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text(text(b.patient.name),M,y);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...muted);doc.text(`Generated ${new Date().toLocaleString()}`,M,y+6);y+=14;
+     heading('Patient'); row('Date of birth',b.patient.birthDate); row('Blood group',b.patient.bloodGroup); row('Email',b.patient.telecom?.[0]?.value);
+     heading('Vitals & lifestyle'); row('Height',b.vitals.height); row('Weight',b.vitals.weight); row('BMI',b.vitals.bmi); row('Smoking',b.lifestyle.smoking); row('Alcohol',b.lifestyle.alcohol);
+     heading('Medical conditions'); if(!b.conditions.length)row('Conditions','None recorded'); else b.conditions.forEach(c=>row('Condition',`${c.code.text} · ${c.clinicalStatus.text||'Status not provided'}${c.onsetYear?' · '+c.onsetYear:''}${c.note?' · '+c.note:''}`));
+     heading('Current medications'); if(!b.medications.length)row('Medication','None recorded'); else b.medications.forEach(m=>row('Medication',`${m.medication.text} · ${m.dose.text||'Dose not provided'} · ${m.frequency.text||'Frequency not provided'}${m.instructions?' · '+m.instructions:''}`));
+     heading('Recent visits'); if(!b.encounters.length)row('Visits','None recorded'); else b.encounters.slice(0,12).forEach(v=>row('Visit',`${v.date?new Date(v.date).toLocaleDateString():'Date unavailable'} · ${v.provider||'Provider not provided'} · ${v.specialty||'Specialty not provided'} · ${v.facility||'Facility not provided'}`));
+     heading('Diagnostic reports'); if(!b.diagnosticReports.length)row('Reports','None recorded'); else b.diagnosticReports.slice(0,15).forEach(r=>row('Report',`${r.date?new Date(r.date).toLocaleDateString():'Date unavailable'} · ${r.code.text}${r.result.text?' · '+r.result.text:''}`));
+     pageBreak(25);doc.setDrawColor(...line);doc.line(M,H-16,W-M,H-16);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...muted);doc.text('SwasthID is a prototype and is not an official Government of India service. This export is informational and should be verified by a healthcare professional.',M,H-10,{maxWidth:CW});
+     const filename=`SwasthID-Health-Summary-${safeHealthName()}.pdf`;const blob=doc.output('blob');const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);setHealthShareStatus(`Health Summary PDF ready: ${filename}`);
+   }catch(e){console.error('Health summary PDF failed:',e);setHealthShareStatus('Health Summary PDF failed: '+(e?.message||'unknown error'),true);alert('The health summary PDF could not be generated. Please try again.');}finally{if(btn)btn.disabled=false;}
+ }
+ function extractLabTrendPoints(){
+   const reports=Array.isArray(patientData?.reports)?patientData.reports:[]; const groups={};
+   const defs=[['TSH',/\bTSH\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mIU/L'],['HbA1c',/\b(?:HbA1c|A1c)\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)\s*%?/i,'%'],['Hemoglobin',/\b(?:Hb|Hgb|Hemoglobin)\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'g/dL'],['Glucose',/\b(?:fasting\s+glucose|blood\s+glucose|glucose)\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mg/dL'],['LDL',/\bLDL(?:\s*cholesterol)?\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mg/dL'],['HDL',/\bHDL(?:\s*cholesterol)?\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mg/dL'],['Total cholesterol',/\b(?:total\s+cholesterol|cholesterol)\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mg/dL'],['Creatinine',/\bcreatinine\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mg/dL'],['eGFR',/\beGFR\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mL/min/1.73m²']];
+   reports.forEach(r=>{const source=String(r.result||'');defs.forEach(([name,re,unit])=>{const m=source.match(re);if(m){(groups[name] ||= {unit,points:[]}).points.push({date:r.date||'',value:Number(m[1]),report:r.name||'Lab report'});}});});
+   Object.values(groups).forEach(g=>g.points.sort((a,b)=>new Date(a.date)-new Date(b.date)));return groups;
+ }
+ function renderLabTrendChart(){
+   const panel=document.getElementById('labTrendPanel'),select=document.getElementById('labTrendMetric'),chart=document.getElementById('labTrendChart'),summary=document.getElementById('labTrendSummary');if(!panel||!select||!chart)return;
+   const groups=extractLabTrendPoints();const names=Object.keys(groups);if(!names.length){select.innerHTML='';chart.innerHTML='<div class="record-empty">No structured lab values could be detected yet. Add report results such as “TSH: 2.1 mIU/L” or “HbA1c: 6.1%” to enable trends.</div>';if(summary)summary.textContent='';return;}
+   const current=names.includes(select.value)?select.value:names[0];select.innerHTML=names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');select.value=current;const g=groups[current],pts=g.points;const w=Math.max(560,pts.length*120),h=230,pad=42,vals=pts.map(p=>p.value),min=Math.min(...vals),max=Math.max(...vals),range=(max-min)||1;const x=i=>pad+(i*(w-pad*2)/Math.max(1,pts.length-1)),y=v=>h-pad-((v-min)/range)*(h-pad*2);
+   let svg=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(current)} trend"><line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#d6e0db"/><line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h-pad}" stroke="#d6e0db"/>`;
+   pts.forEach((pt,i)=>{const xx=x(i),yy=y(pt.value);if(i)svg+=`<line x1="${x(i-1)}" y1="${y(pts[i-1].value)}" x2="${xx}" y2="${yy}" stroke="#2f6956" stroke-width="2.5"/>`;svg+=`<circle cx="${xx}" cy="${yy}" r="4.5" fill="#fff" stroke="#2f6956" stroke-width="2"/><text x="${xx}" y="${h-17}" text-anchor="middle" font-size="10" fill="#65736c">${escapeHtml(pt.date?new Date(pt.date).toLocaleDateString([], {day:'numeric',month:'short'}):'Date')}</text><text x="${xx}" y="${yy-9}" text-anchor="middle" font-size="10" font-weight="600" fill="#1c2b27">${pt.value}</text>`;});svg+=`<text x="10" y="${pad+3}" font-size="10" fill="#65736c">${max} ${escapeHtml(g.unit)}</text><text x="10" y="${h-pad}" font-size="10" fill="#65736c">${min} ${escapeHtml(g.unit)}</text></svg>`;chart.innerHTML=svg;if(summary){const latest=pts[pts.length-1],first=pts[0];summary.textContent=`${pts.length} reading(s) · Latest ${latest.value} ${g.unit} on ${latest.date?new Date(latest.date).toLocaleDateString():'unknown date'}${pts.length>1?` · Change ${latest.value-first.value>=0?'+':''}${(latest.value-first.value).toFixed(2)}`:''}`;}
+ }
+ function initLabTrendView(){const btn=document.getElementById('labTrendBtn'),panel=document.getElementById('labTrendPanel'),select=document.getElementById('labTrendMetric');if(!btn||!panel)return;btn.addEventListener('click',()=>{const open=panel.style.display!=='none';panel.style.display=open?'none':'block';btn.textContent=open?'View trends':'Hide trends';if(!open)renderLabTrendChart();});select?.addEventListener('change',renderLabTrendChart);}
+ async function shareHealthRecordWithDoctor(){
+   const btn=document.getElementById('shareHealthRecordBtn');if(btn)btn.disabled=true;setHealthShareStatus('Creating a time-limited read-only doctor link…');
+   try{
+     const apiBase=(window.SWASTH_API_BASE||((location.protocol==='http:'||location.protocol==='https:')?location.origin:'' )).replace(/\/$/,'');if(!apiBase)throw new Error('Doctor sharing requires the hosted Render app.');
+     const bundle=buildSwasthHealthBundle();const res=await fetch(apiBase+'/api/record-share/create',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({record:bundle,expiresInHours:24})});const body=await res.json().catch(()=>({}));if(!res.ok||!body.url)throw new Error(body.error||`Share service returned HTTP ${res.status}`);
+     await navigator.clipboard?.writeText(body.url).catch(()=>{});setHealthShareStatus(`Doctor link created and copied when browser permissions allowed. It expires ${body.expiresAt?new Date(body.expiresAt).toLocaleString():'after 24 hours'}. ${body.url}`);
+   }catch(e){console.error('Doctor share failed:',e);setHealthShareStatus('Doctor sharing is not available yet: '+(e?.message||'unknown error')+'. The Render backend needs /api/record-share/create.',true);}
+   finally{if(btn)btn.disabled=false;}
+ }
+ document.getElementById('exportHealthJsonBtn')?.addEventListener('click',()=>downloadTextFile(`SwasthID-My-Health-Vault-${safeHealthName()}.json`,JSON.stringify(buildSwasthHealthBundle(),null,2)));
+ document.getElementById('exportHealthPdfBtn')?.addEventListener('click',exportHealthSummaryPDF);
+ document.getElementById('shareHealthRecordBtn')?.addEventListener('click',shareHealthRecordWithDoctor);
+ initLabTrendView();
+
  function renderAllRecords(){renderHistory('historyListRecords');renderVisits();renderReports();renderSavedPrescriptions();renderRecordFoodLogs();renderRecordMedicationActivity();renderRecordTimeline();}
  renderAllRecords(); renderTodayMedications(); renderMedicationInsights();
 
@@ -5328,6 +5452,61 @@ async function requestApproximateNetworkPosition() {
  } finally {
    clearTimeout(timer);
  }
+}
+
+function setNearbyLoading(isLoading) {
+ const loading = document.getElementById('nearbyLoadingState');
+ const fallback = document.getElementById('nearbyFallback');
+ const list = document.getElementById('nearbyItemsList');
+ if (loading) loading.style.display = isLoading ? 'block' : 'none';
+ if (isLoading) {
+   if (fallback) fallback.style.display = 'none';
+   if (list) list.innerHTML = '';
+ }
+}
+
+function showNearbyError(message) {
+ setNearbyLoading(false);
+ const fallback = document.getElementById('nearbyFallback');
+ const list = document.getElementById('nearbyItemsList');
+ if (list) list.innerHTML = '';
+ if (fallback) {
+   fallback.style.display = 'block';
+   const msgEl = document.getElementById('nearbyFallbackMessage') || fallback.querySelector('div[style*="font-size:12px"]');
+   if (msgEl) msgEl.textContent = message;
+ }
+}
+
+function renderNearbyList(hospitals, lat, lon) {
+ setNearbyLoading(false);
+ const fallback = document.getElementById('nearbyFallback');
+ const list = document.getElementById('nearbyItemsList');
+ if (fallback) fallback.style.display = 'none';
+ if (!list) return;
+
+ if (!hospitals || !hospitals.length) {
+   list.innerHTML = '<div style="text-align:center;padding:18px;font-size:13px;color:var(--muted);">No nearby healthcare centers were found. Try again from a different location.</div>';
+   return;
+ }
+
+ list.innerHTML = hospitals.map(h => `
+   <div class="nearby-item">
+     <div>
+       <div class="n-name">${escapeHtml(h.name)}</div>
+       <div class="n-meta">
+         <span class="n-badge dist">${Number(h.dist).toFixed(1)} km</span>
+         <span>${escapeHtml(h.type)}</span>
+         ${h.emergency ? '<span class="n-badge er">24/7 Emergency</span>' : ''}
+         ${h.govt ? '<span class="n-badge govt">Government</span>' : ''}
+         ${h.address ? '· ' + escapeHtml(h.address) : ''}
+       </div>
+     </div>
+     <div class="nearby-actions">
+       <a class="n-btn" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${h.lat},${h.lon}`)}" target="_blank" rel="noopener">Directions</a>
+       ${h.phone ? `<a class="n-btn solid" href="tel:${String(h.phone).replace(/[^+0-9]/g,'')}">Call</a>` : ''}
+     </div>
+   </div>
+ `).join('');
 }
 
 async function loadNearbyHospitals() {
