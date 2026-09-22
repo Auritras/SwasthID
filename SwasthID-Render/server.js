@@ -272,6 +272,14 @@ const server = http.createServer(async (req,res)=>{
       res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8'});
       return fs.createReadStream(path.join(ROOT,'firestore.rules')).pipe(res);
     }
+    if (req.method === 'GET' && url.pathname === '/manifest.webmanifest') {
+      res.writeHead(200,{'Content-Type':'application/manifest+json; charset=utf-8','Cache-Control':'no-cache'});
+      return fs.createReadStream(path.join(ROOT,'manifest.webmanifest')).pipe(res);
+    }
+    if (req.method === 'GET' && url.pathname === '/sw.js') {
+      res.writeHead(200,{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-cache','Service-Worker-Allowed':'/'});
+      return fs.createReadStream(path.join(ROOT,'sw.js')).pipe(res);
+    }
     json(res,404,{error:'Not found'});
   } catch (e) { console.error(e); json(res,500,{error:'Server error'}); }
 });
