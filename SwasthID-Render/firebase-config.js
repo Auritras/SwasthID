@@ -1,7 +1,3 @@
-/* SwasthID Firebase configuration.
-   Firebase web config values are not passwords. Security comes from
-   Firebase Authentication + Firestore Security Rules.
-   Replace the placeholder values with your Firebase Web App config. */
 window.SWASTH_FIREBASE_CONFIG = {
    apiKey: "AIzaSyA0R72dAU5aAJBMPTpl5ykFpz8TPTlnR4M",
    authDomain: "swasthid-hackathon.firebaseapp.com",
