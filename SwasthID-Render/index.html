@@ -33,12 +33,29 @@
     return SWASTH_SCRIPT_PROMISES[key];
   }
   async function ensureFirebaseLoaded() {
-    if (window.firebase?.auth && window.firebase?.firestore) return window.firebase;
-    await loadSwasthScript('firebase-app','https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js','firebase');
+    // Firebase core creates window.firebase, so it cannot be used as the
+    // globalName test for Auth/Firestore. Those compat modules must load
+    // explicitly even when the core object already exists.
+    if (!window.firebase) {
+      await loadSwasthScript(
+        'firebase-app',
+        'https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js',
+        'firebase'
+      );
+    }
     await Promise.all([
-      loadSwasthScript('firebase-auth','https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js','firebase'),
-      loadSwasthScript('firebase-firestore','https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js','firebase')
+      loadSwasthScript(
+        'firebase-auth',
+        'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js'
+      ),
+      loadSwasthScript(
+        'firebase-firestore',
+        'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js'
+      )
     ]);
+    if (typeof window.firebase?.auth !== 'function' || typeof window.firebase?.firestore !== 'function') {
+      throw new Error('Firebase Authentication and Firestore SDKs failed to load.');
+    }
     return window.firebase;
   }
   async function ensureTesseractLoaded() {
@@ -1081,7 +1098,6 @@
 
 /* ===== PERSONALIZED PROFILE / ONBOARDING ===== */
 @keyframes swasthListIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.prototype-banner{position:sticky;top:0;z-index:9998;background:#fff7e6;border-bottom:1px solid #ead7ad;color:#654d1f;text-align:center;padding:7px 14px;font-size:11px;line-height:1.35;font-weight:700}
 .offline-banner{display:none;position:sticky;top:0;z-index:9999;background:#fff0f0;color:#8b1e1e;border-bottom:1px solid #efb5b5;padding:8px 14px;text-align:center;font-size:12px;font-weight:700}.offline-banner.show{display:block}
 body.dark-mode{--bg:#0d1514;--surface:#14201d;--paper:#101b19;--ink:#eef7f3;--muted:#a8bbb4;--line:#29403a;--sage:#17352d;--danger-soft:#3a2020;--teal:#62d2b0}
 body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:#101b19;color:var(--ink);border-color:var(--line)}
@@ -1177,10 +1193,6 @@ body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:#1
 </style>
 
 <style id="swasth-v8-hardening-css">
-:root{--prototype-h:30px;--topbar-h:64px}
-.prototype-banner{position:sticky;top:0;z-index:10050;min-height:30px;box-sizing:border-box}
-.topbar{top:var(--prototype-h)!important}
-.tabnav{top:calc(var(--prototype-h) + var(--topbar-h))!important}
 #darkModeToggle{right:18px!important;bottom:84px!important;z-index:10002!important}
 #aiAssistantDock{z-index:10001!important}
 .inline-editor-overlay{position:fixed;inset:0;z-index:11000;background:rgba(12,24,20,.45);display:flex;align-items:center;justify-content:center;padding:18px}
@@ -5579,7 +5591,7 @@ function renderEmergencyQRIfReady(){
      heading('Current medications'); if(!b.medications.length)row('Medication','None recorded'); else b.medications.forEach(m=>row('Medication',`${m.medication.text} · ${m.dose.text||'Dose not provided'} · ${m.frequency.text||'Frequency not provided'}${m.instructions?' · '+m.instructions:''}`));
      heading('Recent visits'); if(!b.encounters.length)row('Visits','None recorded'); else b.encounters.slice(0,12).forEach(v=>row('Visit',`${v.date?new Date(v.date).toLocaleDateString():'Date unavailable'} · ${v.provider||'Provider not provided'} · ${v.specialty||'Specialty not provided'} · ${v.facility||'Facility not provided'}`));
      heading('Diagnostic reports'); if(!b.diagnosticReports.length)row('Reports','None recorded'); else b.diagnosticReports.slice(0,15).forEach(r=>row('Report',`${r.date?new Date(r.date).toLocaleDateString():'Date unavailable'} · ${r.code.text}${r.result.text?' · '+r.result.text:''}`));
-     pageBreak(25);doc.setDrawColor(...line);doc.line(M,H-16,W-M,H-16);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...muted);doc.text('SwasthID is a prototype and is not an official Government of India service. This export is informational and should be verified by a healthcare professional.',M,H-10,{maxWidth:CW});
+     pageBreak(25);doc.setDrawColor(...line);doc.line(M,H-16,W-M,H-16);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...muted);doc.text('This export is informational and should be verified by a healthcare professional.',M,H-10,{maxWidth:CW});
      const filename=`SwasthID-Health-Summary-${safeHealthName()}.pdf`;const blob=doc.output('blob');const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);setHealthShareStatus(`Health Summary PDF ready: ${filename}`);
    }catch(e){console.error('Health summary PDF failed:',e);setHealthShareStatus('Health Summary PDF failed: '+(e?.message||'unknown error'),true);alert('The health summary PDF could not be generated. Please try again.');}finally{if(btn)btn.disabled=false;}
  }
@@ -6223,7 +6235,7 @@ function showEmergencyPublicView(payload) {
    const conditions = Array.isArray(payload.c) && payload.c.length ? payload.c.join(', ') : 'None recorded';
    const meds = Array.isArray(payload.m) && payload.m.length ? payload.m.join(', ') : 'None recorded';
    const insurance = Array.isArray(payload.ins) && payload.ins.some(Boolean) ? payload.ins.filter(Boolean).join(' · ') : 'Not provided';
-   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency Health Information</h2><p>Read-only emergency information shared by the patient</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-grid"><div class="public-emergency-item full"><label>Patient</label><div>${escapeHtml(payload.n)}</div></div><div class="public-emergency-item"><label>Blood group</label><div>${escapeHtml(payload.bg || 'Not provided')}</div></div><div class="public-emergency-item"><label>Drug allergies</label><div>${escapeHtml(payload.da || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Other allergies</label><div>${escapeHtml(payload.oa || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Ongoing conditions</label><div>${escapeHtml(conditions)}</div></div><div class="public-emergency-item full"><label>Critical daily medicines</label><div>${escapeHtml(meds)}</div></div><div class="public-emergency-item full"><label>Health insurance</label><div>${escapeHtml(insurance)}</div></div><div class="public-emergency-item full"><label>Emergency contact</label><div>${escapeHtml(contactName)}${contactRelation ? ' (' + escapeHtml(contactRelation) + ')' : ''}${contactPhone ? ' · ' + escapeHtml(contactPhone) : ''}</div></div></div><div class="public-emergency-actions"><a class="emergency-call primary" href="tel:112">Call 112</a>${contactPhone ? `<a class="emergency-call" href="tel:${String(contactPhone).replace(/[^+0-9]/g, '')}">Call emergency contact</a>` : ''}<button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div></div><div class="public-emergency-foot">QR payload remains valid until revoked or its long-term expiry date. It is not encrypted, so only place minimum necessary emergency information in the QR. SwasthID is a prototype and is not an official Government of India service. In an active emergency, call 112.</div></div>`;
+   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency Health Information</h2><p>Read-only emergency information shared by the patient</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-grid"><div class="public-emergency-item full"><label>Patient</label><div>${escapeHtml(payload.n)}</div></div><div class="public-emergency-item"><label>Blood group</label><div>${escapeHtml(payload.bg || 'Not provided')}</div></div><div class="public-emergency-item"><label>Drug allergies</label><div>${escapeHtml(payload.da || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Other allergies</label><div>${escapeHtml(payload.oa || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Ongoing conditions</label><div>${escapeHtml(conditions)}</div></div><div class="public-emergency-item full"><label>Critical daily medicines</label><div>${escapeHtml(meds)}</div></div><div class="public-emergency-item full"><label>Health insurance</label><div>${escapeHtml(insurance)}</div></div><div class="public-emergency-item full"><label>Emergency contact</label><div>${escapeHtml(contactName)}${contactRelation ? ' (' + escapeHtml(contactRelation) + ')' : ''}${contactPhone ? ' · ' + escapeHtml(contactPhone) : ''}</div></div></div><div class="public-emergency-actions"><a class="emergency-call primary" href="tel:112">Call 112</a>${contactPhone ? `<a class="emergency-call" href="tel:${String(contactPhone).replace(/[^+0-9]/g, '')}">Call emergency contact</a>` : ''}<button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div></div><div class="public-emergency-foot">QR payload remains valid until revoked or its long-term expiry date. It is not encrypted, so only place minimum necessary emergency information in the QR. In an active emergency, call 112.</div></div>`;
  }
  overlay.classList.add('show');
 }
@@ -6382,7 +6394,7 @@ async function downloadEmergencyPDF() {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.7);
     const note = doc.splitTextToSize(
-      'This document is a patient-controlled emergency reference. It is not a diagnosis and does not replace emergency medical care. Verify critical information when possible. SwasthID is a prototype and is not an official Government of India service.',
+      'This document is a patient-controlled emergency reference. It is not a diagnosis and does not replace emergency medical care. Verify critical information when possible.',
       noteW
     );
     doc.text(note, noteX, footerLineY + 14);
@@ -7468,21 +7480,6 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
     } else { nativeAlert(text); }
   };
 
-  // Measure sticky offsets instead of assuming the prototype banner is always one line.
-  function updateStickyOffsets(){
-    const banner=document.querySelector('.prototype-banner');
-    const topbar=document.querySelector('.topbar');
-    document.documentElement.style.setProperty('--prototype-h', `${Math.ceil(banner?.getBoundingClientRect().height||30)}px`);
-    document.documentElement.style.setProperty('--topbar-h', `${Math.ceil(topbar?.getBoundingClientRect().height||64)}px`);
-  }
-  updateStickyOffsets();
-  window.addEventListener('resize',updateStickyOffsets,{passive:true});
-  if(window.ResizeObserver){
-    const ro=new ResizeObserver(updateStickyOffsets);
-    const b=document.querySelector('.prototype-banner'); if(b)ro.observe(b);
-    const t=document.querySelector('.topbar'); if(t)ro.observe(t);
-  }
-
   // Restore inline calorie/water editors and remove prompt-based handlers by cloning buttons.
   function openTargetEditor(kind){
     const overlay=$('inlineTargetEditor'), input=$('inlineTargetInput'), title=$('inlineTargetTitle'), help=$('inlineTargetHelp'), label=$('inlineTargetLabel');
@@ -7519,25 +7516,31 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
   $('inlineTargetCancel')?.addEventListener('click',closeTargetEditor); $('inlineTargetSave')?.addEventListener('click',saveTargetEditor);
   $('inlineTargetEditor')?.addEventListener('click',e=>{if(e.target.id==='inlineTargetEditor')closeTargetEditor();});
 
-  // Google sign-in.
-  $('googleSignInBtn')?.addEventListener('click',async()=>{
-    const btn=$('googleSignInBtn'); if(btn)btn.disabled=true;
-    try{
-      if(!window.auth && typeof window.initFirebaseDataLayer==='function') await window.initFirebaseDataLayer();
-      if(!window.auth)throw new Error('Firebase Authentication is not configured.');
-      const provider=new firebase.auth.GoogleAuthProvider();
-      const result=await window.auth.signInWithPopup(provider);
-      window.firebaseUser=result.user;
-      await window.firebaseUser.reload();
-      if(!window.firebaseUser.emailVerified){throw new Error('Google account email could not be verified.');}
-      window.cloudSyncReady=await window.loadCloudState();
-      localStorage.setItem('swasth_loggedIn','true'); localStorage.setItem('swasth_abhaId',window.firebaseUser.email||'');
-      window.profileOnboardingRequired=typeof window.isProfileActuallyComplete==='function'?!window.isProfileActuallyComplete():false;
-      window.performLoginSetup?.(window.firebaseUser.email||'SwasthID User');
-      window.renderPersonalizedUI?.();
-      window.showToast?.('', 'Google sign-in successful','Your secure SwasthID session is ready.');
-    }catch(e){console.error(e);window.showToast?.('', 'Google sign-in failed',e.message||'Please try again.');}
-    finally{if(btn)btn.disabled=false;}
+  // Google sign-in. Use the real lexical state variables, not window.* properties.
+  $('googleSignInBtn')?.addEventListener('click', async () => {
+    const btn = $('googleSignInBtn');
+    if (btn) btn.disabled = true;
+    try {
+      if (!auth) await initFirebaseDataLayer();
+      if (!auth) throw new Error('Firebase Authentication is not configured.');
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const result = await auth.signInWithPopup(provider);
+      firebaseUser = result.user;
+      await firebaseUser.reload();
+      if (!firebaseUser.emailVerified) throw new Error('Google account email could not be verified.');
+      cloudSyncReady = await loadCloudState();
+      localStorage.setItem('swasth_loggedIn', 'true');
+      localStorage.setItem('swasth_abhaId', firebaseUser.email || '');
+      profileOnboardingRequired = typeof isProfileActuallyComplete === 'function' ? !isProfileActuallyComplete() : false;
+      performLoginSetup(firebaseUser.email || 'SwasthID User');
+      renderPersonalizedUI();
+      showToast('', 'Google sign-in successful', 'Your secure SwasthID session is ready.');
+    } catch (e) {
+      console.error(e);
+      showToast('', 'Google sign-in failed', e.message || 'Please try again.');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   });
 
   // Profile wizard: move the existing fields into four logical steps without changing save semantics.
