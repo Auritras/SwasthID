@@ -1622,6 +1622,176 @@ body.dark-mode .qr-box,
 body.dark-mode .emergency-card,
 body.dark-mode .extract-card{box-shadow:0 7px 22px rgba(0,0,0,.18)!important}
 </style>
+
+<style id="swasth-darkmode-component-fix">
+/* Comprehensive dark-mode component normalization. */
+html.dark-mode,
+body.dark-mode{
+  background:#07100d!important;
+  color:#dceae4!important;
+}
+
+/* Mental-health / mood banner */
+body.dark-mode .mood-banner{
+  background:linear-gradient(135deg,#102d27 0%,#12352d 55%,#142f2a 100%)!important;
+  border-color:#285446!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.18)!important;
+}
+body.dark-mode .mood-left .kicker{color:#65b99f!important}
+body.dark-mode .mood-left h3{color:#dcebe5!important}
+body.dark-mode .mood-left p{color:#9eb8ae!important}
+body.dark-mode .mood-emoji{
+  background:#13251f!important;
+  border-color:#36584d!important;
+  color:#dceae4!important;
+}
+body.dark-mode .mood-emoji:hover,
+body.dark-mode .mood-emoji.active{
+  border-color:#4a9278!important;
+  background:#18352c!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.22)!important;
+}
+body.dark-mode .mood-emoji.active{background:#1a3b31!important}
+body.dark-mode .mood-emoji small{color:#9eb8ae!important}
+body.dark-mode .support-chip{
+  background:#1c493c!important;
+  color:#9bd4bf!important;
+}
+body.dark-mode .call-btn{
+  background:#164536!important;
+  border-color:#3d7864!important;
+  color:#dff0e9!important;
+  box-shadow:0 3px 9px rgba(0,0,0,.22)!important;
+}
+body.dark-mode .call-btn:hover{background:#1d5745!important}
+
+/* Activity summary */
+body.dark-mode .activity-note{
+  background:linear-gradient(90deg,#102b23,#12271f)!important;
+  color:#a9c0b7!important;
+  border-color:#2c5446!important;
+  border-left-color:#4a9a76!important;
+}
+body.dark-mode .activity-empty{
+  background:#102019!important;
+  color:#9eb8ae!important;
+  border-color:#315047!important;
+}
+body.dark-mode .activity-stats{
+  background:#0d1a16!important;
+  border-color:#294139!important;
+}
+body.dark-mode .activity-stats .stat{
+  background:#0d1a16!important;
+  color:#dceae4!important;
+  border-color:#294139!important;
+}
+body.dark-mode .activity-stats .stat .num{color:#dceae4!important}
+body.dark-mode .activity-stats .stat .label{color:#91aaa0!important}
+
+/* Generic empty states and dashed cards that still carried light-theme backgrounds. */
+body.dark-mode .today-med-empty,
+body.dark-mode .activity-empty,
+body.dark-mode .calorie-meter,
+body.dark-mode .bars{
+  background:#102019!important;
+  border-color:#315047!important;
+  color:#9eb8ae!important;
+}
+
+/* Login screen: eliminate the light-theme shell around the dark login card. */
+body.dark-mode #loginScreen{
+  background:linear-gradient(135deg,#06100d 0%,#091712 52%,#0d211b 100%)!important;
+  color:#dceae4!important;
+}
+body.dark-mode .gov-brand-panel{
+  background:linear-gradient(165deg,#081511 0%,#0b1b16 100%)!important;
+  border-right-color:#223b32!important;
+}
+body.dark-mode .gov-india-text{color:#d5e5df!important}
+body.dark-mode .gov-india-en{color:#8fa89f!important}
+body.dark-mode .gov-login-panel{
+  background:#0b1a15!important;
+  border-color:#29463b!important;
+  box-shadow:0 12px 36px rgba(0,0,0,.28)!important;
+}
+body.dark-mode .secure-chip{
+  background:#17372c!important;
+  border-color:#356454!important;
+  color:#a9d5c2!important;
+}
+body.dark-mode .gov-login-panel h1{color:#dceae4!important}
+body.dark-mode .gov-login-panel .sub{color:#98b0a7!important}
+body.dark-mode .gov-login-panel label{color:#b8cbc4!important}
+body.dark-mode .forgot-link{color:#83b9e9!important}
+body.dark-mode .gov-input-wrap{
+  background:#0c1814!important;
+  border-color:#39554b!important;
+}
+body.dark-mode .gov-input-wrap:focus-within{
+  border-color:#4c9278!important;
+  box-shadow:0 0 0 3px rgba(76,146,120,.15)!important;
+}
+body.dark-mode .gov-input-wrap input{
+  background:transparent!important;
+  color:#dceae4!important;
+}
+body.dark-mode .gov-input-wrap input::placeholder{color:#708a80!important}
+body.dark-mode .input-icon,
+body.dark-mode .eye-icon{color:#8da79e!important}
+body.dark-mode .login-btn{
+  background:#1d634d!important;
+  color:#eff8f4!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.22)!important;
+}
+body.dark-mode .login-btn:hover{background:#247259!important}
+body.dark-mode .login-divider{color:#789189!important}
+body.dark-mode .alt-login-btn{
+  background:#10231d!important;
+  border-color:#365349!important;
+  color:#d3e2dc!important;
+}
+body.dark-mode .alt-login-btn:hover{
+  background:#163028!important;
+  border-color:#4a6e61!important;
+}
+body.dark-mode .security-note{
+  color:#829b92!important;
+  border-top-color:#29443a!important;
+}
+body.dark-mode .mission-strip{
+  background:rgba(7,16,13,.82)!important;
+  border-top-color:#294139!important;
+}
+body.dark-mode .mission-strip strong{color:#b8ccc5!important}
+body.dark-mode .mission-strip small{color:#7f9990!important}
+body.dark-mode .m-white{background:#274037!important}
+
+/* Login background ornaments are intentionally much quieter in dark mode. */
+body.dark-mode .login-saffron{opacity:.18!important}
+body.dark-mode .login-green{opacity:.20!important}
+
+/* Portal shell pieces that can otherwise remain light before dashboard sections load. */
+body.dark-mode .gov-portal-strip{
+  background:#0b1814!important;
+  border-bottom-color:#263f36!important;
+  color:#91aaa1!important;
+}
+body.dark-mode .gov-portal-title{color:#9fb9b0!important}
+body.dark-mode .gov-portal-title span{color:#718980!important}
+body.dark-mode .gov-tagline{color:#91aaa1!important}
+
+/* Strong fallback for inline light backgrounds used by legacy components. */
+body.dark-mode [style*="background:#fff"],
+body.dark-mode [style*="background:#FFF"],
+body.dark-mode [style*="background: #fff"],
+body.dark-mode [style*="background: #FFF"],
+body.dark-mode [style*="background:white"],
+body.dark-mode [style*="background: white"]{
+  background:#102019!important;
+  color:#dceae4!important;
+}
+</style>
 </head>
 <body><div id="offlineBanner" class="offline-banner" role="status">You are offline. Saved information remains available, but live services may be unavailable until your connection returns.</div><!-- ============ GOVERNMENT LOGIN SCREEN ============ -->
 <div id="loginScreen">
@@ -3214,7 +3384,7 @@ let profileOnboardingRequired = false;
  const saved=localStorage.getItem(key)==='true';
  const applyTheme=(on)=>{
   document.documentElement.classList.toggle('dark-mode',on);
-  document.body.classList.toggle('dark-mode',on);
+  document.body.classList.toggle('dark-mode',on); document.documentElement.classList.toggle('dark-mode',on);
   const btn=document.getElementById('darkModeToggle');
   if(btn){
    btn.setAttribute('aria-pressed',String(on));
