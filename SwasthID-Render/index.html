@@ -1213,10 +1213,417 @@ body.dark-mode [style*="background:#fff"],body.dark-mode [style*="background: #f
 body.dark-mode [style*="linear-gradient"]{color:var(--ink)}
 @media(max-width:600px){#darkModeToggle{bottom:72px!important;right:12px!important}}
 </style>
-</head>
-<body><div id="offlineBanner" class="offline-banner" role="status">You are offline. Saved information remains available, but live services may be unavailable until your connection returns.</div><button id="darkModeToggle" type="button" aria-label="Toggle dark mode" style="position:fixed;right:12px;bottom:12px;z-index:10001;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 12px;box-shadow:0 8px 24px rgba(0,0,0,.12);">Dark mode</button>
+<style id="swasth-theme-redesign">
+#darkModeToggle{position:relative!important;right:auto!important;bottom:auto!important;z-index:auto!important}
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:34px;padding:0 10px;border:1px solid #d7e1dc;border-radius:9px;background:#fff;color:#43554f;font:600 12px/1 'Inter','Work Sans',sans-serif;cursor:pointer;transition:background .2s,border-color .2s,color .2s,transform .15s}.theme-toggle:hover{background:#f3f7f5;border-color:#b9cbc3;transform:translateY(-1px)}.theme-toggle:focus-visible{outline:3px solid rgba(19,136,8,.18);outline-offset:2px}.theme-toggle-icon{font-size:16px;line-height:1;width:17px;text-align:center}.theme-toggle-label{min-width:30px}
+body.dark-mode{--bg:#0b1210;--surface:#121c19;--paper:#0f1715;--ink:#edf5f1;--muted:#9fb2aa;--line:#293b35;--sage:#173129;--sage-line:#31554a;--teal:#6ad5b4;--gov-blue:#86b8e9;--india-green:#5fc477;--saffron:#ffad62;background:var(--bg);color:var(--ink)}
+body.dark-mode .theme-toggle{background:#18231f;border-color:#344941;color:#e8f2ee}body.dark-mode .theme-toggle:hover{background:#20302a;border-color:#466158}
+body.dark-mode .topbar,body.dark-mode .tabnav{background:rgba(15,24,21,.94)!important;border-color:var(--line)!important;color:var(--ink)}body.dark-mode .tabnav{box-shadow:0 4px 18px rgba(0,0,0,.22)}body.dark-mode .tab-btn{color:#a9bbb4}body.dark-mode .tab-btn.active{color:#9bc9ee;border-bottom-color:#65c87d;background:linear-gradient(180deg,rgba(95,196,119,.08),transparent)}body.dark-mode .brand-name-gov{color:#edf5f1}body.dark-mode .top-health-chip{background:#18231f;border-color:#30443c;color:#b5c7c0}body.dark-mode .lang-select{background:#18231f;color:#dce9e4;border-color:#344941}body.dark-mode .logout-link{color:#72d6b5}
+body.dark-mode .hero,body.dark-mode section,body.dark-mode .card,body.dark-mode .panel section,body.dark-mode .clinical-card,body.dark-mode .intel-card,body.dark-mode .reg-card,body.dark-mode .med-item,body.dark-mode .history-item,body.dark-mode .visit-item,body.dark-mode .price-row,body.dark-mode .stat,body.dark-mode .nearby-panel,body.dark-mode .nearby-item,body.dark-mode .profile-vitals,body.dark-mode .accordion-head,body.dark-mode .accordion-body,body.dark-mode .qr-box,body.dark-mode .emergency-card,body.dark-mode .extract-card,body.dark-mode .doctor-card,body.dark-mode .record-card,body.dark-mode .care-journey-section{background:var(--surface);color:var(--ink);border-color:var(--line)}body.dark-mode .content,body.dark-mode .panel{color:var(--ink)}body.dark-mode .section-sub,body.dark-mode .label,body.dark-mode .muted,body.dark-mode .sub-line,body.dark-mode .small,body.dark-mode .personalization-note{color:var(--muted)!important}
+body.dark-mode input,body.dark-mode select,body.dark-mode textarea,body.dark-mode .reg-input,body.dark-mode .profile-input{background:#0f1715!important;color:var(--ink)!important;border-color:#344941!important}body.dark-mode input::placeholder,body.dark-mode textarea::placeholder{color:#71847c}body.dark-mode .n-btn,body.dark-mode .med-action,body.dark-mode .call-btn{background:#18251f;color:#dcebe5;border-color:#3a5047}body.dark-mode .n-btn:hover,body.dark-mode .med-action:hover{background:#20322b}body.dark-mode .n-btn.solid{background:#2f7c61;color:#fff;border-color:#2f7c61}body.dark-mode .hero-chip,body.dark-mode .badge,body.dark-mode .ai-chip{background:#182b24;border-color:#345147;color:#bfe1d2}
+body.dark-mode .ai-chat-body{background:#0e1614!important}body.dark-mode .ai-msg.bot,body.dark-mode .ai-suggestions{background:#15211d!important;color:var(--ink);border-color:var(--line)}body.dark-mode .ai-input-row{background:#121c19!important;border-color:var(--line)}body.dark-mode .offline-banner{background:#302719;color:#f1d7a5;border-color:#66502c}body.dark-mode .inline-editor-overlay{background:rgba(0,0,0,.68)}body.dark-mode .inline-editor-card,body.dark-mode .modal-content,body.dark-mode .profile-modal{background:#121c19!important;color:var(--ink)!important;border-color:var(--line)!important}body.dark-mode .toast{background:#16231f!important;color:var(--ink)!important;border-color:#365047!important}body.dark-mode .topbar.scrolled,body.dark-mode .tabnav.scrolled{background:rgba(15,24,21,.86)!important}@media(max-width:760px){.theme-toggle-label{display:none}.theme-toggle{width:34px;padding:0}.topbar-right{gap:9px}.theme-toggle-icon{font-size:17px}}
+</style>
+<style id="swasth-darkmode-final-fix">
 
-<!-- ============ GOVERNMENT LOGIN SCREEN ============ -->
+/* Dark-mode scrollbars: keep browser and tab scrolling visually integrated with the theme. */
+html.dark-mode,
+body.dark-mode{
+  scrollbar-color:#1a4a3b #07100d;
+  scrollbar-width:thin;
+}
+
+html.dark-mode::-webkit-scrollbar{
+  width:10px;
+  height:10px;
+}
+html.dark-mode::-webkit-scrollbar-track{
+  background:#07100d;
+}
+html.dark-mode::-webkit-scrollbar-thumb{
+  background:#1a4a3b;
+  border:2px solid #07100d;
+  border-radius:999px;
+}
+html.dark-mode::-webkit-scrollbar-thumb:hover{
+  background:#24634f;
+}
+html.dark-mode::-webkit-scrollbar-corner{
+  background:#07100d;
+}
+
+/* Horizontal tab strip: deliberately slimmer and quieter than the page scrollbar. */
+body.dark-mode .tabnav{
+  scrollbar-color:#1a4a3b transparent;
+  scrollbar-width:thin;
+}
+body.dark-mode .tabnav::-webkit-scrollbar{
+  width:0;
+  height:6px;
+}
+body.dark-mode .tabnav::-webkit-scrollbar-track{
+  background:transparent;
+}
+body.dark-mode .tabnav::-webkit-scrollbar-thumb{
+  background:#1a4a3b;
+  border:0;
+  border-radius:999px;
+}
+body.dark-mode .tabnav::-webkit-scrollbar-thumb:hover{
+  background:#24634f;
+}
+
+/* Other intentionally scrollable dark-mode panels. */
+body.dark-mode .ai-suggestions,
+body.dark-mode .ai-chat-body,
+body.dark-mode .modal-content,
+body.dark-mode .inline-editor-card{
+  scrollbar-color:#1a4a3b #0b1712;
+  scrollbar-width:thin;
+}
+body.dark-mode .ai-suggestions::-webkit-scrollbar,
+body.dark-mode .ai-chat-body::-webkit-scrollbar,
+body.dark-mode .modal-content::-webkit-scrollbar,
+body.dark-mode .inline-editor-card::-webkit-scrollbar{
+  width:7px;
+  height:7px;
+}
+body.dark-mode .ai-suggestions::-webkit-scrollbar-track,
+body.dark-mode .ai-chat-body::-webkit-scrollbar-track,
+body.dark-mode .modal-content::-webkit-scrollbar-track,
+body.dark-mode .inline-editor-card::-webkit-scrollbar-track{
+  background:#0b1712;
+}
+body.dark-mode .ai-suggestions::-webkit-scrollbar-thumb,
+body.dark-mode .ai-chat-body::-webkit-scrollbar-thumb,
+body.dark-mode .modal-content::-webkit-scrollbar-thumb,
+body.dark-mode .inline-editor-card::-webkit-scrollbar-thumb{
+  background:#1a4a3b;
+  border-radius:999px;
+}
+body.dark-mode .ai-suggestions::-webkit-scrollbar-thumb:hover,
+body.dark-mode .ai-chat-body::-webkit-scrollbar-thumb:hover,
+body.dark-mode .modal-content::-webkit-scrollbar-thumb:hover,
+body.dark-mode .inline-editor-card::-webkit-scrollbar-thumb:hover{
+  background:#24634f;
+}
+
+/* Final dark-mode pass: normalize surfaces, contrast, borders and the green accent. */
+body.dark-mode{
+  --bg:#07100d;
+  --surface:#0d1915;
+  --surface-2:#102019;
+  --paper:#09130f;
+  --ink:#dceae4;
+  --muted:#96ada3;
+  --line:#263d34;
+  --sage:#10251c;
+  --sage-line:#2a493d;
+  --teal:#1c5a45;
+  --teal-light:#246b51;
+  --india-green:#4fae70;
+  --ok:#4f9b70;
+  --gov-blue:#9bbbdc;
+  --blue:#9bbbdc;
+  --danger:#d36b58;
+  --danger-soft:#321a17;
+  --amber:#d29a52;
+  --amber-soft:#302516;
+  background:var(--bg)!important;
+  color:var(--ink)!important;
+}
+
+/* Government strip / navigation */
+body.dark-mode .gov-portal-strip,
+body.dark-mode .topbar,
+body.dark-mode .tabnav,
+body.dark-mode .topbar.scrolled,
+body.dark-mode .tabnav.scrolled{
+  background:#09130f!important;
+  color:var(--muted)!important;
+  border-color:var(--line)!important;
+  box-shadow:none!important;
+}
+body.dark-mode .gov-portal-title,
+body.dark-mode .gov-portal-title span,
+body.dark-mode .gov-tagline,
+body.dark-mode .topbar-right,
+body.dark-mode .tab-btn{color:var(--muted)!important}
+body.dark-mode .gov-portal-title{color:#b8cec5!important}
+body.dark-mode .gov-tagline{color:#9db7ad!important}
+body.dark-mode .brand-name-gov{color:#dceae4!important}
+body.dark-mode .brand-name-gov span{color:#4fae70!important}
+body.dark-mode .top-health-chip{background:#112019!important;border-color:#29463b!important;color:#b7cbc2!important}
+body.dark-mode .lang-select{background:#101d18!important;color:#d5e4de!important;border-color:#30483e!important}
+body.dark-mode .logout-link{color:#5aa77a!important}
+body.dark-mode .tab-btn.active{color:#a8c8df!important;border-bottom-color:#3f8f63!important;background:rgba(63,143,99,.08)!important}
+body.dark-mode .tab-btn.active:before{background:#b36c35!important}
+body.dark-mode .topbar:after{background:linear-gradient(90deg,#9a572b,#285e45)!important}
+
+/* Main surfaces: eliminate accidental white/light cards. */
+body.dark-mode section,
+body.dark-mode .card,
+body.dark-mode .panel section,
+body.dark-mode .clinical-card,
+body.dark-mode .intel-card,
+body.dark-mode .reg-card,
+body.dark-mode .med-item,
+body.dark-mode .history-item,
+body.dark-mode .visit-item,
+body.dark-mode .price-row,
+body.dark-mode .stat,
+body.dark-mode .nearby-panel,
+body.dark-mode .nearby-item,
+body.dark-mode .profile-vitals,
+body.dark-mode .accordion-head,
+body.dark-mode .accordion-body,
+body.dark-mode .qr-box,
+body.dark-mode .emergency-card,
+body.dark-mode .extract-card,
+body.dark-mode .doctor-card,
+body.dark-mode .record-card,
+body.dark-mode .care-journey-section,
+body.dark-mode .privacy-card,
+body.dark-mode .visibility-item,
+body.dark-mode .workflow-step,
+body.dark-mode .scan-upload,
+body.dark-mode .rx-card-results,
+body.dark-mode .rx-order-card,
+body.dark-mode .refill-panel,
+body.dark-mode .adherence-panel,
+body.dark-mode .empty-state,
+body.dark-mode .record-empty,
+body.dark-mode .ai-summary,
+body.dark-mode .ai-summary.blue-tint,
+body.dark-mode .simple-explain,
+body.dark-mode .alert-card{
+  background:var(--surface)!important;
+  color:var(--ink)!important;
+  border-color:var(--line)!important;
+}
+
+/* Inline light backgrounds are a major source of the white cards seen in dark mode. */
+body.dark-mode [style*="background:#fff" i],
+body.dark-mode [style*="background: #fff" i],
+body.dark-mode [style*="background:#ffffff" i],
+body.dark-mode [style*="background: #ffffff" i],
+body.dark-mode [style*="background:white" i],
+body.dark-mode [style*="background: white" i],
+body.dark-mode [style*="background:#F3F9F5" i],
+body.dark-mode [style*="background:#F8FAF9" i],
+body.dark-mode [style*="background:#FFFDFD" i],
+body.dark-mode [style*="background:#fbfdfc" i],
+body.dark-mode [style*="background:#edf4ef" i],
+body.dark-mode [style*="background:#edf7ef" i]{
+  background:var(--surface)!important;
+  color:var(--ink)!important;
+}
+body.dark-mode [style*="background:var(--paper" i]{background:var(--paper)!important}
+body.dark-mode [style*="background:var(--surface" i]{background:var(--surface)!important}
+body.dark-mode [style*="background: linear-gradient(135deg, #f0f7f1" i]{
+  background:#102019!important;
+}
+
+/* Headings and copy need to stay readable instead of inheriting the old navy theme. */
+body.dark-mode section h3,
+body.dark-mode section h4,
+body.dark-mode .section-head-row h3,
+body.dark-mode .reg-card h4,
+body.dark-mode .privacy-card h4,
+body.dark-mode .scan-upload h4,
+body.dark-mode .workflow-step,
+body.dark-mode .history-item .h-name,
+body.dark-mode .visit-head,
+body.dark-mode .clinical-card b,
+body.dark-mode .medicine-input-header,
+body.dark-mode .medicine-name-input,
+body.dark-mode .today-med-name,
+body.dark-mode .status-main,
+body.dark-mode .status-sub,
+body.dark-mode .visibility-item,
+body.dark-mode .care-journey-head,
+body.dark-mode .care-journey-next,
+body.dark-mode .care-journey-status{
+  color:#cfe2da!important;
+}
+body.dark-mode section p,
+body.dark-mode section .section-sub,
+body.dark-mode .h-meta,
+body.dark-mode .visit-body,
+body.dark-mode .clinical-card p,
+body.dark-mode .small,
+body.dark-mode .muted,
+body.dark-mode .qr-meta,
+body.dark-mode .rx-caption,
+body.dark-mode .record-empty,
+body.dark-mode .empty-state,
+body.dark-mode .privacy-card p,
+body.dark-mode .personalization-note,
+body.dark-mode .today-med-meta,
+body.dark-mode .med-item .dose,
+body.dark-mode .history-item .h-meta,
+body.dark-mode .visit-head .meta,
+body.dark-mode .nearby-item .n-meta,
+body.dark-mode .lab-trend-summary{
+  color:var(--muted)!important;
+}
+body.dark-mode section h3,
+body.dark-mode .scan-upload h4,
+body.dark-mode .reg-card h4,
+body.dark-mode .privacy-card h4{
+  text-shadow:none!important;
+}
+
+/* The old inline navy heading on the prescription scanner. */
+body.dark-mode .scan-hero h3,
+body.dark-mode h3[style*="color:#28425d" i],
+body.dark-mode h3[style*="color: #28425d" i]{
+  color:#cfe2da!important;
+}
+
+/* Keep the specialty sections intentional rather than generic. */
+body.dark-mode .doctor-hero{background:linear-gradient(115deg,#123b30,#18513f)!important;color:#eef7f2!important;border-color:#2c5a48!important}
+body.dark-mode .doctor-hero h3{color:#eef7f2!important}
+body.dark-mode .doctor-hero .section-sub{color:#b8cdc4!important}
+body.dark-mode .emergency-hero{background:#291714!important;border-color:#55312b!important}
+body.dark-mode .emergency-hero h3,
+body.dark-mode .emergency-kicker{color:#e28a78!important}
+body.dark-mode .emergency-hero .section-sub{color:#bba7a1!important}
+body.dark-mode .passport-status{background:#1a120f!important;border-color:#694038!important;color:#e28a78!important}
+body.dark-mode .passport-status .status-sub{color:#b9aaa5!important;border-top-color:#49312c!important}
+body.dark-mode .emergency-card-head{background:#6e2d25!important}
+body.dark-mode .emergency-call{background:#111b17!important;color:#e28a78!important;border-color:#8c463b!important}
+body.dark-mode .emergency-call.primary{background:#7a3028!important;color:#fff!important}
+
+/* Dark, restrained green accent. */
+body.dark-mode .n-btn,
+body.dark-mode .med-action,
+body.dark-mode .call-btn{
+  background:#101f19!important;
+  color:#cfe2da!important;
+  border-color:#315447!important;
+}
+body.dark-mode .n-btn:hover,
+body.dark-mode .med-action:hover,
+body.dark-mode .call-btn:hover{background:#152a21!important;border-color:#3d6856!important}
+body.dark-mode .n-btn.solid,
+body.dark-mode .login-btn,
+body.dark-mode .water-add-btn.solid{
+  background:#1c5a45!important;
+  color:#f1faf6!important;
+  border-color:#1c5a45!important;
+}
+body.dark-mode .n-btn.solid:hover,
+body.dark-mode .login-btn:hover{background:#246b51!important}
+body.dark-mode .summary-label,
+body.dark-mode .visit-toggle,
+body.dark-mode .logout-link,
+body.dark-mode .n-badge.dist{color:#5aa77a!important}
+body.dark-mode .n-badge.dist{background:#102a20!important}
+body.dark-mode .tag.resolved{background:#123024!important;color:#69b789!important}
+body.dark-mode .tag.blue{background:#15283a!important;color:#9bbbdc!important}
+body.dark-mode .tag.ongoing{background:#302516!important;color:#d29a52!important}
+
+/* Form controls */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea,
+body.dark-mode .reg-input,
+body.dark-mode .profile-input,
+body.dark-mode .rx-physician-field{
+  background:#09140f!important;
+  color:#dceae4!important;
+  border-color:#30493e!important;
+}
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder{color:#6f877d!important}
+body.dark-mode label{color:#b9cec5!important}
+body.dark-mode .input-icon,
+body.dark-mode .eye-icon{color:#91a89f!important}
+body.dark-mode .privacy-card .switch{filter:brightness(.82) saturate(.82)}
+
+/* AI / summaries / document scan */
+body.dark-mode .ai-summary{background:#102019!important;border-color:#2a493d!important}
+body.dark-mode .ai-summary.blue-tint{background:#111d29!important;border-color:#2a4055!important}
+body.dark-mode .summary-label{color:#5aa77a!important}
+body.dark-mode .scan-upload{background:#0f1c17!important;border-color:#3a5b4d!important}
+body.dark-mode .scan-kicker{background:#302516!important;color:#d7a25c!important}
+body.dark-mode .analysis-banner{background:#10291f!important;border-color:#2d6348!important;color:#9bc9ad!important}
+body.dark-mode .workflow-step .step-no{background:#173026!important;color:#69b789!important}
+body.dark-mode .extract-head{border-color:var(--line)!important}
+body.dark-mode .rx-preview{background:#12110f!important;border-color:#4c3b2d!important}
+body.dark-mode .rx-preview .scribble{color:#a9bdb4!important}
+
+/* Timeline / empty states */
+body.dark-mode .timeline{border-left-color:#2a493d!important}
+body.dark-mode .timeline-dot{background:var(--surface)!important;border-color:#315447!important}
+body.dark-mode .timeline-dot.active-dot{background:#1c5a45!important;border-color:#1c5a45!important}
+
+/* Registry / records / visibility cards */
+body.dark-mode .reg-card,
+body.dark-mode .privacy-card,
+body.dark-mode .record-card{box-shadow:0 8px 24px rgba(0,0,0,.18)!important}
+body.dark-mode .reg-card .history-item{background:#101f19!important}
+body.dark-mode .active-doctor-share-panel,
+body.dark-mode #activeDoctorSharePanel{background:#101f19!important;border-color:#2c493d!important}
+body.dark-mode #labTrendPanel{background:#0f1c17!important}
+body.dark-mode .profile-vitals .stat{background:#101f19!important}
+
+/* Prevent old fixed dark text from becoming navy on the dark surface. */
+body.dark-mode .gov-portal-title,
+body.dark-mode .gov-portal-title span,
+body.dark-mode .gov-tagline,
+body.dark-mode .brand-wordmark,
+body.dark-mode .brand-tagline,
+body.dark-mode .brand-subline,
+body.dark-mode .mission-strip strong,
+body.dark-mode .mission-strip small,
+body.dark-mode .gov-login-panel h1,
+body.dark-mode .security-note,
+body.dark-mode .gov-footer,
+body.dark-mode .footer-hindi{
+  color:var(--ink)!important;
+}
+body.dark-mode .gov-portal-title span,
+body.dark-mode .mission-strip small,
+body.dark-mode .brand-subline,
+body.dark-mode .security-note{color:var(--muted)!important}
+
+/* Footer */
+body.dark-mode .gov-footer{background:#08110e!important;border-color:var(--line)!important;color:#9db2a9!important}
+body.dark-mode .footer-hindi{color:#a9beb5!important}
+
+/* Keep the floating assistant and overlays coherent with the same palette. */
+body.dark-mode #aiChatWindow,
+body.dark-mode .ai-input-row,
+body.dark-mode .ai-msg.bot,
+body.dark-mode .ai-suggestions,
+body.dark-mode .inline-editor-card,
+body.dark-mode .modal-content,
+body.dark-mode .profile-modal,
+body.dark-mode .support-popup-card,
+body.dark-mode .toast{
+  background:#0d1915!important;
+  color:var(--ink)!important;
+  border-color:var(--line)!important;
+}
+body.dark-mode .ai-chat-body{background:#09130f!important}
+body.dark-mode .ai-msg.user{background:#173a2d!important;color:#dceae4!important}
+body.dark-mode .ai-chip{background:#102a20!important;border-color:#2c5a48!important;color:#a8ceb9!important}
+
+/* Do not let old light shadows/borders visually read as white blocks. */
+body.dark-mode .med-item,
+body.dark-mode .history-item,
+body.dark-mode .visit-item,
+body.dark-mode .price-row,
+body.dark-mode .clinical-card,
+body.dark-mode .intel-card,
+body.dark-mode .reg-card,
+body.dark-mode .qr-box,
+body.dark-mode .emergency-card,
+body.dark-mode .extract-card{box-shadow:0 7px 22px rgba(0,0,0,.18)!important}
+</style>
+</head>
+<body><div id="offlineBanner" class="offline-banner" role="status">You are offline. Saved information remains available, but live services may be unavailable until your connection returns.</div><!-- ============ GOVERNMENT LOGIN SCREEN ============ -->
 <div id="loginScreen">
  <div class="login-bg-shape login-saffron"></div>
  <div class="login-bg-shape login-green"></div>
@@ -1318,6 +1725,7 @@ body.dark-mode [style*="linear-gradient"]{color:var(--ink)}
  <div class="brand"><span class="gov-mini-logo"><b>+</b></span><span class="brand-name-gov">Swasth<span>ID</span></span></div>
  <div class="topbar-right">
  <span class="top-health-chip"> Secure account</span>
+ <button id="darkModeToggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Dark</span></button>
  <select class="lang-select" aria-label="Select language">
  <option value="English" selected>English</option>
  <option value="हिन्दी">हिन्दी</option>
@@ -2802,8 +3210,24 @@ let profileOnboardingRequired = false;
  }
 
  function initDarkMode(){
- const key='swasth_darkMode'; const saved=localStorage.getItem(key)==='true'; document.body.classList.toggle('dark-mode',saved);
- const btn=document.getElementById('darkModeToggle'); if(btn){btn.textContent=saved?'Light mode':'Dark mode'; btn.addEventListener('click',()=>{const on=!document.body.classList.contains('dark-mode');document.body.classList.toggle('dark-mode',on);localStorage.setItem(key,String(on));btn.textContent=on?'Light mode':'Dark mode';});}
+ const key='swasth_darkMode';
+ const saved=localStorage.getItem(key)==='true';
+ const applyTheme=(on)=>{
+  document.documentElement.classList.toggle('dark-mode',on);
+  document.body.classList.toggle('dark-mode',on);
+  const btn=document.getElementById('darkModeToggle');
+  if(btn){
+   btn.setAttribute('aria-pressed',String(on));
+   btn.setAttribute('aria-label',on?'Switch to light mode':'Switch to dark mode');
+   const icon=btn.querySelector('.theme-toggle-icon');
+   const label=btn.querySelector('.theme-toggle-label');
+   if(icon)icon.textContent=on?'☀':'☾';
+   if(label)label.textContent=on?'Light':'Dark';
+  }
+ };
+ applyTheme(saved);
+ const btn=document.getElementById('darkModeToggle');
+ if(btn&&!btn.dataset.bound){btn.dataset.bound='1';btn.addEventListener('click',()=>{const on=!document.body.classList.contains('dark-mode');localStorage.setItem(key,String(on));applyTheme(on);});}
 }
 function updateOfflineBanner(){const el=document.getElementById('offlineBanner');if(el)el.classList.toggle('show',navigator.onLine===false);}
 initDarkMode(); updateOfflineBanner(); window.addEventListener('online',updateOfflineBanner); window.addEventListener('offline',updateOfflineBanner);
