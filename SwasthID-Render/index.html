@@ -1963,6 +1963,12 @@ body.dark-mode [style*="linear-gradient"]{color:var(--ink)}
    </div>
   </div>
   <div id="healthShareStatus" style="margin-top:10px;font-size:12px;color:var(--muted);"></div>
+  <div id="activeDoctorSharePanel" style="display:none;margin-top:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--soft);">
+   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+    <div><b>Active doctor share</b><div id="activeDoctorShareMeta" style="font-size:11px;color:var(--muted);margin-top:3px;"></div></div>
+    <button class="n-btn" type="button" id="revokeDoctorShareBtn" style="border-color:#b84a40;color:#8f2d24;">Revoke share</button>
+   </div>
+  </div>
  </section>
  <section style="border-color:#e7b9b5;">
   <h3 style="color:#8f2d24;">Account &amp; data deletion</h3>
@@ -2083,10 +2089,21 @@ body.dark-mode [style*="linear-gradient"]{color:var(--ink)}
  <input type="text" class="reg-input" id="regName" placeholder="e.g. Ramesh Sharma">
  <label style="margin-top:12px;">Relationship</label>
  <select class="reg-input" id="regRel"><option value="">Select relationship</option><option>Parent</option><option>Mother</option><option>Father</option><option>Spouse</option><option>Partner</option><option>Son</option><option>Daughter</option><option>Sibling</option><option>Brother</option><option>Sister</option><option>Grandparent</option><option>Grandmother</option><option>Grandfather</option><option>Uncle</option><option>Aunt</option><option>Cousin</option><option>Friend</option><option>Other relative</option><option>Other</option></select>
- <button class="n-btn solid" id="registerDepBtn" style="width:100%; margin-top:16px;">Initiate Family Registration</button>
+ <button class="n-btn solid" id="registerDepBtn" style="width:100%; margin-top:16px;">Add dependent</button>
+ <div id="dependentList" style="margin-top:14px;"></div>
  </div>
  </section>
  </div>
+ </div>
+
+ <div id="dependentEditor" class="inline-editor-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="dependentEditorTitle">
+  <div class="inline-editor-card" style="max-width:500px;">
+   <h3 id="dependentEditorTitle">Edit dependent</h3>
+   <p class="section-sub">Update the linked profile details. This does not create a separate Firebase or ABHA account.</p>
+   <input id="dependentEditName" class="profile-input" type="text" maxlength="100" placeholder="Full name">
+   <select id="dependentEditRelation" class="profile-input" style="margin-top:10px;"><option value="">Select relationship</option><option>Parent</option><option>Mother</option><option>Father</option><option>Spouse</option><option>Partner</option><option>Son</option><option>Daughter</option><option>Sibling</option><option>Brother</option><option>Sister</option><option>Grandparent</option><option>Grandmother</option><option>Grandfather</option><option>Uncle</option><option>Aunt</option><option>Cousin</option><option>Friend</option><option>Other relative</option><option>Other</option></select>
+   <div class="inline-editor-actions"><button type="button" class="n-btn" id="dependentEditCancel">Cancel</button><button type="button" class="n-btn solid" id="dependentEditSave">Save changes</button></div>
+  </div>
  </div>
 
  <!-- ===== FOOTER ===== -->
@@ -2127,6 +2144,34 @@ body.dark-mode [style*="linear-gradient"]{color:var(--ink)}
     <label id="inlineTargetLabel" for="inlineTargetInput">Target</label>
     <input id="inlineTargetInput" type="number">
     <div class="inline-editor-actions"><button type="button" class="n-btn" id="inlineTargetCancel">Cancel</button><button type="button" class="n-btn solid" id="inlineTargetSave">Save</button></div>
+  </div>
+</div>
+
+<!-- ===== RECORD ENTRY EDITOR ===== -->
+<div id="recordEntryEditor" class="inline-editor-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="recordEntryTitle">
+  <div class="inline-editor-card" style="max-width:520px;">
+    <h3 id="recordEntryTitle">Add record</h3>
+    <p id="recordEntryHelp" class="section-sub">Add a new item to your health record.</p>
+    <div id="visitEntryFields">
+      <label for="recordDoctorInput">Doctor name</label>
+      <input id="recordDoctorInput" class="profile-input" type="text" autocomplete="name" placeholder="e.g. Dr. Ananya Sen">
+      <label for="recordSpecialtyInput" style="margin-top:12px;">Specialty</label>
+      <input id="recordSpecialtyInput" class="profile-input" type="text" value="General Medicine" placeholder="e.g. Cardiology">
+      <label for="recordFacilityInput" style="margin-top:12px;">Clinic / hospital</label>
+      <input id="recordFacilityInput" class="profile-input" type="text" placeholder="Optional">
+    </div>
+    <div id="labEntryFields" hidden>
+      <label for="recordReportNameInput">Report name</label>
+      <input id="recordReportNameInput" class="profile-input" type="text" value="Blood test" placeholder="e.g. CBC">
+      <label for="recordResultInput" style="margin-top:12px;">Result / value</label>
+      <textarea id="recordResultInput" class="profile-input" rows="4" placeholder="e.g. Hemoglobin 13.2 g/dL"></textarea>
+    </div>
+    <label for="recordDateInput" style="margin-top:12px;">Date</label>
+    <input id="recordDateInput" class="profile-input" type="date">
+    <div class="inline-editor-actions">
+      <button type="button" class="n-btn" id="recordEntryCancel">Cancel</button>
+      <button type="button" class="n-btn solid" id="recordEntrySave">Save record</button>
+    </div>
   </div>
 </div>
 
@@ -3269,9 +3314,15 @@ if (supportBtn && !supportBtn.dataset.bound) {
  const raw=String(value||'').toLowerCase().trim();
  return raw.replace(/\b(tablets?|tabs?|capsules?|caps?|syrups?|syr|injections?|inj|creams?|ointments?|drops?|solutions?|suspensions?|inhalers?|patches?|powders?)\b/g,' ').replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|iu|units?|%)\b/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
 }
+function medicationScheduleIdentity(m){
+ const name=medicationIdentityKey(m?.medicine||m?.name);
+ const dose=String(m?.dose||'').toLowerCase().replace(/\s+/g,' ').trim();
+ const frequency=String(m?.frequency||m?.schedule||'').toLowerCase().replace(/\s+/g,' ').trim();
+ return [name,dose,frequency].filter(Boolean).join(' | ');
+}
 function ensureMedicationStableId(m){
- const existing=String(m?.medicationId||'').trim(); if(existing)return existing;
- const key=medicationIdentityKey(m?.medicine||m?.name); return key ? `med_${key.replace(/[^a-z0-9]+/g,'_').slice(0,60)}` : '';
+ const key=medicationScheduleIdentity(m) || medicationIdentityKey(m?.medicine||m?.name);
+ return key ? `med_${key.replace(/[^a-z0-9]+/gi,'_').slice(0,90)}` : '';
 }
 function getCurrentMedicationList() {
  const saved = getSavedPrescriptions();
@@ -3280,6 +3331,7 @@ function getCurrentMedicationList() {
  const prescriptionMeds = latest && Array.isArray(latest.medicines) ? latest.medicines : [];
  const out = [];
  const key = value => medicationIdentityKey(value);
+ const scheduleKey = value => medicationScheduleIdentity(value);
 
  // Build a UNION rather than choosing either Profile or Prescription data.
  // Profile is where optional pack-size metadata is normally entered; the
@@ -3302,7 +3354,7 @@ function getCurrentMedicationList() {
  prescriptionMeds.forEach(rx => {
    const name = String(rx?.medicine || rx?.name || '').trim();
    if (!name) return;
-   const existing = out.find(m => key(m.medicine) === key(name));
+   const existing = out.find(m => scheduleKey(m) === scheduleKey(rx));
    if (existing) {
      existing.dose = rx.dose || existing.dose || '';
      existing.frequency = rx.frequency || rx.schedule || existing.frequency || '';
@@ -3325,7 +3377,8 @@ function getCurrentMedicationList() {
  });
  return out;
  }
- function medicationScheduleKey(index, unitIndex) { const m=getCurrentMedicationList()[index]||{}; const stable=ensureMedicationStableId(m)||`unknown_${index}`; return `med_${stable.replace(/[^a-zA-Z0-9_]/g,'').slice(0,72)}_${unitIndex}`; }
+ function medicationScheduleKey(index, unitIndex) { const m=getCurrentMedicationList()[index]||{}; const stable=ensureMedicationStableId(m)||`unknown_${index}`; return `med_${stable.replace(/[^a-zA-Z0-9_]/g,'').slice(0,100)}_${unitIndex}`; }
+ function legacyMedicationScheduleKey(index, unitIndex) { return `med_${index}_${unitIndex}`; }
  function saveMedicationTimes(index, times) {
  const meds = getCurrentMedicationList();
  const target = meds[index];
@@ -3381,7 +3434,7 @@ function getCurrentMedicationList() {
  scheduledDoses.forEach(({ m, i, unit, time }) => {
      const count = medicationSlotCount(m);
      const id = medicationScheduleKey(i, unit);
-     const savedStatus = status[id];
+     const savedStatus = status[id] || status[legacyMedicationScheduleKey(i, unit)];
      const label = count > 1 ? `Dose ${unit + 1} of ${count}` : 'Scheduled dose';
      html += `<div class="today-med-item ${savedStatus?.taken ? 'taken' : ''}" id="${id}">
        <div class="today-med-time">${time ? formatMedicationTime(time) : 'Set time'}<small>${label}</small></div>
@@ -3426,7 +3479,7 @@ function getCurrentMedicationList() {
  function getMedicationHistory() {
    const status = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
    if (Array.isArray(status.history)) return status.history;
-   return Object.entries(status).filter(([k,v]) => /^med_\d+_\d+$/.test(k) && v?.taken).map(([id,v]) => ({id,...v,medicine:'Medication'}));
+   return Object.entries(status).filter(([k,v]) => /^med_.+_\d+$/.test(k) && v?.taken).map(([id,v]) => ({id,...v,medicine:'Medication'}));
  }
  function localDayKey(d) { const x=new Date(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; }
  function renderMedicationAdherence() {
@@ -3541,7 +3594,7 @@ function getCurrentMedicationList() {
      const times = suggestedMedicationTimes(m, count);
      for (let unit = 0; unit < count; unit++) {
        const id = medicationScheduleKey(i, unit);
-       const saved = status[id];
+       const saved = status[id] || status[legacyMedicationScheduleKey(i, unit)];
        const takenToday = saved?.taken && saved?.date && new Date(saved.date).toDateString() === now.toDateString();
        if (takenToday) continue;
 
@@ -3574,9 +3627,15 @@ function getCurrentMedicationList() {
  const meds = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
  const history = Array.isArray(meds.history) ? meds.history : [];
  const current = getCurrentMedicationList();
- const match = String(id).match(/^med_(\d+)_(\d+)$/);
- const medIndex = match ? Number(match[1]) : -1;
- const unitIndex = match ? Number(match[2]) : -1;
+ let medIndex = -1;
+ let unitIndex = -1;
+ for (let i = 0; i < current.length; i++) {
+   const count = medicationSlotCount(current[i]);
+   for (let u = 0; u < count; u++) {
+     if (medicationScheduleKey(i,u) === id || legacyMedicationScheduleKey(i,u) === id) { medIndex=i; unitIndex=u; break; }
+   }
+   if (medIndex >= 0) break;
+ }
  const med = medIndex >= 0 ? current[medIndex] : null;
  const event = {
    id, medicine: med?.medicine || name || 'Medication', dose: med?.dose || '',
@@ -4545,15 +4604,39 @@ LOCAL_INDIAN_FOODS.forEach(food => {
 
  return { doctor, medicines: found, rawText: raw };
  }
+ function extractJsonObject(text){
+ const cleaned=String(text||'').replace(/```(?:json)?/gi,'').replace(/```/g,'').trim();
+ try{return JSON.parse(cleaned);}catch(_){ }
+ const start=cleaned.indexOf('{'); const end=cleaned.lastIndexOf('}');
+ if(start<0||end<=start)throw new Error('No JSON object returned by the local model');
+ return JSON.parse(cleaned.slice(start,end+1));
+ }
+ function validateStructuredPrescription(candidate, rawText, fallback){
+   if(!candidate || !Array.isArray(candidate.medicines) || !candidate.medicines.length) throw new Error('Structured output contains no medicines');
+   const source=String(rawText||'').toLowerCase();
+   const medicines=candidate.medicines.map(m=>{
+     const medicine=String(m?.medicine||'').trim();
+     const dose=String(m?.dose||'').trim();
+     const frequency=String(m?.frequency||'').trim();
+     const instructions=String(m?.instructions||'').trim();
+     if(!medicine) throw new Error('A medicine entry is missing its name');
+     const tokens=medicine.toLowerCase().split(/\s+/).filter(t=>t.length>=4).slice(0,4);
+     if(tokens.length && !tokens.some(t=>source.includes(t))) throw new Error(`Medicine not grounded in OCR text: ${medicine}`);
+     return {medicine,dose,frequency:frequency||'Needs review',instructions};
+   });
+   const doctor=String(candidate.doctor||fallback.doctor||'Needs review').trim()||'Needs review';
+   return {doctor,medicines,rawText:cleanOcrText(rawText),parser:'local-llm',structuredValidated:true};
+ }
  async function parsePrescriptionWithSwasthAI(rawText){
  const fallback=parsePrescription(rawText);
  try{
   const engine=await loadSwasthaiEngine();
-  const response=await engine.chat.completions.create({messages:[{role:'system',content:'Extract medical prescription OCR into JSON. Never invent information. Return ONLY JSON with keys doctor and medicines. Each medicine has medicine,dose,frequency,instructions.'},{role:'user',content:`OCR TEXT:\n${String(rawText).slice(0,12000)}`}],temperature:0,max_tokens:700});
-  const raw=String(response?.choices?.[0]?.message?.content||'').replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
-  const x=JSON.parse(raw); if(!x||!Array.isArray(x.medicines)||!x.medicines.length)throw new Error('No medicines returned');
-  return {doctor:String(x.doctor||fallback.doctor||'Needs review'),medicines:x.medicines.map(m=>({medicine:String(m.medicine||'Needs review'),dose:String(m.dose||''),frequency:String(m.frequency||'Needs review'),instructions:String(m.instructions||'')})),rawText:cleanOcrText(rawText),parser:'local-llm'};
- }catch(e){console.warn('Local LLM prescription parsing unavailable; using regex fallback.',e);return {...fallback,parser:'regex-fallback'};}
+  const response=await engine.chat.completions.create({messages:[
+    {role:'system',content:'You extract prescription OCR into a strict JSON object. Return ONLY valid JSON, with no markdown. Schema: {"doctor":"string","medicines":[{"medicine":"string","dose":"string","frequency":"string","instructions":"string"}]}. Never invent or normalize away uncertain information. Use empty strings when a field is not present. Every medicine must be supported by the OCR text.'},
+    {role:'user',content:`OCR TEXT:\n${String(rawText).slice(0,12000)}`}
+  ],temperature:0,max_tokens:700});
+  return validateStructuredPrescription(extractJsonObject(response?.choices?.[0]?.message?.content),rawText,fallback);
+ }catch(e){console.warn('Structured local-LLM prescription parsing rejected; using regex fallback.',e);return {...fallback,parser:'regex-fallback',structuredValidated:false,parserWarning:String(e?.message||e)};}
 }
 
 function renderEditablePrescription(parsed) {
@@ -4585,7 +4668,7 @@ function renderEditablePrescription(parsed) {
  }));
 
  currentPrescription = { ...parsed, scannedAt: new Date().toISOString() };
- document.getElementById('ocrConfBadge').textContent = 'Review before saving';
+ document.getElementById('ocrConfBadge').textContent = parsed.parser==='local-llm' && parsed.structuredValidated ? 'Local AI structured output validated — review' : parsed.parser==='demo' ? 'Instant demo data — review' : 'OCR fallback — review';
  const reviewNote = document.getElementById('rxReviewNote');
  if (reviewNote) reviewNote.textContent = 'Fields marked \"Needs review\" were not confidently detected. You can edit any extracted field before saving.';
  scanResults.classList.add('show');
@@ -4752,9 +4835,18 @@ function renderEditablePrescription(parsed) {
  }
  });
 
- document.getElementById('demoRxBtn').addEventListener('click', async () => {
- renderEditablePrescription(await parsePrescriptionWithSwasthAI('Dr. Rohan Iyer\nRx\nThyroxine 12.5 mcg — OD\nVitamin D3 1000 IU — Weekly'));
- document.getElementById('ocrConfBadge').textContent = 'Demo data — review';
+ document.getElementById('demoRxBtn').addEventListener('click', () => {
+   // Demo mode is deterministic and instant. It must never initialize/download WebLLM.
+   renderEditablePrescription({
+     doctor:'Dr. Rohan Iyer',
+     medicines:[
+       {medicine:'Thyroxine 12.5 mcg',dose:'12.5 mcg',frequency:'Once daily',instructions:''},
+       {medicine:'Vitamin D3 1000 IU',dose:'1000 IU',frequency:'Weekly',instructions:''}
+     ],
+     rawText:'Dr. Rohan Iyer\nRx\nThyroxine 12.5 mcg — OD\nVitamin D3 1000 IU — Weekly',
+     parser:'demo'
+   });
+   document.getElementById('ocrConfBadge').textContent = 'Instant demo data — review';
  });
 
  document.getElementById('confirmRxBtn').addEventListener('click', function(){
@@ -4849,7 +4941,11 @@ function renderEditablePrescription(parsed) {
  el.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:13px;">No prescriptions have been confirmed yet.</div>';
  return;
  }
- el.innerHTML = saved.map((r, i) => `
+ const groupKey = r => (r.medicines||[]).map(m=>`${String(m.medicine||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}|${String(m.dose||'').toLowerCase().replace(/\s+/g,' ').trim()}`).sort().join(';;');
+ const groups = new Map(); saved.forEach((r,i)=>{ const key=groupKey(r); if(!groups.has(key)) groups.set(key,[]); groups.get(key).push({r,i}); });
+ const repeatGroups=[...groups.values()].filter(g=>g.length>1);
+ const summary=`<div style="margin-bottom:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);font-size:12px;"><b>${saved.length} prescription scan${saved.length===1?'':'s'}</b> · ${repeatGroups.length} repeat/refill group${repeatGroups.length===1?'':'s'} detected. <button type="button" class="n-btn" id="togglePrescriptionGroups" style="margin-left:6px;padding:5px 8px;font-size:11px;">View grouped repeats</button></div><div id="prescriptionGroupedView" style="display:none;margin-bottom:12px;"></div>`;
+ const cards = saved.map((r, i) => `
  <div class="visit-item">
  <div class="visit-head" onclick="togglePrescription(${i})">
  <div><div class="doc">Prescription · ${escapeHtml(r.doctor)} ${r.isRefillOrRepeat ? '<span class="tag" style="margin-left:6px;">Refill / repeat</span>' : ''}</div><div class="meta">${new Date(r.date).toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'})} · ${r.medicines.length} medication(s)${r.duplicateMatches?.length ? ` · Matches: ${escapeHtml(r.duplicateMatches.join(', '))}` : ''}</div></div>
@@ -4861,6 +4957,9 @@ function renderEditablePrescription(parsed) {
  <button type="button" class="n-btn" style="margin-top:8px;" onclick="shopSavedPrescription(${i})">Find these medicines in Order Medicine</button>
  </div>
  </div>`).join('');
+ el.innerHTML = summary + cards;
+ const grouped=document.getElementById('prescriptionGroupedView'); const toggle=document.getElementById('togglePrescriptionGroups');
+ toggle?.addEventListener('click',()=>{const open=grouped.style.display!=='none';grouped.style.display=open?'none':'block';toggle.textContent=open?'View grouped repeats':'Hide grouped repeats';if(!open){if(!repeatGroups.length){grouped.innerHTML='<div class="record-empty">No repeated prescription scans detected yet.</div>';return;}grouped.innerHTML=repeatGroups.map(group=>{const latest=group[0].r;const names=(latest.medicines||[]).map(m=>`${escapeHtml(m.medicine)}${m.dose?' · '+escapeHtml(m.dose):''}`).join(', ');return `<div style="padding:10px 0;border-bottom:1px solid var(--line);"><b>${group.length} scans</b> · ${names}<div style="font-size:11px;color:var(--muted);margin-top:3px;">Latest: ${new Date(latest.date).toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'})}. Older scans remain stored below; this view groups them without deleting data.</div></div>`;}).join('');}});
  }
 
  window.togglePrescription = function(i) {
@@ -5517,8 +5616,58 @@ function renderEmergencyQRIfReady(){
  }
  window.toggleReport=function(i){const body=document.getElementById('reportBody'+i),toggle=document.getElementById('reportToggle'+i);if(!body||!toggle)return;body.classList.toggle('open');toggle.textContent=body.classList.contains('open')?'Hide ▴':'View ▾';}; renderReports();
  function saveRecordCollections(){ cacheProfileLocally(); syncProfileToCloud(); renderVisits(); renderReports(); renderRecordTimeline(); renderLabTrendChart(); }
- document.getElementById('addVisitRecordBtn')?.addEventListener('click',()=>{const doctor=prompt('Doctor name');if(!doctor)return;const specialty=prompt('Specialty','General Medicine')||'General Medicine';const facility=prompt('Clinic / hospital','')||'';const date=prompt('Visit date (YYYY-MM-DD)',getTodayKey())||getTodayKey();patientData.visits=[...(patientData.visits||[]),{doctor,specialty,facility,date}];saveRecordCollections();showToast('','Visit Added','The visit is now part of your health record.');});
- document.getElementById('addLabReportBtn')?.addEventListener('click',()=>{const name=prompt('Report name','Blood test');if(!name)return;const result=prompt('Result / value');if(result===null)return;const date=prompt('Report date (YYYY-MM-DD)',getTodayKey())||getTodayKey();patientData.reports=[...(patientData.reports||[]),{name,result,date}];saveRecordCollections();showToast('','Lab Report Added','The report is now available in Records and trend extraction.');});
+ // Inline record editor: replaces the old multi-step prompt() flow so record entry works on all browsers.
+ function openRecordEntryEditor(kind){
+   const overlay=document.getElementById('recordEntryEditor');
+   if(!overlay)return;
+   const isVisit=kind==='visit';
+   document.getElementById('recordEntryTitle').textContent=isVisit?'Add physician visit':'Add lab report';
+   document.getElementById('recordEntryHelp').textContent=isVisit?'Add a consultation to your longitudinal health record.':'Add a diagnostic report and its result/value.';
+   document.getElementById('visitEntryFields').hidden=!isVisit;
+   document.getElementById('labEntryFields').hidden=isVisit;
+   document.getElementById('recordDateInput').value=getTodayKey();
+   overlay.dataset.kind=kind;
+   overlay.hidden=false;
+   setTimeout(()=>{
+     const first=isVisit?document.getElementById('recordDoctorInput'):document.getElementById('recordReportNameInput');
+     first?.focus();
+   },20);
+ }
+ function closeRecordEntryEditor(){
+   const overlay=document.getElementById('recordEntryEditor');
+   if(overlay)overlay.hidden=true;
+ }
+ function saveRecordEntry(){
+   const overlay=document.getElementById('recordEntryEditor');
+   if(!overlay)return;
+   const kind=overlay.dataset.kind;
+   const date=document.getElementById('recordDateInput')?.value||getTodayKey();
+   if(kind==='visit'){
+     const doctor=document.getElementById('recordDoctorInput')?.value.trim();
+     const specialty=document.getElementById('recordSpecialtyInput')?.value.trim()||'General Medicine';
+     const facility=document.getElementById('recordFacilityInput')?.value.trim()||'';
+     if(!doctor){showToast('','Doctor name required','Enter the doctor name before saving the visit.');document.getElementById('recordDoctorInput')?.focus();return;}
+     patientData.visits=[...(patientData.visits||[]),{doctor,specialty,facility,date}];
+     saveRecordCollections();
+     closeRecordEntryEditor();
+     showToast('','Visit Added','The visit is now part of your health record.');
+   }else{
+     const name=document.getElementById('recordReportNameInput')?.value.trim();
+     const result=document.getElementById('recordResultInput')?.value.trim();
+     if(!name){showToast('','Report name required','Enter a name for the lab report.');document.getElementById('recordReportNameInput')?.focus();return;}
+     if(!result){showToast('','Result required','Enter the report result or value before saving.');document.getElementById('recordResultInput')?.focus();return;}
+     patientData.reports=[...(patientData.reports||[]),{name,result,date}];
+     saveRecordCollections();
+     closeRecordEntryEditor();
+     showToast('','Lab Report Added','The report is now available in Records and trend extraction.');
+   }
+ }
+ document.getElementById('addVisitRecordBtn')?.addEventListener('click',()=>openRecordEntryEditor('visit'));
+ document.getElementById('addLabReportBtn')?.addEventListener('click',()=>openRecordEntryEditor('lab'));
+ document.getElementById('recordEntryCancel')?.addEventListener('click',closeRecordEntryEditor);
+ document.getElementById('recordEntrySave')?.addEventListener('click',saveRecordEntry);
+ document.getElementById('recordEntryEditor')?.addEventListener('click',e=>{if(e.target.id==='recordEntryEditor')closeRecordEntryEditor();});
+ document.getElementById('recordResultInput')?.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')saveRecordEntry();});
  function renderRecordFoodLogs(){
    const el=document.getElementById('recordFoodList');if(!el)return;
    const logs=getRecordFoodLogs().slice().sort((a,b)=>new Date(`${b.date}T${b.time||'00:00'}`)-new Date(`${a.date}T${a.time||'00:00'}`));
@@ -5609,7 +5758,9 @@ function renderEmergencyQRIfReady(){
    pts.forEach((pt,i)=>{const xx=x(i),yy=y(pt.value);if(i)svg+=`<line x1="${x(i-1)}" y1="${y(pts[i-1].value)}" x2="${xx}" y2="${yy}" stroke="#2f6956" stroke-width="2.5"/>`;svg+=`<circle cx="${xx}" cy="${yy}" r="4.5" fill="#fff" stroke="#2f6956" stroke-width="2"/><text x="${xx}" y="${h-17}" text-anchor="middle" font-size="10" fill="#65736c">${escapeHtml(pt.date?new Date(pt.date).toLocaleDateString([], {day:'numeric',month:'short'}):'Date')}</text><text x="${xx}" y="${yy-9}" text-anchor="middle" font-size="10" font-weight="600" fill="#1c2b27">${pt.value}</text>`;});svg+=`<text x="10" y="${pad+3}" font-size="10" fill="#65736c">${max} ${escapeHtml(g.unit)}</text><text x="10" y="${h-pad}" font-size="10" fill="#65736c">${min} ${escapeHtml(g.unit)}</text></svg>`;chart.innerHTML=svg;if(summary){const latest=pts[pts.length-1],first=pts[0];summary.textContent=`${pts.length} reading(s) · Latest ${latest.value} ${g.unit} on ${latest.date?new Date(latest.date).toLocaleDateString():'unknown date'}${pts.length>1?` · Change ${latest.value-first.value>=0?'+':''}${(latest.value-first.value).toFixed(2)}`:''}`;}
  }
  function initLabTrendView(){const btn=document.getElementById('labTrendBtn'),panel=document.getElementById('labTrendPanel'),select=document.getElementById('labTrendMetric');if(!btn||!panel)return;btn.addEventListener('click',()=>{const open=panel.style.display!=='none';panel.style.display=open?'none':'block';btn.textContent=open?'View trends':'Hide trends';if(!open)renderLabTrendChart();});select?.addEventListener('change',renderLabTrendChart);}
- async function shareHealthRecordWithDoctor(){
+ function renderActiveDoctorShare(){const panel=document.getElementById('activeDoctorSharePanel'),meta=document.getElementById('activeDoctorShareMeta');if(!panel||!meta)return;const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){panel.style.display='none';return;}if(saved.expiresAt&&Date.now()>=Number(saved.expiresAt)){localStorage.removeItem('swasth_activeDoctorShare');panel.style.display='none';return;}panel.style.display='block';meta.textContent=`Share ID ${String(saved.id).slice(0,10)}…${saved.expiresAt?` · expires ${new Date(saved.expiresAt).toLocaleString()}`:''}`;}
+async function revokeDoctorShare(){const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){renderActiveDoctorShare();return;}const btn=document.getElementById('revokeDoctorShareBtn');if(btn)btn.disabled=true;try{const apiBase=(window.SWASTH_API_BASE||((location.protocol==='http:'||location.protocol==='https:')?location.origin:'')).replace(/\/$/,'');if(!apiBase)throw new Error('Doctor sharing requires the hosted Render app.');if(!firebaseUser)throw new Error('Sign in before revoking a doctor share.');const idToken=await firebaseUser.getIdToken(true);const res=await fetch(apiBase+'/api/record-share/revoke',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':`Bearer ${idToken}`},body:JSON.stringify({shareId:saved.id})});const body=await res.json().catch(()=>({}));if(!res.ok)throw new Error(body.error||`Revoke service returned HTTP ${res.status}`);localStorage.removeItem('swasth_activeDoctorShare');renderActiveDoctorShare();setHealthShareStatus('Doctor share revoked. The previous link can no longer be opened.');showToast('','Doctor share revoked','The shared health record link is no longer active.');}catch(e){console.error('Doctor share revoke failed:',e);setHealthShareStatus('Could not revoke doctor share: '+(e?.message||'unknown error'),true);}finally{if(btn)btn.disabled=false;}}
+async function shareHealthRecordWithDoctor(){
  const btn=document.getElementById('shareHealthRecordBtn');if(btn)btn.disabled=true;setHealthShareStatus('Creating an authenticated, time-limited doctor link…');
  try{
   const apiBase=(window.SWASTH_API_BASE||((location.protocol==='http:'||location.protocol==='https:')?location.origin:'' )).replace(/\/$/,'');if(!apiBase)throw new Error('Doctor sharing requires the hosted Render app.');
@@ -5620,6 +5771,7 @@ function renderEmergencyQRIfReady(){
   const res=await fetch(apiBase+'/api/record-share/create',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':`Bearer ${idToken}`},body:JSON.stringify({record:bundle,expiresInHours:24,scope:'clinical-summary'})});
   const body=await res.json().catch(()=>({}));if(!res.ok||!body.url)throw new Error(body.error||`Share service returned HTTP ${res.status}`);
   const shareId=body.shareId||body.id||'';if(shareId)localStorage.setItem('swasth_activeDoctorShare',JSON.stringify({id:shareId,expiresAt:body.expiresAt||null}));
+  renderActiveDoctorShare();
   await navigator.clipboard?.writeText(body.url).catch(()=>{});
   setHealthShareStatus(`Authenticated doctor link created. It expires ${body.expiresAt?new Date(body.expiresAt).toLocaleString():'after 24 hours'}. ${body.url}${shareId?' — share ID saved for revocation.':''}`);
  }catch(e){console.error('Doctor share failed:',e);setHealthShareStatus('Doctor sharing failed: '+(e?.message||'unknown error')+'. The backend must verify the Firebase bearer token and support scoped/revocable shares.',true);}finally{if(btn)btn.disabled=false;}
@@ -5627,6 +5779,8 @@ function renderEmergencyQRIfReady(){
  document.getElementById('exportHealthJsonBtn')?.addEventListener('click',()=>downloadTextFile(`SwasthID-My-Health-Vault-${safeHealthName()}.json`,JSON.stringify(buildSwasthHealthBundle(),null,2)));
  document.getElementById('exportHealthPdfBtn')?.addEventListener('click',exportHealthSummaryPDF);
  document.getElementById('shareHealthRecordBtn')?.addEventListener('click',shareHealthRecordWithDoctor);
+ document.getElementById('revokeDoctorShareBtn')?.addEventListener('click',revokeDoctorShare);
+ renderActiveDoctorShare();
  initLabTrendView();
 
  function renderAllRecords(){renderHistory('historyListRecords');renderVisits();renderReports();renderSavedPrescriptions();renderRecordFoodLogs();renderRecordMedicationActivity();renderRecordTimeline();}
@@ -6431,7 +6585,7 @@ async function downloadEmergencyPDF() {
     doc.setTextColor(...muted);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.text('Emergency QR validity: 24 hours from generation.', margin, metaY);
+    doc.text('Emergency QR validity: long-term until revoked or the configured expiry date.', margin, metaY);
     doc.text('QR is not encrypted. Share only with intended emergency responders.', pageW - margin, metaY, { align: 'right' });
 
     const filename = `SwasthID-Emergency-${String(payload.n).replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'') || 'Passport'}.pdf`;
@@ -6496,18 +6650,15 @@ document.getElementById('simulateScanBtn').addEventListener('click', () => {
 });
 
 (async () => { await openEmergencyPayloadFromUrl(); })();
- /* Family Registration — creates a linked dependent profile record, not a separate ABHA/Firebase account. */
- async function registerDependentProfile(){
-  const name=document.getElementById('regName').value.trim(),relation=document.getElementById('regRel').value;
-  if(!name){showToast('','Dependent name required','Enter the dependent name.');return;}
-  if(!relation){showToast('','Relationship required','Select the relationship first.');return;}
-  const list=safeJsonParse(localStorage.getItem('swasth_dependents')||'[]',[]);
-  list.unshift({id:`dep_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,name,relation,ownerUid:firebaseUser?.uid||'',createdAt:new Date().toISOString(),status:'linked-profile'});
-  localStorage.setItem('swasth_dependents',JSON.stringify(list));if(typeof syncCloudState==='function')syncCloudState('swasth_dependents');
-  document.getElementById('regName').value='';document.getElementById('regRel').value='';
-  showToast('','Dependent profile saved',`${name} was added as a linked profile. No fake OTP or ABHA account was created.`);
- }
- document.getElementById('registerDepBtn')?.addEventListener('click',registerDependentProfile);
+ /* Family Registration — linked dependent profiles with local/cloud persistence. */
+ function getDependents(){const list=safeJsonParse(localStorage.getItem('swasth_dependents')||'[]',[]);const uid=firebaseUser?.uid||'';return Array.isArray(list)?list.filter(x=>!x?.ownerUid||!uid||x.ownerUid===uid):[];}
+ function saveDependents(list){localStorage.setItem('swasth_dependents',JSON.stringify(list));if(typeof syncCloudState==='function')syncCloudState('swasth_dependents');}
+ function renderDependents(){const el=document.getElementById('dependentList');if(!el)return;const list=getDependents();if(!list.length){el.innerHTML='<div style="padding:10px 0;color:var(--muted);font-size:12px;">No linked dependents yet.</div>';return;}el.innerHTML=`<div style="font-size:12px;font-weight:700;margin-bottom:6px;">Linked dependents</div>`+list.map(d=>`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);"><div><b>${escapeHtml(d.name||'Unnamed')}</b><div style="font-size:11px;color:var(--muted);">${escapeHtml(d.relation||'Relationship not set')} · ${escapeHtml(d.status||'linked-profile')}</div></div><div style="display:flex;gap:6px;"><button type="button" class="n-btn" data-dependent-view="${escapeHtml(d.id)}" style="padding:5px 8px;font-size:11px;">View</button><button type="button" class="n-btn" data-dependent-edit="${escapeHtml(d.id)}" style="padding:5px 8px;font-size:11px;">Edit</button><button type="button" class="n-btn" data-dependent-delete="${escapeHtml(d.id)}" style="padding:5px 8px;font-size:11px;border-color:#b84a40;color:#8f2d24;">Delete</button></div></div>`).join('');el.querySelectorAll('[data-dependent-view]').forEach(btn=>btn.addEventListener('click',()=>{const d=getDependents().find(x=>x.id===btn.dataset.dependentView);if(d)showToast('',d.name||'Dependent',`${d.relation||'Relationship not set'} · Linked profile created ${d.createdAt?new Date(d.createdAt).toLocaleDateString():'date unavailable'}.`);}));el.querySelectorAll('[data-dependent-edit]').forEach(btn=>btn.addEventListener('click',()=>openDependentEditor(btn.dataset.dependentEdit)));el.querySelectorAll('[data-dependent-delete]').forEach(btn=>btn.addEventListener('click',()=>{const d=getDependents().find(x=>x.id===btn.dataset.dependentDelete);if(!d)return;if(!window.confirm(`Remove linked dependent ${d.name||'this profile'}?`))return;saveDependents(getDependents().filter(x=>x.id!==d.id));renderDependents();showToast('','Dependent removed','The linked profile was removed from this account.');}));}
+ function openDependentEditor(id){const d=getDependents().find(x=>x.id===id);if(!d)return;const modal=document.getElementById('dependentEditor');if(!modal)return;modal.dataset.id=id;document.getElementById('dependentEditName').value=d.name||'';document.getElementById('dependentEditRelation').value=d.relation||'';modal.hidden=false;document.getElementById('dependentEditName')?.focus();}
+ function closeDependentEditor(){document.getElementById('dependentEditor')?.setAttribute('hidden','');}
+ function saveDependentEditor(){const modal=document.getElementById('dependentEditor');if(!modal)return;const id=modal.dataset.id,name=document.getElementById('dependentEditName')?.value.trim(),relation=document.getElementById('dependentEditRelation')?.value;if(!name||!relation){showToast('','Name and relationship required','Complete both fields before saving.');return;}const list=getDependents();const idx=list.findIndex(x=>x.id===id);if(idx<0)return;list[idx]={...list[idx],name,relation,updatedAt:new Date().toISOString()};saveDependents(list);closeDependentEditor();renderDependents();showToast('','Dependent updated','The linked profile was updated.');}
+ function registerDependentProfile(){const name=document.getElementById('regName').value.trim(),relation=document.getElementById('regRel').value;if(!name){showToast('','Dependent name required','Enter the dependent name.');return;}if(!relation){showToast('','Relationship required','Select the relationship first.');return;}const list=getDependents();list.unshift({id:`dep_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,name,relation,ownerUid:firebaseUser?.uid||'',createdAt:new Date().toISOString(),status:'linked-profile'});saveDependents(list);document.getElementById('regName').value='';document.getElementById('regRel').value='';renderDependents();showToast('','Dependent profile saved',`${name} was added as a linked profile.`);}
+ document.getElementById('registerDepBtn')?.addEventListener('click',registerDependentProfile);document.getElementById('dependentEditCancel')?.addEventListener('click',closeDependentEditor);document.getElementById('dependentEditSave')?.addEventListener('click',saveDependentEditor);document.getElementById('dependentEditor')?.addEventListener('click',e=>{if(e.target.id==='dependentEditor')closeDependentEditor();});renderDependents();
 
  /* =========================================================
  11. SWASTHAI — 100% LOCAL BROWSER AI
@@ -6653,7 +6804,7 @@ Rules:
      if(send) send.title='SwasthAI requires WebGPU';
      return false;
    }
-   setSwasthaiStatus('WebGPU ready · local model will load in this browser.', 0, 'loading');
+   setSwasthaiStatus('WebGPU ready · local model loads only when SwasthAI is used.', 0, 'loading');
    if(send) send.title='Ask SwasthAI';
    if(input) input.placeholder='Ask about medications, labs, visits…';
    return true;
@@ -6764,13 +6915,7 @@ Rules:
  updateSwasthaiCapability();
  const welcomeBubble=document.getElementById('swasthaiWelcomeBubble');
  if(welcomeBubble && patientData?.name) welcomeBubble.innerHTML=`Welcome, <b>${aiEscape(patientData.name)}</b>. I can answer questions using the health information available in your SwasthID record.`;
- setTimeout(() => {
-   if (swasthaiHasWebGPU()) {
-     const box=document.getElementById('swasthaiModelStatus');
-     if(box) box.style.display='block';
-     void loadSwasthaiEngine().catch(()=>{});
-   }
- }, 1200);
+ // Do not preload WebLLM on page load. The model downloads only when the user explicitly uses SwasthAI or parses an actual prescription.
 
  /* =========================================================
  12. MULTILINGUAL SUPPORT (LANGUAGE SWITCHER)
@@ -7584,5 +7729,5 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
   const econsult=document.querySelector('#panel-econsult .doctor-hero .section-sub'); if(econsult)econsult.textContent='Connect with demo specialists in your selected area for instant video consultations.';
   const ehead=document.querySelector('#panel-econsult h3 + .section-sub'); if(ehead && /700110/.test(ehead.textContent))ehead.textContent='Demo directory for prototype presentation. Names, availability and clinics are mock data; real consultation booking is not connected.';
 })();
-</script>\n<script>window.prompt=function(message, defaultValue){ if(typeof window.showToast==='function'){window.showToast('','Inline editor required',String(message||'Please use the on-screen editor.'));} return null;};</script></body>
+</script></body>
 </html>
