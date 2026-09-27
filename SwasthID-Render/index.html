@@ -3140,6 +3140,7 @@ let profileOnboardingRequired = false;
 
    loginScreen.style.display = 'none';
    dashboard.style.display = 'block';
+   if (typeof wakeSwasthServer === 'function') wakeSwasthServer();
    const aiDock = document.getElementById('aiAssistantDock');
    if (aiDock) aiDock.style.display = 'flex';
    window.scrollTo(0, 0);
@@ -3398,6 +3399,7 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
  animateRiskMeter();
  }
  if(this.dataset.tab === 'nutrition') window.renderNutritionUpgrades?.();
+ if(this.dataset.tab === 'emergency' && typeof wakeSwasthServer === 'function') wakeSwasthServer();
  if(this.dataset.tab === 'emergency' && !qrGenerated) {
  generateEmergencyQR();
  qrGenerated = true;
@@ -6834,36 +6836,75 @@ async function getEmergencyQRText() {
   const cached = safeJsonParse(localStorage.getItem('swasth_emergencyQrCache') || 'null', null);
   if (cached && cached.sig === signature && cached.url && Number(cached.expiresAt) > Date.now() + 86400000) return cached.url;
   compact.manageToken = manageToken;
-  const apiBase = (window.SWASTH_API_BASE || ((location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : '')).replace(/\/$/, '');
-  if (apiBase) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 3500);
-      try {
-        const res = await fetch(apiBase + '/api/emergency/create', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json','Accept':'application/json'},
-          body: JSON.stringify(compact),
-          signal: controller.signal
-        });
-        const body = await res.json();
-        if (res.ok && body.url) {
-          if (body.tokenId) localStorage.setItem('swasth_emergencyTokenId', body.tokenId);
-          if (body.expiresAt) localStorage.setItem('swasth_emergencyExpiresAt', String(body.expiresAt));
-          localStorage.setItem('swasth_emergencyQrCache', JSON.stringify({ sig: signature, url: body.url, expiresAt: body.expiresAt }));
-          if (typeof syncCloudState === 'function') ['swasth_emergencyTokenId', 'swasth_emergencyExpiresAt', 'swasth_emergencyQrCache'].forEach(syncCloudState);
-          return body.url;
-        }
-      } finally {
-        clearTimeout(timer);
-      }
-    } catch (error) {
-      console.warn('Emergency token service unavailable; using local preview token.', error);
-    }
+  const apiBase = getSwasthApiBase();
+  if (!apiBase) {
+    // Opened as a local file with no server: an unencrypted preview is the only option.
+    return encodeEmergencyToken(compact);
   }
-  const token = encodeEmergencyToken(compact);
-  if (location.protocol === 'http:' || location.protocol === 'https:') return `${location.origin}${location.pathname}?emergency=${encodeURIComponent(token)}`;
-  return token;
+  // Several dashboard renders can ask at once; share one request per payload.
+  if (emergencyQrInFlight && emergencyQrInFlight.sig === signature) return emergencyQrInFlight.promise;
+  const promise = createSecureEmergencyQr(apiBase, compact, signature);
+  emergencyQrInFlight = { sig: signature, promise };
+  try { return await promise; } finally { if (emergencyQrInFlight?.promise === promise) emergencyQrInFlight = null; }
+}
+
+let emergencyQrInFlight = null;
+
+function getSwasthApiBase() {
+  return (window.SWASTH_API_BASE || ((location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : '')).replace(/\/$/, '');
+}
+
+// A free Render instance sleeps when idle and can take 30+ seconds to wake.
+// Ping it early so it is awake by the time a QR is needed.
+function wakeSwasthServer() {
+  const apiBase = getSwasthApiBase();
+  if (apiBase) fetch(apiBase + '/health', { cache: 'no-store' }).catch(() => {});
+}
+
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try { return await fetch(url, { ...options, signal: controller.signal }); }
+  finally { clearTimeout(timer); }
+}
+
+// Never fall back to an unencrypted QR here: it would carry health data in the
+// URL and could not be revoked. Wait for the server (it may be waking), or fail.
+async function createSecureEmergencyQr(apiBase, compact, signature) {
+  const status = document.getElementById('qrPayloadStatus');
+  const attempts = [8000, 45000];
+  let lastError = null;
+  for (let i = 0; i < attempts.length; i++) {
+    if (i > 0 && status) status.textContent = 'Waking up the secure QR service. This can take up to a minute…';
+    let res;
+    try {
+      res = await fetchWithTimeout(apiBase + '/api/emergency/create', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','Accept':'application/json'},
+        body: JSON.stringify(compact)
+      }, attempts[i]);
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+    const body = await res.json().catch(() => ({}));
+    if (res.ok && body.url) {
+      if (body.tokenId) localStorage.setItem('swasth_emergencyTokenId', body.tokenId);
+      if (body.expiresAt) localStorage.setItem('swasth_emergencyExpiresAt', String(body.expiresAt));
+      localStorage.setItem('swasth_emergencyQrCache', JSON.stringify({ sig: signature, url: body.url, expiresAt: body.expiresAt }));
+      if (typeof syncCloudState === 'function') ['swasth_emergencyTokenId', 'swasth_emergencyExpiresAt', 'swasth_emergencyQrCache'].forEach(syncCloudState);
+      return body.url;
+    }
+    // Gateway errors while the instance starts are worth retrying; others are not.
+    lastError = new Error(body.error || `Server returned HTTP ${res.status}`);
+    if (![502, 503, 504].includes(res.status) || /not configured/i.test(body.error || '')) break;
+  }
+  console.warn('Secure emergency QR unavailable:', lastError);
+  const timedOut = /abort/i.test(String(lastError?.name || lastError));
+  const networkError = lastError instanceof TypeError;
+  throw new Error(timedOut ? 'The secure QR service did not respond. Check your connection and try again.'
+    : networkError ? 'Could not reach the SwasthID server. Check your connection and try again.'
+    : (lastError?.message || 'The secure QR service is unavailable.'));
 }
 
 async function generateEmergencyQR(force = false) {
@@ -6878,6 +6919,8 @@ async function generateEmergencyQR(force = false) {
  if (!force && qrContainer.dataset.generated) return;
  qrContainer.dataset.generated = 'true';
  qrContainer.innerHTML = '<span style="font-size:12px;color:var(--muted);">Generating secure emergency QR…</span>';
+ const pendingStatus = document.getElementById('qrPayloadStatus');
+ if (pendingStatus) pendingStatus.textContent = 'Creating a secure QR…';
  qrContainer.style.background = '#fff';
  qrContainer.style.boxShadow = 'none';
  qrContainer.style.border = '1px solid #e1e8e4';
@@ -6888,14 +6931,15 @@ async function generateEmergencyQR(force = false) {
    const qrText = await getEmergencyQRText();
    qrContainer.innerHTML = '';
    new QRCode(qrContainer, {text: qrText,width:220,height:220,colorDark:'#111814',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-   const serverBacked = /[?&]emergency=v1\./.test(qrText);
+   const serverBacked = /emergency=v1\./.test(qrText) || /^v1\./.test(qrText);
    const expiresAt = Number(localStorage.getItem('swasth_emergencyExpiresAt') || 0);
    if (status) status.textContent = serverBacked
      ? `Secure emergency QR ready. The server encrypts the emergency payload. Valid until ${expiresAt ? new Date(expiresAt).toLocaleDateString() : 'its expiry date'} unless you revoke it.`
-     : 'Emergency QR preview ready. This preview is not encrypted or revocable; the secure QR needs the SwasthID server.';
+     : 'Offline preview only: this QR is not encrypted or revocable. Open SwasthID from its website to create a secure QR.';
  } catch (error) {
-   qrContainer.innerHTML = '<span style="font-size:12px;color:#8f2d24;padding:16px;text-align:center;">QR generation failed. Refresh and try again.</span>';
-   if (status) status.textContent = 'The emergency QR could not be generated.';
+   qrContainer.innerHTML = '<span style="font-size:12px;color:#8f2d24;padding:16px;text-align:center;">No QR yet. Use Refresh to try again.</span>';
+   qrContainer.dataset.generated = '';
+   if (status) status.textContent = 'The secure emergency QR could not be created: ' + (error?.message || 'unknown error');
    console.error('Emergency QR generation failed:', error);
  }
 }
@@ -6933,20 +6977,23 @@ async function openEmergencyPayloadFromUrl() {
  // Show the public shell immediately so a slow backend never leaves a blank page.
  let overlay = document.getElementById('publicEmergencyOverlay');
  if (!overlay) { overlay = document.createElement('div'); overlay.id = 'publicEmergencyOverlay'; overlay.className = 'public-emergency-overlay'; document.body.appendChild(overlay); }
- overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Loading emergency information</h2><p>Verifying the secure emergency QR…</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-item full"><div>Please wait a moment.</div></div></div></div>';
+ overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Loading emergency information</h2><p>Verifying the secure emergency QR…</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-item full"><div>Please wait a moment.</div></div><div class="public-emergency-actions"><a class="emergency-call primary" href="tel:112">Call 112</a></div></div></div>';
  overlay.classList.add('show');
- if (apiBase) {
-  try {
-   const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 4000);
-   const res = await fetch(apiBase + '/api/emergency/view?token=' + encodeURIComponent(token), {headers:{'Accept':'application/json'}, signal:controller.signal});
-   clearTimeout(timer);
-   const body = await res.json();
-   if (res.ok && body.payload) { showEmergencyPublicView(body.payload); return true; }
-   if (res.status === 410 && /^v1\./.test(token)) {
-    showEmergencyPublicView({ n: 'Unavailable', exp: 0, reason: body.error });
-    return false;
-   }
-  } catch (error) { console.warn('Secure emergency viewer unavailable; trying local token.', error); }
+ if (apiBase && /^v1\./.test(token)) {
+  // The server may be waking from sleep; give it time and retry once.
+  for (const timeoutMs of [10000, 30000]) {
+   try {
+    const res = await fetchWithTimeout(apiBase + '/api/emergency/view?token=' + encodeURIComponent(token), {headers:{'Accept':'application/json'}}, timeoutMs);
+    const body = await res.json().catch(() => ({}));
+    if (res.ok && body.payload) { showEmergencyPublicView(body.payload); return true; }
+    if (res.status === 410) { showEmergencyPublicView({ n: 'Unavailable', exp: 0, reason: body.error }); return false; }
+    if (![502, 503, 504].includes(res.status)) break;
+   } catch (error) { console.warn('Secure emergency viewer did not respond; retrying.', error); }
+   const note = overlay.querySelector('.public-emergency-item div');
+   if (note) note.textContent = 'The server is starting up. This can take up to a minute…';
+  }
+  overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Could not load emergency information</h2><p>The SwasthID server did not respond.</p></div><span class="public-emergency-badge">RETRY</span></div><div class="public-emergency-expired">Check the internet connection and scan the QR again. If this is an active emergency, call 112.</div><div class="public-emergency-actions" style="padding:0 24px 22px;"><a class="emergency-call primary" href="tel:112">Call 112</a><button class="n-btn" type="button" onclick="location.reload()">Try again</button></div></div>';
+  return false;
  }
  const payload = decodeEmergencyToken(token);
  if (payload) { showEmergencyPublicView(payload); return true; }
