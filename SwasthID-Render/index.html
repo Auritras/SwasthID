@@ -6300,7 +6300,11 @@ function renderEmergencyQRIfReady(){
      meta:{profile:'SwasthID Health Summary', format:'FHIR-ish portable prototype bundle', prototype:true},
      patient:{resourceType:'Patient', id:profile.ownerUid||profile.email||'patient', name:profile.name||'', birthDate:profile.dob||'', bloodGroup:profile.bloodGroup||'', telecom:profile.email?[{system:'email',value:profile.email}]:[]},
      conditions:conditions.map((c,i)=>({resourceType:'Condition',id:`condition-${i+1}`,code:{text:c.name||''},clinicalStatus:{text:c.status||''},onsetYear:c.year||'',note:c.details||''})),
-     medications:meds.map((m,i)=>({resourceType:'MedicationStatement',id:`medication-${i+1}`,medication:{text:m.name||m.medicine||''},dose:{text:m.dose||''},frequency:{text:m.frequency||''},instructions:m.instructions||''})),
+     allergies:{
+       drug:(Array.isArray(profile.allergies)?profile.allergies:[]).map(String).filter(a=>a&&a!=='__NONE__'),
+       other:(Array.isArray(profile.normalAllergies)?profile.normalAllergies:[]).map(String).filter(a=>a&&a!=='__NONE__')
+     },
+     medications:meds.map((m,i)=>({resourceType:'MedicationStatement',id:`medication-${i+1}`,medication:{text:m.name||m.medicine||''},dose:{text:m.dose||''},frequency:{text:m.frequency||m.schedule||''},instructions:m.instructions||''})),
      prescriptions:prescriptions.map(r=>({resourceType:'MedicationRequest',id:r.id||`rx-${Date.now()}`,authoredOn:r.date||'',requester:{display:r.doctor||''},medications:r.medicines||[]})),
      encounters:visits.map((v,i)=>({resourceType:'Encounter',id:`encounter-${i+1}`,date:v.date||'',provider:v.doctor||'',specialty:v.specialty||'',facility:v.facility||''})),
      diagnosticReports:reports.map((r,i)=>({resourceType:'DiagnosticReport',id:`report-${i+1}`,date:r.date||'',code:{text:r.name||''},result:{text:r.result||''}})),

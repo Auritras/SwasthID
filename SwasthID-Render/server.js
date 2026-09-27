@@ -1266,6 +1266,22 @@ function render(b){
   '</section>'+
 
   '<section class="card">'+
+  '<h2>Allergies</h2>'+
+
+  (
+    b.allergies
+      ? '<div class="item"><strong>Drug allergies</strong><div class="small">'+
+        esc(arr(b.allergies.drug).join(', ') || 'No known drug allergies')+
+        '</div></div>'+
+        '<div class="item"><strong>Other allergies</strong><div class="small">'+
+        esc(arr(b.allergies.other).join(', ') || 'None recorded')+
+        '</div></div>'
+      : '<div class="small">Not included in this share</div>'
+  )+
+
+  '</section>'+
+
+  '<section class="card">'+
   '<h2>Medical conditions</h2>'+
 
   (
