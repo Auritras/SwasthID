@@ -3549,6 +3549,7 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
  if(this.dataset.tab === 'predict') {
  animateRiskMeter();
  }
+ if(this.dataset.tab === 'nutrition') window.renderNutritionUpgrades?.();
  if(this.dataset.tab === 'emergency' && !qrGenerated) {
  generateEmergencyQR();
  qrGenerated = true;
@@ -4671,7 +4672,8 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  function getWaterState(){
    const key=getTodayKey();
    const raw=safeJsonParse(localStorage.getItem('swasth_waterIntake'),null);
-   return raw&&raw.date===key?raw:{date:key,ml:0,target:2000};
+   // A new day resets intake but keeps the user's chosen target.
+   return raw&&raw.date===key?raw:{date:key,ml:0,target:Number(raw?.target)||2000};
  }
  function saveWaterState(state){ localStorage.setItem('swasth_waterIntake',JSON.stringify(state)); syncCloudState('swasth_waterIntake'); }
  function renderWaterIntake(){
@@ -5738,6 +5740,7 @@ function renderPersonalizedUI() {
   renderTodayMedications();
   updateRiskFactors();
   renderEmergencyQRIfReady();
+  window.renderNutritionUpgrades?.();
 }
 function buildDoctorSummary() {
   const name = patientData.name || 'This patient';
@@ -8295,7 +8298,10 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
     const kind=o.dataset.kind, value=Number(input.value);
     if(kind==='water'){
       if(!Number.isFinite(value)||value<500||value>5000){window.showToast?.('', 'Invalid water target','Choose a value between 500 and 5,000 ml.');return;}
-      const st=safe(()=>JSON.parse(localStorage.getItem('swasth_waterIntake')||'{}'))||{}; st.target=Math.round(value); if(!Array.isArray(st.logs))st.logs=[];
+      const today=typeof getTodayKey==='function'?getTodayKey():new Date().toISOString().slice(0,10);
+      let st=safe(()=>JSON.parse(localStorage.getItem('swasth_waterIntake')||'{}'))||{};
+      if(st.date!==today)st={date:today,ml:0};
+      st.target=Math.round(value); if(!Array.isArray(st.logs))st.logs=[];
       localStorage.setItem('swasth_waterIntake',JSON.stringify(st)); window.syncCloudState?.('swasth_waterIntake'); window.renderWaterIntake?.();
       window.showToast?.('', 'Water target updated',`Daily reference target set to ${Math.round(value).toLocaleString()} ml.`);
     }else{
