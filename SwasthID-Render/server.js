@@ -2073,6 +2073,32 @@ const server =
         if (
           req.method === 'GET' &&
           url.pathname ===
+            '/sw.js'
+        ) {
+          res.writeHead(
+            200,
+            {
+              'Content-Type':
+                'application/javascript; charset=utf-8',
+
+              'Cache-Control':
+                'no-cache'
+            }
+          );
+
+          return fs
+            .createReadStream(
+              path.join(
+                ROOT,
+                'sw.js'
+              )
+            )
+            .pipe(res);
+        }
+
+        if (
+          req.method === 'GET' &&
+          url.pathname ===
             '/firebase-config.js'
         ) {
 
