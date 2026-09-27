@@ -4047,7 +4047,9 @@ function getCurrentMedicationList() {
  scheduledDoses.forEach(({ m, i, unit, time }) => {
      const count = medicationSlotCount(m);
      const id = medicationScheduleKey(i, unit);
-     const savedStatus = status[id] || status[legacyMedicationScheduleKey(i, unit)];
+     const storedStatus = status[id] || status[legacyMedicationScheduleKey(i, unit)];
+     // Only today's flag counts; another device may have synced yesterday's.
+     const savedStatus = storedStatus?.taken && storedStatus?.date && new Date(storedStatus.date).toDateString() === new Date().toDateString() ? storedStatus : null;
      const label = count > 1 ? `Dose ${unit + 1} of ${count}` : 'Scheduled dose';
      html += `<div class="today-med-item ${savedStatus?.taken ? 'taken' : ''}" id="${id}">
        <div class="today-med-time">${time ? formatMedicationTime(time) : 'Set time'}<small>${label}</small></div>
