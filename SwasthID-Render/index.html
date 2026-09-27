@@ -3511,8 +3511,19 @@ window.addEventListener('DOMContentLoaded', async () => {
  if(!window.confirm('Delete your SwasthID account and stored data? This cannot be undone.'))return;
  try{
   if(status)status.textContent='Deleting account data…';
+  const apiBase=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');
+  const clearLocal=()=>Object.keys(localStorage).filter(k=>k.startsWith('swasth_')).forEach(k=>localStorage.removeItem(k));
+  // Emergency QRs are tied to the manage token rather than the account, so revoke them first.
+  const tokenId=localStorage.getItem('swasth_emergencyTokenId'),manageToken=localStorage.getItem('swasth_emergencyManageToken');
+  if(tokenId&&manageToken)await fetch(apiBase+'/api/emergency/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tokenId,manageToken})}).catch(()=>{});
+  // Prefer the server: it also removes doctor share links and does not need a recent sign-in.
+  const idToken=await firebaseUser.getIdToken(true);
+  const res=await fetch(apiBase+'/api/account/delete',{method:'POST',headers:{'Authorization':`Bearer ${idToken}`}}).catch(()=>null);
+  if(res&&res.ok){clearLocal();try{await auth.signOut();}catch(_){}window.location.reload();return;}
+  if(res&&res.status!==503&&res.status!==404){const b=await res.json().catch(()=>({}));throw new Error(b.error||`Server returned HTTP ${res.status}`);}
+  // Server unavailable: delete what the client is allowed to delete.
   if(db)await db.collection('users').doc(firebaseUser.uid).delete();
-  Object.keys(localStorage).filter(k=>k.startsWith('swasth_')||k==='swasth_loggedIn'||k==='swasth_abhaId').forEach(k=>localStorage.removeItem(k));
+  clearLocal();
   await firebaseUser.delete();window.location.reload();
  }catch(error){console.error('Account deletion failed:',error);if(status)status.textContent='Deletion failed: '+(error?.message||'unknown error')+'. Recent sign-in may be required.';}
 }
