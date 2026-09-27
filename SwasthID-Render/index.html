@@ -2820,7 +2820,8 @@ body.dark-mode [style*="background: white"]{
   'swasth_riskInputs', 'swasth_clinicalRiskResult',
    'swasth_waterIntake',
    'swasth_profile_medications',
-   'swasth_emergencyManageToken', 'swasth_emergencyTokenId', 'swasth_emergencyExpiresAt', 'swasth_emergencyQrCache'
+   'swasth_emergencyManageToken', 'swasth_emergencyTokenId', 'swasth_emergencyExpiresAt', 'swasth_emergencyQrCache',
+   'swasth_emergencyVisibility', 'swasth_dependents', 'swasth_activeDoctorShare'
  ];
 
  function cloudDoc() {
@@ -2950,6 +2951,9 @@ function isProfileSkippedForCurrentAccount() {
 
 function clearCloudCacheForUserSwitch() {
    CLOUD_KEYS.forEach(key => localStorage.removeItem(key));
+   // An unfinished profile draft belongs to whoever typed it.
+   localStorage.removeItem('swasth_profileWizardDraft');
+   localStorage.removeItem('swasth_profileWizardStep');
    localStorage.removeItem('swasth_addedKcal');
    localStorage.removeItem('swasth_stepsToday');
    localStorage.removeItem('swasth_lastActiveDate');
@@ -5741,6 +5745,8 @@ function renderPersonalizedUI() {
   updateRiskFactors();
   renderEmergencyQRIfReady();
   window.renderNutritionUpgrades?.();
+  if (typeof renderDependents === 'function') renderDependents();
+  if (typeof renderActiveDoctorShare === 'function') renderActiveDoctorShare();
 }
 function buildDoctorSummary() {
   const name = patientData.name || 'This patient';
@@ -6183,7 +6189,7 @@ document.addEventListener('submit', async e => {
 document.querySelectorAll('[data-emergency-visibility]').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const key=btn.dataset.emergencyVisibility; const state=safeJsonParse(localStorage.getItem('swasth_emergencyVisibility')||'{}',{});
-    const next=state[key]===false ? true : false; state[key]=next; localStorage.setItem('swasth_emergencyVisibility',JSON.stringify(state));
+    const next=state[key]===false ? true : false; state[key]=next; localStorage.setItem('swasth_emergencyVisibility',JSON.stringify(state)); syncCloudState('swasth_emergencyVisibility');
     btn.classList.toggle('on',next); btn.setAttribute('aria-pressed',String(next)); generateEmergencyQR(true);
   });
 });
@@ -6389,7 +6395,7 @@ function renderEmergencyQRIfReady(){
  }
  function initLabTrendView(){const btn=document.getElementById('labTrendBtn'),panel=document.getElementById('labTrendPanel'),select=document.getElementById('labTrendMetric');if(!btn||!panel)return;btn.addEventListener('click',()=>{const open=panel.style.display!=='none';panel.style.display=open?'none':'block';btn.textContent=open?'View trends':'Hide trends';if(!open)renderLabTrendChart();});select?.addEventListener('change',renderLabTrendChart);}
  function renderActiveDoctorShare(){const panel=document.getElementById('activeDoctorSharePanel'),meta=document.getElementById('activeDoctorShareMeta');if(!panel||!meta)return;const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){panel.style.display='none';return;}if(saved.expiresAt&&Date.now()>=Number(saved.expiresAt)){localStorage.removeItem('swasth_activeDoctorShare');panel.style.display='none';return;}panel.style.display='block';meta.textContent=`Share ID ${String(saved.id).slice(0,10)}…${saved.expiresAt?` · expires ${new Date(saved.expiresAt).toLocaleString()}`:''}`;}
-async function revokeDoctorShare(){const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){renderActiveDoctorShare();return;}const btn=document.getElementById('revokeDoctorShareBtn');if(btn)btn.disabled=true;try{const apiBase=(window.SWASTH_API_BASE||((location.protocol==='http:'||location.protocol==='https:')?location.origin:'')).replace(/\/$/,'');if(!apiBase)throw new Error('Doctor sharing requires the hosted Render app.');if(!firebaseUser)throw new Error('Sign in before revoking a doctor share.');const idToken=await firebaseUser.getIdToken(true);const res=await fetch(apiBase+'/api/record-share/revoke',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':`Bearer ${idToken}`},body:JSON.stringify({shareId:saved.id})});const body=await res.json().catch(()=>({}));if(!res.ok)throw new Error(body.error||`Revoke service returned HTTP ${res.status}`);localStorage.removeItem('swasth_activeDoctorShare');renderActiveDoctorShare();setHealthShareStatus('Doctor share revoked. The previous link can no longer be opened.');showToast('','Doctor share revoked','The shared health record link is no longer active.');}catch(e){console.error('Doctor share revoke failed:',e);setHealthShareStatus('Could not revoke doctor share: '+(e?.message||'unknown error'),true);}finally{if(btn)btn.disabled=false;}}
+async function revokeDoctorShare(){const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){renderActiveDoctorShare();return;}const btn=document.getElementById('revokeDoctorShareBtn');if(btn)btn.disabled=true;try{const apiBase=(window.SWASTH_API_BASE||((location.protocol==='http:'||location.protocol==='https:')?location.origin:'')).replace(/\/$/,'');if(!apiBase)throw new Error('Doctor sharing requires the hosted Render app.');if(!firebaseUser)throw new Error('Sign in before revoking a doctor share.');const idToken=await firebaseUser.getIdToken(true);const res=await fetch(apiBase+'/api/record-share/revoke',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':`Bearer ${idToken}`},body:JSON.stringify({shareId:saved.id})});const body=await res.json().catch(()=>({}));if(!res.ok)throw new Error(body.error||`Revoke service returned HTTP ${res.status}`);localStorage.removeItem('swasth_activeDoctorShare');syncCloudState('swasth_activeDoctorShare');renderActiveDoctorShare();setHealthShareStatus('Doctor share revoked. The previous link can no longer be opened.');showToast('','Doctor share revoked','The shared health record link is no longer active.');}catch(e){console.error('Doctor share revoke failed:',e);setHealthShareStatus('Could not revoke doctor share: '+(e?.message||'unknown error'),true);}finally{if(btn)btn.disabled=false;}}
 async function shareHealthRecordWithDoctor(){
  const btn=document.getElementById('shareHealthRecordBtn');if(btn)btn.disabled=true;setHealthShareStatus('Creating an authenticated, time-limited doctor link…');
  try{
@@ -6400,7 +6406,7 @@ async function shareHealthRecordWithDoctor(){
   const bundle={...full,emergencyContact:undefined,nutrition:undefined,meta:{...(full.meta||{}),shareScope:'doctor-clinical-summary'}};
   const res=await fetch(apiBase+'/api/record-share/create',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':`Bearer ${idToken}`},body:JSON.stringify({record:bundle,expiresInHours:24,scope:'clinical-summary'})});
   const body=await res.json().catch(()=>({}));if(!res.ok||!body.url)throw new Error(body.error||`Share service returned HTTP ${res.status}`);
-  const shareId=body.shareId||body.id||'';if(shareId)localStorage.setItem('swasth_activeDoctorShare',JSON.stringify({id:shareId,expiresAt:body.expiresAt||null}));
+  const shareId=body.shareId||body.id||'';if(shareId){localStorage.setItem('swasth_activeDoctorShare',JSON.stringify({id:shareId,expiresAt:body.expiresAt||null}));syncCloudState('swasth_activeDoctorShare');}
   renderActiveDoctorShare();
   await navigator.clipboard?.writeText(body.url).catch(()=>{});
   setHealthShareStatus(`Authenticated doctor link created. It expires ${body.expiresAt?new Date(body.expiresAt).toLocaleString():'after 24 hours'}. ${body.url}${shareId?' — share ID saved for revocation.':''}`);
