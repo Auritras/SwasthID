@@ -5081,8 +5081,9 @@ LOCAL_INDIAN_FOODS.forEach(food => {
 
  const normalizeMedicineName = value => String(value || '')
    .replace(/^[\-•*]+\s*/, '')
+   .replace(/^\(?\d{1,2}\s*[.)]\s*/, '')
    .replace(/^(?:rx|medications?|medicines?)\s*[:\-]?\s*/i, '')
-   .replace(/^(?:tab(?:let)?s?|cap(?:sule)?s?|caps?|syr(?:up)?|inj(?:ection)?|injection|cream|ointment|drops?)\.?\s+/i, '')
+   .replace(/^(?:tab(?:let)?s?|cap(?:sule)?s?|caps?|syr(?:up)?|syp|inj(?:ection)?|injection|cream|ointment|drops?)\.?\s+/i, '')
    .replace(/\s+\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%|mmol)\b.*$/i, '')
    .replace(/\s+(?:tablets?|tabs?|capsules?|caps?|syrup|injection|inj\.?|cream|ointment|drops?)\b.*$/i, '')
    .replace(/\s{2,}/g, ' ')
@@ -5097,6 +5098,18 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    if (every) return `Every ${every[1]} ${/^h/i.test(every[2]) ? 'hours' : every[2].toLowerCase().replace(/s$/, '') + 's'}`;
    const q = line.match(/\bq(\d+(?:\.5)?)(?:h|hr|hrs)\b/i);
    if (q) return `Every ${q[1]} hours`;
+   // Indian dosing notation: morning-afternoon-night(-bedtime), e.g. 1-0-1, 1-1-1, 0-0-1.
+   const slots = line.match(/(?:^|[^\d./-])([0-2]|½|1\/2)\s*-\s*([0-2]|½|1\/2)\s*-\s*([0-2]|½|1\/2)(?:\s*-\s*([0-2]|½|1\/2))?(?![\d./-])/);
+   if (slots) {
+     const parts = slots.slice(1).filter(x => x !== undefined);
+     const taken = parts.filter(x => x !== '0').length;
+     const names = parts.length === 4 ? ['morning', 'afternoon', 'evening', 'night'] : ['morning', 'afternoon', 'night'];
+     const when = parts.map((x, i) => x !== '0' ? names[i] : '').filter(Boolean).join(', ');
+     if (taken === 1) return `Once daily (${when})`;
+     if (taken === 2) return `Twice daily (${when})`;
+     if (taken === 3) return 'Three times daily';
+     if (taken === 4) return 'Four times daily';
+   }
    if (/\b(?:qid|four times daily|4\s*(?:times|x)\s*(?:a\s*)?day|4-?times?\s*daily)\b/i.test(line)) return 'Four times daily';
    if (/\b(?:tds|tid|thrice daily|three times daily|3\s*(?:times|x)\s*(?:a\s*)?day|3-?times?\s*daily)\b/i.test(line)) return 'Three times daily';
    if (/\b(?:bd|bid|twice daily|2\s*(?:times|x)\s*(?:a\s*)?day|2-?times?\s*daily)\b/i.test(line)) return 'Twice daily';
@@ -5133,7 +5146,7 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    const l = String(line || '').trim();
    if (!l || isInstructionLine(l) || isAdministrativeLine(l)) return false;
    if (/^(?:\d+[.)]|[-•*])\s*$/.test(l)) return false;
-   return /^(?:[-•*]\s*)?(?:tab(?:let)?s?|cap(?:sule)?s?|syr(?:up)?|inj(?:ection)?|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\.?\s+/i.test(l)
+   return /^(?:[-•*]\s*|\(?\d{1,2}\s*[.)]\s*)?(?:tab(?:let)?s?|cap(?:sule)?s?|syr(?:up)?|syp|inj(?:ection)?|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\.?\s+/i.test(l)
      || /\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%)\b/i.test(l)
      || /\b(?:tablet|tablets|capsule|capsules|syrup|injection|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\b/i.test(l);
  };
@@ -5226,8 +5239,11 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  }
  async function parsePrescriptionWithSwasthAI(rawText){
  const fallback=parsePrescription(rawText);
+ // Only use the local model if the user already loaded it through SwasthAI;
+ // never start a large model download just to read a prescription.
+ if(!swasthaiEngine) return {...fallback,parser:'regex-fallback',structuredValidated:false};
  try{
-  const engine=await loadSwasthaiEngine();
+  const engine=swasthaiEngine;
   const response=await engine.chat.completions.create({messages:[
     {role:'system',content:'You extract prescription OCR into a strict JSON object. Return ONLY valid JSON, with no markdown. Schema: {"doctor":"string","medicines":[{"medicine":"string","dose":"string","frequency":"string","instructions":"string"}]}. Never invent or normalize away uncertain information. Use empty strings when a field is not present. Every medicine must be supported by the OCR text.'},
     {role:'user',content:`OCR TEXT:\n${String(rawText).slice(0,12000)}`}
