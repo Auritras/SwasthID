@@ -6797,7 +6797,7 @@ async function fetchNearbyHospitals(lat, lon) {
  // a broad unbounded healthcare query is much more likely to time out.
  const query = `[out:json][timeout:18];
  (
-   nwr["amenity"="hospital"](around:8000,${safeLat},${safeLon});
+   nwr["amenity"="hospital"](around:10000,${safeLat},${safeLon});
    nwr["amenity"="clinic"](around:5000,${safeLat},${safeLon});
    nwr["amenity"="doctors"](around:5000,${safeLat},${safeLon});
    nwr["healthcare"~"^(hospital|clinic|doctor|centre|center|polyclinic)$"](around:5000,${safeLat},${safeLon});
@@ -6846,15 +6846,19 @@ async function fetchNearbyHospitals(lat, lon) {
                  amenity === 'clinic' || healthcare === 'clinic' || healthcare === 'polyclinic' ? 'Clinic' :
                  amenity === 'doctors' || healthcare === 'doctor' ? 'Doctor' : 'Healthcare centre',
            emergency: tags.emergency === 'yes' || tags.emergency === '24/7',
-           govt: tags.operator_type === 'government' || /government|govt|state|district hospital/i.test(`${tags.operator || ''} ${tags.name}`),
+           govt: /^(government|public)$/i.test(tags['operator:type'] || tags.operator_type || '') ||
+                 /\b(government|govt|district hospital|state general hospital|sub[- ]?divisional hospital|primary health cent(?:re|er)|community health cent(?:re|er)|phc|chc|esi|esic)\b/i.test(`${tags.operator || ''} ${tags.name}`),
            phone: tags.phone || tags['contact:phone'] || null,
            address: tags['addr:full'] || [[tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '), tags['addr:suburb'] || tags['addr:city']].filter(Boolean).join(', ')
          };
        })
        .filter(Boolean)
-       .sort((a,b) => a.dist - b.dist)
-       .slice(0,10);
-     return results;
+       .sort((a,b) => a.dist - b.dist);
+     // Clinics and doctors' chambers are dense in cities; never let them push
+     // every hospital off the list. Keep the 3 nearest hospitals, then fill up.
+     const nearestHospitals = results.filter(p => p.type === 'Hospital').slice(0, 3);
+     const others = results.filter(p => !nearestHospitals.includes(p)).slice(0, 12 - nearestHospitals.length);
+     return [...nearestHospitals, ...others].sort((a,b) => a.dist - b.dist);
    } catch(err) {
      lastError = err;
      console.warn(`Nearby healthcare endpoint failed: ${endpoint}`, err);
@@ -6932,7 +6936,7 @@ function renderNearbyList(hospitals, lat, lon) {
  const subtitle = document.getElementById('nearbySubtitle');
  if (subtitle && nearbyPlaces.length) {
    const farthest = Math.max(...nearbyPlaces.map(p => Number(p.dist) || 0));
-   subtitle.textContent = `${nearbyPlaces.length} ${nearbyPlaces.length === 1 ? 'place' : 'places'} within ${Math.max(1, Math.ceil(farthest))} km, closest first.`;
+   subtitle.textContent = `${nearbyPlaces.length} ${nearbyPlaces.length === 1 ? 'place' : 'places'} within ${Math.max(1, Math.ceil(farthest))} km (straight-line distance), closest first.`;
  }
  renderNearbyPlaces();
 }
