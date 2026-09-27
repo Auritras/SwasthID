@@ -5775,10 +5775,16 @@ async function calculateClinicalRisk() {
    if(result) result.style.display='none';
    return;
  }
- const required=[['age',data.age],['sex',data.sex],['sbp',data.sbp],['totalCholesterol',data.totalCholesterol],['hdlCholesterol',data.hdlCholesterol],['egfr',data.egfr],['bmi',data.bmi]];
+ const required=[['age',data.age],['sbp',data.sbp],['totalCholesterol',data.totalCholesterol],['hdlCholesterol',data.hdlCholesterol],['egfr',data.egfr],['bmi',data.bmi]];
  const missing=required.filter(([,v]) => v === '' || v === null || !Number.isFinite(Number(v)) || Number(v) <= 0).map(([k])=>k);
- if (data.age === null || data.age < 30 || data.age > 79) missing.push('age 30–79');
- if (missing.length) { if(status) status.textContent='Complete the required fields, including height/weight and a valid age (30–79).'; if(result) result.style.display='none'; return; }
+ if (!['M','F'].includes(data.sex)) missing.push('sex');
+ if (missing.length) {
+   const reason = !['M','F'].includes(data.sex) ? 'Select sex.'
+     : (data.age === null ? 'Add your date of birth in your profile.'
+     : (!(data.bmi > 0) ? 'Add height and weight in your profile.' : 'Enter blood pressure, cholesterol, HDL and eGFR.'));
+   if(status) status.textContent=reason; if(result) result.style.display='none'; return;
+ }
+ if (data.age < 30 || data.age > 79) { if(status) status.textContent=`PREVENT is validated for ages 30–79; your profile age is ${data.age}.`; if(result) result.style.display='none'; return; }
  if(data.bmi < 18.5 || data.bmi > 39.9 || data.sbp < 90 || data.sbp > 200 || data.totalCholesterol < 130 || data.totalCholesterol > 320 || data.hdlCholesterol < 20 || data.hdlCholesterol > 100 || data.egfr < 15 || data.egfr > 140) { if(status) status.textContent='One or more values are outside the supported PREVENT input ranges.'; if(result) result.style.display='none'; return; }
  saveClinicalRiskInputs(data);
  if(status) status.textContent='Calculating…';
