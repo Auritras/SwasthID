@@ -6247,6 +6247,10 @@ function renderEmergencyQRIfReady(){
    document.getElementById('recordEntryHelp').textContent=isVisit?'Add a consultation to your longitudinal health record.':'Add a diagnostic report and its result/value.';
    document.getElementById('visitEntryFields').hidden=!isVisit;
    document.getElementById('labEntryFields').hidden=isVisit;
+   // Start each entry blank so the previous record is not saved again by accident.
+   const setValue=(id,value)=>{const el=document.getElementById(id);if(el)el.value=value;};
+   setValue('recordDoctorInput','');setValue('recordSpecialtyInput','General Medicine');setValue('recordFacilityInput','');
+   setValue('recordReportNameInput','Blood test');setValue('recordResultInput','');
    document.getElementById('recordDateInput').value=getTodayKey();
    overlay.dataset.kind=kind;
    overlay.hidden=false;
