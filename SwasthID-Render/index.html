@@ -1781,6 +1781,107 @@ body.dark-mode [style*="background: white"]{
   color:#dceae4!important;
 }
 </style>
+<style id="profile-editor-polish">
+/* Profile editor: each wizard step spans the dialog and lays out its own fields. */
+.profile-form-grid > .profile-wizard-step{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:18px 16px;align-items:start}
+.profile-wizard-step > .profile-field.full{grid-column:1/-1}
+.profile-field{gap:6px}
+.profile-field > label{margin:0}
+.profile-wizard-step-label{font-weight:600;color:var(--ink);font-size:13px;margin-bottom:14px}
+.profile-field .personalization-note{margin-top:2px;font-size:11.5px;color:var(--muted);line-height:1.45}
+/* One row of actions: Back on the left, Cancel + Next/Save on the right. */
+#profileForm .profile-modal-actions{display:none}
+.profile-wizard-nav{align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
+.profile-wizard-nav-right{display:flex;gap:10px;margin-left:auto}
+.profile-wizard-nav .n-btn{min-width:92px;justify-content:center}
+.profile-wizard-nav #profileWizardBack:disabled{visibility:hidden}
+/* Allergy choices as chips: the checkbox stays for keyboard and screen readers. */
+.allergy-options,.normal-allergy-options{gap:8px;margin-top:4px}
+.allergy-option,.normal-allergy-option{position:relative;display:inline-flex!important;align-items:center;gap:7px;width:auto;margin:0;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:13px;font-weight:500;line-height:1.2;white-space:nowrap;text-align:left;cursor:pointer;user-select:none;transition:background .15s,border-color .15s,color .15s}
+.allergy-option input,.normal-allergy-option input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+.allergy-option:before,.normal-allergy-option:before{content:'';width:14px;height:14px;flex:0 0 14px;border:1.5px solid #9fb1a9;border-radius:4px;box-sizing:border-box;background:var(--surface) center/10px no-repeat}
+.allergy-option:hover,.normal-allergy-option:hover{border-color:#b8c9c1;background:var(--surface-2)}
+.allergy-option:has(input:checked),.normal-allergy-option:has(input:checked){border-color:var(--brand);background:rgba(46,125,91,.1);color:#1d5a40;font-weight:600}
+.allergy-option:has(input:checked):before,.normal-allergy-option:has(input:checked):before{border-color:var(--brand);background-color:var(--brand);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.allergy-option:has(input:focus-visible),.normal-allergy-option:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.allergy-custom{margin-top:10px}
+body.dark-mode .allergy-option:has(input:checked),body.dark-mode .normal-allergy-option:has(input:checked){background:rgba(95,196,140,.14);color:#bfe8d2;border-color:#5fc48c}
+body.dark-mode .allergy-option:before,body.dark-mode .normal-allergy-option:before{border-color:#5d7a6f}
+@media(max-width:620px){
+ .profile-form-grid > .profile-wizard-step{grid-template-columns:1fr;gap:16px}
+ .profile-wizard-step > .profile-field.full{grid-column:auto}
+ .profile-wizard-nav .n-btn{min-width:0;padding-left:14px;padding-right:14px}
+ .allergy-option,.normal-allergy-option{white-space:normal}
+}
+</style>
+<style id="records-polish">
+/* Records: day-grouped logs and timeline */
+.record-day{border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:12px;overflow:hidden}
+.record-day-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:10px 16px;background:var(--surface-2,#f7faf8);border-bottom:1px solid var(--line);font-size:12.5px}
+.record-day-head span:first-child{font-weight:700;color:var(--ink)}
+.record-day-head span:last-child{color:var(--muted)}
+.record-row{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;padding:11px 16px;border-top:1px solid var(--line)}
+.record-day-head + .record-row{border-top:0}
+.record-row-time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.record-row-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.record-row-main b{font-size:14px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.record-row-main span{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.record-row-value{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.record-row-check{font-size:12px;font-weight:600;color:var(--brand);white-space:nowrap}
+.record-empty-cta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.record-more-btn{display:block;margin:4px auto 0;background:none;border:0;padding:8px 14px;border-radius:8px;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer}
+.record-more-btn:hover{background:var(--sage)}
+.record-timeline-day{position:relative;padding-left:22px;margin-bottom:6px}
+.record-timeline-day:before{content:'';position:absolute;left:6px;top:4px;bottom:-6px;width:2px;background:var(--line)}
+.record-timeline-date{font-size:12.5px;font-weight:700;color:var(--ink);margin:0 0 8px -22px;padding-left:22px}
+.record-timeline-item{position:relative;display:flex;gap:10px;padding:10px 14px;margin-bottom:8px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.record-timeline-dot{position:absolute;left:-21px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:3px solid var(--muted)}
+.record-type{font-size:10.5px!important;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.type-visit .record-timeline-dot{border-color:var(--accent)} .type-visit .record-type{color:var(--accent)!important}
+.type-lab .record-timeline-dot{border-color:#8a5cc2} .type-lab .record-type{color:#7a4fb3!important}
+.type-rx .record-timeline-dot{border-color:var(--brand)} .type-rx .record-type{color:var(--brand)!important}
+.type-log .record-timeline-dot{border-color:#b9c7c1} .type-log{background:var(--surface-2,#f7faf8)}
+body.dark-mode .record-day-head,body.dark-mode .type-log{background:#15211d}
+body.dark-mode .type-lab .record-type{color:#c4a6ec!important}
+@media(max-width:620px){.record-row{grid-template-columns:58px 1fr;row-gap:4px}.record-row-value,.record-row-check{grid-column:2}}
+</style>
+<style id="places-polish">
+/* Nearby healthcare */
+.places-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.places-head .section-sub{margin-bottom:0}
+.places-panel{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.places-empty{padding:22px 18px;text-align:center;font-size:13px;color:var(--muted)}
+.places-source{padding:10px 16px;border-top:1px solid var(--line);background:var(--surface-2,#f7faf8);font-size:11px;color:var(--muted)}
+.places-filters{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.places-filter{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.places-filter span{color:var(--muted);font-weight:500;margin-left:2px}
+.places-filter:hover{background:var(--sage)}
+.places-filter.active{background:var(--teal,#143831);border-color:var(--teal,#143831);color:#fff}
+.places-filter.active span{color:rgba(255,255,255,.75)}
+.place-row{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;border-top:1px solid var(--line)}
+.places-list .place-row:first-child{border-top:0}
+.place-dist{font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.place-dist small{font-size:11px;font-weight:600;color:var(--muted);margin-left:2px}
+.place-name{font-size:14.5px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.place-meta{font-size:12.5px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.place-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.place-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#e8eff7;color:#2a5585}
+.place-tag.er{background:#fdecea;color:#a23b2e}
+.place-actions{display:grid;grid-template-columns:repeat(2,96px);gap:8px}
+.place-actions .n-btn{justify-content:center;text-align:center;min-height:36px;padding:8px 10px}
+.places-panel .record-more-btn{margin:0 auto;padding:12px;width:100%;border-radius:0;border-top:1px solid var(--line)}
+body.dark-mode .places-source{background:#15211d}
+body.dark-mode .place-tag{background:#1b2c3d;color:#9cc4ec}
+body.dark-mode .place-tag.er{background:#3a1d19;color:#f0a092}
+body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
+@media(max-width:620px){
+ .place-row{grid-template-columns:52px minmax(0,1fr);row-gap:10px}
+ .place-actions{grid-column:1/-1;grid-template-columns:1fr 1fr}
+ .place-action-gap{display:none}
+ .place-actions .n-btn.solid:only-of-type{grid-column:1/-1}
+ .places-head .n-btn{width:100%}
+}
+</style>
 </head>
 <body><div id="offlineBanner" class="offline-banner" role="status">You are offline. Saved information remains available, but live services may be unavailable until your connection returns.</div><!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
@@ -1929,15 +2030,14 @@ body.dark-mode [style*="background: white"]{
  </section>
 
  <section>
- <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap;">
+ <div class="places-head">
  <div>
- <h3>Nearby healthcare centers</h3>
- <p class="section-sub" id="nearbySubtitle">Allow location access to find hospitals and clinics near you.</p>
+ <h3>Nearby healthcare</h3>
+ <p class="section-sub" id="nearbySubtitle">Find hospitals, clinics and doctors near you.</p>
  </div>
- <button class="n-btn solid" id="findNearbyBtn" type="button"> Find near me</button>
+ <button class="n-btn solid" id="findNearbyBtn" type="button">Find near me</button>
  </div>
- <div style="font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:10px;">Healthcare data: © OpenStreetMap contributors</div>
- <div class="nearby-panel">
+ <div class="places-panel">
  <div id="nearbyLoadingState" style="display:none; text-align:center; padding:18px; color:var(--muted);">
  <div style="font-size:20px; margin-bottom:6px;"></div>
  <b style="color:var(--ink);">Finding your location…</b>
@@ -1950,8 +2050,9 @@ body.dark-mode [style*="background: white"]{
  <button class="n-btn" id="retryLocationBtn" type="button">Try again</button>
  </div>
  <div id="nearbyItemsList">
- <div style="text-align:center; padding:18px; font-size:13px; color:var(--muted);">Click <b>Find near me</b> to load real nearby hospitals.</div>
+ <div class="places-empty">Use <b>Find near me</b> to list hospitals and clinics around your current location.</div>
  </div>
+ <div class="places-source">Data © OpenStreetMap contributors. Details can be out of date, so call ahead when you can.</div>
  </div>
  </section>
 
@@ -2406,18 +2507,18 @@ body.dark-mode [style*="background: white"]{
  <div id="prescriptionList"></div>
  </section>
  <section>
- <h3>Nutrition History</h3>
- <p class="section-sub">Meal logs recorded through Nutrition &amp; Diet.</p>
+ <h3>Nutrition history</h3>
+ <p class="section-sub">Meals you logged in Nutrition, by day.</p>
  <div id="recordFoodList"></div>
  </section>
  <section>
- <h3>Medication Activity</h3>
- <p class="section-sub">Medication doses marked as taken in the app.</p>
+ <h3>Medication activity</h3>
+ <p class="section-sub">Doses you marked as taken, by day.</p>
  <div id="recordMedicationList"></div>
  </section>
  <section>
- <h3>Recent Health Activity</h3>
- <p class="section-sub">A single timeline assembled from data generated across SwasthID.</p>
+ <h3>Health timeline</h3>
+ <p class="section-sub">Visits, lab reports and prescriptions, with a daily summary of doses and meals.</p>
  <div id="recordTimeline"></div>
  </section>
  </div>
@@ -5755,7 +5856,7 @@ window.openProfileModal = function openProfileModal(options = {}) {
   try { renderMedicineInputRows(patientData.medications || []); } catch (err) {
     console.error('Medicine editor error:', err);
     const medicineWrap = document.getElementById('medicineInputRows');
-    if (medicineWrap) medicineWrap.innerHTML = '<div class="medicine-input-row" data-index="0"><input type="text" class="medicine-name-input" placeholder="Medicine name"><input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 2 tablets)"><input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Twice daily)"><input type="text" class="medicine-pack-input" placeholder="Pack size (optional, e.g. 30 tablets)"><button type="button" class="medicine-remove-btn" data-remove-medicine="0">×</button></div>';
+    if (medicineWrap) medicineWrap.innerHTML = '<div class="medicine-input-row" data-index="0"><input type="text" class="medicine-name-input" placeholder="Medicine name"><input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 2 tablets)"><input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Twice daily)"><input type="text" class="medicine-pack-input" placeholder="Pack size" aria-label="Pack size (optional, e.g. 30 tablets)" title="Optional, e.g. 30 tablets"><button type="button" class="medicine-remove-btn" data-remove-medicine="0">×</button></div>';
   }
   const title = document.getElementById('profileModalTitle');
   const subtitle = document.getElementById('profileModalSubtitle');
@@ -5871,7 +5972,7 @@ function renderMedicineInputRows(medicines=[]) {
       <input type="text" class="medicine-name-input" placeholder="Medicine name" value="${escapeHtml(String(m.name||m.medicine||''))}">
       <input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 2 tablets)" value="${escapeHtml(String(m.dose||''))}">
       <input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Twice daily)" value="${escapeHtml(String(m.schedule||m.frequency||''))}">
-      <input type="text" class="medicine-pack-input" placeholder="Pack size (optional, e.g. 30 tablets)" value="${escapeHtml(String(m.packSize||m.pack||''))}">
+      <input type="text" class="medicine-pack-input" placeholder="Pack size" aria-label="Pack size (optional, e.g. 30 tablets)" title="Optional, e.g. 30 tablets" value="${escapeHtml(String(m.packSize||m.pack||''))}">
       <button type="button" class="medicine-remove-btn" aria-label="Remove medicine" data-remove-medicine="${i}">×</button>
       <div class="med-time-editor">
         <div class="med-time-editor-label">When should each dose be taken?</div>
@@ -6162,27 +6263,91 @@ function renderEmergencyQRIfReady(){
  document.getElementById('recordEntrySave')?.addEventListener('click',saveRecordEntry);
  document.getElementById('recordEntryEditor')?.addEventListener('click',e=>{if(e.target.id==='recordEntryEditor')closeRecordEntryEditor();});
  document.getElementById('recordResultInput')?.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')saveRecordEntry();});
+ // Records: day-grouped logs. Each list shows 7 days at first; "Show earlier days" adds 7 more.
+ const recordDaysShown = { food: 7, meds: 7, timeline: 7 };
+ function recordDayKey(value){ const d=new Date(value); return Number.isNaN(d.getTime()) ? String(value||'') : localDayKey(d); }
+ function recordDayLabel(key){
+   const today=localDayKey(new Date()), y=new Date(); y.setDate(y.getDate()-1);
+   if(key===today) return 'Today';
+   if(key===localDayKey(y)) return 'Yesterday';
+   const d=new Date(`${key}T12:00:00`);
+   return Number.isNaN(d.getTime()) ? key : d.toLocaleDateString([], {weekday:'short', day:'numeric', month:'short', year: d.getFullYear()===new Date().getFullYear() ? undefined : 'numeric'});
+ }
+ function groupRecordsByDay(items, keyOf){
+   const map=new Map();
+   items.forEach(item=>{ const k=keyOf(item); if(!map.has(k)) map.set(k,[]); map.get(k).push(item); });
+   return [...map.entries()].sort((a,b)=>b[0].localeCompare(a[0]));
+ }
+ function recordEmpty(message, tab, action){
+   return `<div class="record-empty record-empty-cta"><span>${escapeHtml(message)}</span>${tab?`<button type="button" class="n-btn" data-open-tab="${tab}">${escapeHtml(action)}</button>`:''}</div>`;
+ }
+ function recordMoreButton(kind, totalDays){
+   return totalDays > recordDaysShown[kind] ? `<button type="button" class="record-more-btn" data-record-more="${kind}">Show earlier days</button>` : '';
+ }
+ function bindRecordListActions(el){
+   el.querySelectorAll('[data-open-tab]').forEach(btn=>btn.addEventListener('click',()=>document.querySelector(`.tab-btn[data-tab="${btn.dataset.openTab}"]`)?.click()));
+   el.querySelectorAll('[data-record-more]').forEach(btn=>btn.addEventListener('click',()=>{
+     const kind=btn.dataset.recordMore; recordDaysShown[kind]+=7;
+     ({food:renderRecordFoodLogs, meds:renderRecordMedicationActivity, timeline:renderRecordTimeline})[kind]();
+   }));
+ }
+ // Meals store a display time like "06:40 PM"; the id is the creation timestamp, so sort by it.
+ function foodLogTimestamp(log){ const t=Number(log.id); return Number.isFinite(t) && t>1e12 ? t : new Date(`${log.date}T12:00:00`).getTime(); }
+
  function renderRecordFoodLogs(){
    const el=document.getElementById('recordFoodList');if(!el)return;
-   const logs=getRecordFoodLogs().slice().sort((a,b)=>new Date(`${b.date}T${b.time||'00:00'}`)-new Date(`${a.date}T${a.time||'00:00'}`));
-   if(!logs.length){el.innerHTML='<div class="record-empty">No meals have been logged yet. Meals recorded in Nutrition will appear here automatically.</div>';return;}
-   el.innerHTML=logs.slice(0,20).map(log=>`<div class="visit-item"><div class="visit-head"><div><div class="doc">${escapeFoodText(log.name)}</div><div class="meta">${formatRecordDate(log.date)} · ${escapeFoodText(log.time||'')} · ${escapeFoodText(log.portion||'')}</div></div><span class="visit-toggle" style="color:var(--ink);">${Math.round(Number(log.kcal||0))} kcal</span></div><div class="visit-body open"><div class="rx-caption">Protein ${Number(log.protein||0).toFixed(1)}g · Carbs ${Number(log.carbs||0).toFixed(1)}g · Fat ${Number(log.fat||0).toFixed(1)}g · ${escapeFoodText(log.source||'Nutrition log')}</div></div></div>`).join('');
+   const logs=getRecordFoodLogs().slice().sort((a,b)=>foodLogTimestamp(b)-foodLogTimestamp(a));
+   if(!logs.length){el.innerHTML=recordEmpty('No meals logged yet.','nutrition','Log a meal');bindRecordListActions(el);return;}
+   const days=groupRecordsByDay(logs, log=>log.date || recordDayKey(foodLogTimestamp(log)));
+   el.innerHTML=days.slice(0,recordDaysShown.food).map(([key,items])=>{
+     const kcal=items.reduce((sum,x)=>sum+Number(x.kcal||0),0);
+     return `<div class="record-day"><div class="record-day-head"><span>${escapeHtml(recordDayLabel(key))}</span><span>${Math.round(kcal).toLocaleString()} kcal · ${items.length} ${items.length===1?'meal':'meals'}</span></div>`+
+       items.map(log=>{
+         const macros=[['P',log.protein],['C',log.carbs],['F',log.fat]].filter(([,v])=>Number(v)>0).map(([k,v])=>`${k} ${Number(v).toFixed(0)}g`).join(' · ');
+         const detail=[log.mealType && log.mealType!=='Unspecified' ? log.mealType : '', log.portion, macros].filter(Boolean).join(' · ');
+         return `<div class="record-row"><span class="record-row-time">${escapeFoodText(log.time||'')}</span><div class="record-row-main"><b>${escapeFoodText(log.name)}</b><span>${escapeFoodText(detail)}</span></div><span class="record-row-value">${Math.round(Number(log.kcal||0))} kcal</span></div>`;
+       }).join('')+'</div>';
+   }).join('')+recordMoreButton('food',days.length);
+   bindRecordListActions(el);
  }
+
  function renderRecordMedicationActivity(){
-   const el=document.getElementById('recordMedicationList');if(!el)return; const activity=getRecordMedicationActivity();
-   if(!activity.length){el.innerHTML='<div class="record-empty">No medication doses have been marked as taken yet.</div>';return;}
-   el.innerHTML=activity.slice().reverse().slice(0,20).map(item=>`<div class="history-item"><div><div class="h-name">${escapeHtml(item.medicine)}</div><div class="h-meta">Taken at ${escapeHtml(item.time)} · ${formatRecordDate(item.date)}</div></div><span class="tag ongoing">Taken</span></div>`).join('');
+   const el=document.getElementById('recordMedicationList');if(!el)return;
+   const current=getCurrentMedicationList();
+   const doses=getMedicationHistory().filter(x=>x?.taken).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+   if(!doses.length){el.innerHTML=recordEmpty('No doses marked as taken yet.','home',"Open today's medicines");bindRecordListActions(el);return;}
+   const days=groupRecordsByDay(doses, d=>recordDayKey(d.date));
+   el.innerHTML=days.slice(0,recordDaysShown.meds).map(([key,items])=>
+     `<div class="record-day"><div class="record-day-head"><span>${escapeHtml(recordDayLabel(key))}</span><span>${items.length} ${items.length===1?'dose':'doses'} taken</span></div>`+
+     items.map(d=>{
+       const med=current.find(m=>medicationIdentityKey(m.medicine)===medicationIdentityKey(d.medicine));
+       const count=med ? medicationSlotCount(med) : 0;
+       const unit=Number(d.unitIndex);
+       const detail=[d.dose, count>1 && unit>=0 ? `Dose ${unit+1} of ${count}` : ''].filter(Boolean).join(' · ');
+       return `<div class="record-row"><span class="record-row-time">${escapeHtml(d.time||'')}</span><div class="record-row-main"><b>${escapeHtml(d.medicine||'Medication')}</b>${detail?`<span>${escapeHtml(detail)}</span>`:''}</div><span class="record-row-check" aria-label="Taken">✓ Taken</span></div>`;
+     }).join('')+'</div>'
+   ).join('')+recordMoreButton('meds',days.length);
+   bindRecordListActions(el);
  }
+
  function renderRecordTimeline(){
    const el=document.getElementById('recordTimeline');if(!el)return; const events=[];
-   (patientData.visits||[]).forEach(v=>events.push({date:v.date,type:'Visit',title:`${v.doctor} — ${v.specialty}`,meta:v.facility}));
-   (patientData.reports||[]).forEach(r=>events.push({date:r.date,type:'Lab report',title:r.name,meta:r.result||'Report available'}));
-   getSavedPrescriptions().forEach(r=>events.push({date:r.date,type:'Prescription',title:`Prescription from ${r.doctor}`,meta:`${r.medicines?.length||0} medication(s) confirmed`}));
-   getRecordFoodLogs().forEach(log=>events.push({date:`${log.date}T${log.time||'00:00'}`,type:'Nutrition',title:log.name,meta:`${Math.round(Number(log.kcal||0))} kcal · ${log.portion||''}`}));
-   getRecordMedicationActivity().forEach(m=>events.push({date:m.date,type:'Medication',title:m.medicine,meta:`Taken at ${m.time}`}));
-   events.sort((a,b)=>new Date(b.date)-new Date(a.date));
-   if(!events.length){el.innerHTML='<div class="record-empty">Your cross-module activity will appear here as you use SwasthID.</div>';return;}
-   el.innerHTML=events.slice(0,30).map(event=>`<div class="history-item"><div><div class="h-name">${escapeHtml(event.title)}</div><div class="h-meta">${escapeHtml(event.type)} · ${formatRecordDate(event.date)}${event.meta?' · '+escapeHtml(event.meta):''}</div></div><span class="tag ongoing">Recorded</span></div>`).join('');
+   (patientData.visits||[]).forEach(v=>events.push({day:recordDayKey(v.date),type:'visit',label:'Visit',title:[v.doctor,v.specialty].filter(Boolean).join(' · '),meta:v.facility||''}));
+   (patientData.reports||[]).forEach(r=>events.push({day:recordDayKey(r.date),type:'lab',label:'Lab report',title:r.name,meta:r.result||''}));
+   getSavedPrescriptions().forEach(r=>{const n=r.medicines?.length||0;events.push({day:recordDayKey(r.date),type:'rx',label:'Prescription',title:`Prescription from ${r.doctor||'your doctor'}`,meta:`${n} ${n===1?'medicine':'medicines'}${n?': '+r.medicines.slice(0,3).map(m=>m.medicine).join(', ')+(n>3?'…':''):''}`});});
+   // One summary line per day for routine logs, instead of repeating every dose and meal.
+   const daily=new Map();
+   getMedicationHistory().filter(x=>x?.taken).forEach(d=>{const k=recordDayKey(d.date);const e=daily.get(k)||{doses:0,meals:0,kcal:0};e.doses++;daily.set(k,e);});
+   getRecordFoodLogs().forEach(l=>{const k=l.date||recordDayKey(foodLogTimestamp(l));const e=daily.get(k)||{doses:0,meals:0,kcal:0};e.meals++;e.kcal+=Number(l.kcal||0);daily.set(k,e);});
+   daily.forEach((e,k)=>events.push({day:k,type:'log',label:'Daily log',title:[e.doses?`${e.doses} ${e.doses===1?'dose':'doses'} taken`:'',e.meals?`${e.meals} ${e.meals===1?'meal':'meals'} logged (${Math.round(e.kcal).toLocaleString()} kcal)`:''].filter(Boolean).join(' · '),meta:''}));
+   if(!events.length){el.innerHTML=recordEmpty('Your visits, lab reports and prescriptions will appear here.','scan','Scan a prescription');bindRecordListActions(el);return;}
+   const order={visit:0,lab:1,rx:2,log:3};
+   const days=groupRecordsByDay(events, e=>e.day);
+   el.innerHTML='<div class="record-timeline">'+days.slice(0,recordDaysShown.timeline).map(([key,items])=>
+     `<div class="record-timeline-day"><div class="record-timeline-date">${escapeHtml(recordDayLabel(key))}</div>`+
+     items.sort((a,b)=>order[a.type]-order[b.type]).map(e=>`<div class="record-timeline-item type-${e.type}"><span class="record-timeline-dot" aria-hidden="true"></span><div class="record-row-main"><span class="record-type">${escapeHtml(e.label)}</span><b>${escapeHtml(e.title)}</b>${e.meta?`<span>${escapeHtml(e.meta)}</span>`:''}</div></div>`).join('')+'</div>'
+   ).join('')+'</div>'+recordMoreButton('timeline',days.length);
+   bindRecordListActions(el);
  }
  function buildSwasthHealthBundle(){
    const profile=patientData||{};
@@ -6616,7 +6781,7 @@ async function fetchNearbyHospitals(lat, lon) {
            emergency: tags.emergency === 'yes' || tags.emergency === '24/7',
            govt: tags.operator_type === 'government' || /government|govt|state|district hospital/i.test(`${tags.operator || ''} ${tags.name}`),
            phone: tags.phone || tags['contact:phone'] || null,
-           address: tags['addr:street'] || tags['addr:full'] || ''
+           address: tags['addr:full'] || [[tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '), tags['addr:suburb'] || tags['addr:city']].filter(Boolean).join(', ')
          };
        })
        .filter(Boolean)
@@ -6681,36 +6846,63 @@ function showNearbyError(message) {
  }
 }
 
+let nearbyPlaces = [];
+let nearbyFilter = 'all';
+let nearbyShowAll = false;
+const NEARBY_FILTERS = [
+  ['all', 'All', () => true],
+  ['hospital', 'Hospitals', p => p.type === 'Hospital'],
+  ['clinic', 'Clinics & doctors', p => p.type !== 'Hospital'],
+  ['emergency', '24×7 emergency', p => p.emergency]
+];
+
 function renderNearbyList(hospitals, lat, lon) {
  setNearbyLoading(false);
  const fallback = document.getElementById('nearbyFallback');
- const list = document.getElementById('nearbyItemsList');
  if (fallback) fallback.style.display = 'none';
- if (!list) return;
+ nearbyPlaces = Array.isArray(hospitals) ? hospitals : [];
+ nearbyFilter = 'all'; nearbyShowAll = false;
+ const subtitle = document.getElementById('nearbySubtitle');
+ if (subtitle && nearbyPlaces.length) {
+   const farthest = Math.max(...nearbyPlaces.map(p => Number(p.dist) || 0));
+   subtitle.textContent = `${nearbyPlaces.length} ${nearbyPlaces.length === 1 ? 'place' : 'places'} within ${Math.max(1, Math.ceil(farthest))} km, closest first.`;
+ }
+ renderNearbyPlaces();
+}
 
- if (!hospitals || !hospitals.length) {
-   list.innerHTML = '<div style="text-align:center;padding:18px;font-size:13px;color:var(--muted);">No nearby healthcare centers were found. Try again from a different location.</div>';
+function renderNearbyPlaces() {
+ const list = document.getElementById('nearbyItemsList');
+ if (!list) return;
+ if (!nearbyPlaces.length) {
+   list.innerHTML = '<div class="places-empty">No hospitals or clinics were found nearby. Try again from a different location.</div>';
    return;
  }
-
- list.innerHTML = hospitals.map(h => `
-   <div class="nearby-item">
-     <div>
-       <div class="n-name">${escapeHtml(h.name)}</div>
-       <div class="n-meta">
-         <span class="n-badge dist">${Number(h.dist).toFixed(1)} km</span>
-         <span>${escapeHtml(h.type)}</span>
-         ${h.emergency ? '<span class="n-badge er">24/7 Emergency</span>' : ''}
-         ${h.govt ? '<span class="n-badge govt">Government</span>' : ''}
-         ${h.address ? '· ' + escapeHtml(h.address) : ''}
-       </div>
+ const filters = NEARBY_FILTERS.filter(([key,,test]) => key === 'all' || nearbyPlaces.some(test));
+ const test = (NEARBY_FILTERS.find(([key]) => key === nearbyFilter) || NEARBY_FILTERS[0])[2];
+ const matches = nearbyPlaces.filter(test);
+ const shown = nearbyShowAll ? matches : matches.slice(0, 6);
+ const chips = filters.length > 2 ? `<div class="places-filters" role="group" aria-label="Filter places">${filters.map(([key, label, t]) =>
+   `<button type="button" class="places-filter${key === nearbyFilter ? ' active' : ''}" data-nearby-filter="${key}" aria-pressed="${key === nearbyFilter}">${label} <span>${nearbyPlaces.filter(t).length}</span></button>`).join('')}</div>` : '';
+ list.innerHTML = chips + '<div class="places-list">' + shown.map(h => {
+   const km = Number(h.dist);
+   const distance = km < 1 ? `${Math.round(km * 1000 / 10) * 10}<small>m</small>` : `${km.toFixed(1)}<small>km</small>`;
+   const phone = h.phone ? String(h.phone).split(/[;,]/)[0].trim() : '';
+   const tags = [h.emergency ? '<span class="place-tag er">24×7 emergency</span>' : '', h.govt ? '<span class="place-tag">Government</span>' : ''].join('');
+   return `<div class="place-row">
+     <div class="place-dist">${distance}</div>
+     <div class="place-main">
+       <div class="place-name">${escapeHtml(h.name)}</div>
+       <div class="place-meta">${escapeHtml(h.type)}${h.address ? ' · ' + escapeHtml(h.address) : ''}</div>
+       ${tags ? `<div class="place-tags">${tags}</div>` : ''}
      </div>
-     <div class="nearby-actions">
-       <a class="n-btn" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${h.lat},${h.lon}`)}" target="_blank" rel="noopener">Directions</a>
-       ${h.phone ? `<a class="n-btn solid" href="tel:${String(h.phone).replace(/[^+0-9]/g,'')}">Call</a>` : ''}
+     <div class="place-actions">
+       ${phone ? `<a class="n-btn" href="tel:${phone.replace(/[^+0-9]/g,'')}" aria-label="Call ${escapeHtml(h.name)}">Call</a>` : '<span class="place-action-gap" aria-hidden="true"></span>'}
+       <a class="n-btn solid" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${h.lat},${h.lon}`)}" target="_blank" rel="noopener" aria-label="Directions to ${escapeHtml(h.name)}">Directions</a>
      </div>
-   </div>
- `).join('');
+   </div>`;
+ }).join('') + '</div>' + (!nearbyShowAll && matches.length > shown.length ? `<button type="button" class="record-more-btn" data-nearby-more>Show all ${matches.length}</button>` : '');
+ list.querySelectorAll('[data-nearby-filter]').forEach(btn => btn.addEventListener('click', () => { nearbyFilter = btn.dataset.nearbyFilter; nearbyShowAll = false; renderNearbyPlaces(); }));
+ list.querySelector('[data-nearby-more]')?.addEventListener('click', () => { nearbyShowAll = true; renderNearbyPlaces(); });
 }
 
 async function loadNearbyHospitals() {
@@ -6721,7 +6913,7 @@ async function loadNearbyHospitals() {
      const hospitals = await fetchNearbyHospitals(networkPos.coords.latitude, networkPos.coords.longitude);
      setNearbyLoading(false);
      renderNearbyList(hospitals, networkPos.coords.latitude, networkPos.coords.longitude);
-     document.getElementById('nearbySubtitle').textContent = `Approximate network location • ${hospitals.length} nearby centers found.`;
+     document.getElementById('nearbySubtitle').textContent = `Based on your approximate location. ` + document.getElementById('nearbySubtitle').textContent;
      return;
    } catch(err) {
      showNearbyError('This browser has no location service and approximate network location was unavailable.');
@@ -6750,7 +6942,7 @@ async function loadNearbyHospitals() {
    document.getElementById('nearbyFallback').style.display = 'none';
    renderNearbyList(hospitals, latitude, longitude);
    document.getElementById('nearbySubtitle').title = `Location accuracy: approximately ${Math.round(accuracy || 5000)} m${pos.approximate ? ' (network estimate)' : ''}`;
-   if(pos.approximate) document.getElementById('nearbySubtitle').textContent = `Approximate network location • ${hospitals.length} nearby centers found.`;
+   if(pos.approximate) document.getElementById('nearbySubtitle').textContent = `Based on your approximate location. ` + document.getElementById('nearbySubtitle').textContent;
  } catch(err) {
    console.error('Nearby hospital search:', err);
    if(err && err.code) {
@@ -7706,7 +7898,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
       if (wrap) {
         const row = document.createElement('div');
         row.className = 'medicine-input-row';
-        row.innerHTML = '<input type="text" class="medicine-name-input" placeholder="Medicine name"><input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 2 tablets)"><input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Twice daily)"><input type="text" class="medicine-pack-input" placeholder="Pack size (optional, e.g. 30 tablets)"><button type="button" class="medicine-remove-btn" data-remove-medicine="0">×</button>';
+        row.innerHTML = '<input type="text" class="medicine-name-input" placeholder="Medicine name"><input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 2 tablets)"><input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Twice daily)"><input type="text" class="medicine-pack-input" placeholder="Pack size" aria-label="Pack size (optional, e.g. 30 tablets)" title="Optional, e.g. 30 tablets"><button type="button" class="medicine-remove-btn" data-remove-medicine="0">×</button>';
         wrap.appendChild(row);
         row.querySelector('.medicine-name-input')?.focus();
       }
@@ -8088,7 +8280,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
     grid.replaceChildren(...steps);
     const progress=document.createElement('div');progress.className='profile-wizard-progress';progress.innerHTML='<span></span><span></span><span></span><span></span>';
     const label=document.createElement('div');label.className='profile-wizard-step-label';label.id='profileWizardStepLabel';
-    const nav=document.createElement('div');nav.className='profile-wizard-nav';nav.innerHTML='<button type="button" class="n-btn" id="profileWizardBack">Back</button><button type="button" class="n-btn solid" id="profileWizardNext">Next</button>';
+    const nav=document.createElement('div');nav.className='profile-wizard-nav';nav.innerHTML='<button type="button" class="n-btn" id="profileWizardBack">Back</button><div class="profile-wizard-nav-right"><button type="button" class="n-btn" id="profileWizardCancel">Cancel</button><button type="button" class="n-btn solid" id="profileWizardNext">Next</button></div>';
     form.insertBefore(progress,grid); form.insertBefore(label,grid); form.appendChild(nav);
     const labels=['Personal details','Health & lifestyle','Allergies','Emergency & insurance'];
     let current=Math.max(0,Math.min(3,Number(localStorage.getItem('swasth_profileWizardStep')||0)));
@@ -8100,6 +8292,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
     function restoreDraft(){const d=safe(()=>JSON.parse(localStorage.getItem('swasth_profileWizardDraft')||'{}'))||{};Object.entries(d).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=!!val;else if(el.value===''||!window.patientData?.[id])el.value=val;});}
     function render(){steps.forEach((x,i)=>x.classList.toggle('profile-wizard-hidden',i!==current));progress.querySelectorAll('span').forEach((x,i)=>x.classList.toggle('active',i<=current));label.textContent=`Step ${current+1} of 4 · ${labels[current]}`;const back=$('profileWizardBack'),next=$('profileWizardNext');if(back)back.disabled=current===0;if(next)next.textContent=current===3?'Save profile':'Next';}
     $('profileWizardBack').onclick=()=>{saveDraft();current=Math.max(0,current-1);render();};
+    $('profileWizardCancel').onclick=()=>$('cancelProfileBtn')?.click();
     $('profileWizardNext').onclick=async()=>{saveDraft();if(current<3){current++;render();return;} const save=$('saveProfileBtn'); if(save){save.click();} localStorage.removeItem('swasth_profileWizardStep'); localStorage.removeItem('swasth_profileWizardDraft');};
     form.addEventListener('input',saveDraft); form.addEventListener('change',saveDraft);
     restoreDraft(); render();
