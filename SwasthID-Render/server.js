@@ -1081,7 +1081,7 @@ Loading the shared health record…
 </div>
 
 <div class="footer">
-SwasthID is a prototype and is not an official Government of India service.
+SwasthID is an independent prototype, not a government or hospital service.
 This shared record is informational and should be verified with the patient
 and original clinical records.
 </div>
