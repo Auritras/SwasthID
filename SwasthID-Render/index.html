@@ -2819,7 +2819,9 @@ body.dark-mode [style*="background: white"]{
    'swasth_chatHistory',
   'swasth_riskInputs', 'swasth_clinicalRiskResult',
    'swasth_waterIntake',
-   'swasth_profile_medications'
+   'swasth_profile_medications',
+   'swasth_emergencyManageToken', 'swasth_emergencyTokenId', 'swasth_emergencyExpiresAt', 'swasth_emergencyQrCache',
+   'swasth_emergencyVisibility', 'swasth_dependents', 'swasth_activeDoctorShare'
  ];
 
  function cloudDoc() {
@@ -2949,6 +2951,9 @@ function isProfileSkippedForCurrentAccount() {
 
 function clearCloudCacheForUserSwitch() {
    CLOUD_KEYS.forEach(key => localStorage.removeItem(key));
+   // An unfinished profile draft belongs to whoever typed it.
+   localStorage.removeItem('swasth_profileWizardDraft');
+   localStorage.removeItem('swasth_profileWizardStep');
    localStorage.removeItem('swasth_addedKcal');
    localStorage.removeItem('swasth_stepsToday');
    localStorage.removeItem('swasth_lastActiveDate');
@@ -3038,7 +3043,9 @@ function clearCloudCacheForUserSwitch() {
        CLOUD_KEYS.forEach(key => {
          if (Object.prototype.hasOwnProperty.call(localState, key)) {
            const value = localState[key];
-           localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+           // Older builds synced missing keys as null; never turn that into the string "null".
+           if (value === null || value === undefined) localStorage.removeItem(key);
+           else localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
          }
        });
 
@@ -3117,7 +3124,7 @@ function clearCloudCacheForUserSwitch() {
    if (!ref || !CLOUD_KEYS.includes(changedKey)) return false;
    try {
      const raw = localStorage.getItem(changedKey);
-     const value = raw === null ? null : (safeJsonParse(raw, raw));
+     const value = raw === null ? firebase.firestore.FieldValue.delete() : (safeJsonParse(raw, raw));
      await ref.set({
        localState: { [changedKey]: value },
        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -3504,8 +3511,19 @@ window.addEventListener('DOMContentLoaded', async () => {
  if(!window.confirm('Delete your SwasthID account and stored data? This cannot be undone.'))return;
  try{
   if(status)status.textContent='Deleting account data…';
+  const apiBase=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');
+  const clearLocal=()=>Object.keys(localStorage).filter(k=>k.startsWith('swasth_')).forEach(k=>localStorage.removeItem(k));
+  // Emergency QRs are tied to the manage token rather than the account, so revoke them first.
+  const tokenId=localStorage.getItem('swasth_emergencyTokenId'),manageToken=localStorage.getItem('swasth_emergencyManageToken');
+  if(tokenId&&manageToken)await fetch(apiBase+'/api/emergency/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tokenId,manageToken})}).catch(()=>{});
+  // Prefer the server: it also removes doctor share links and does not need a recent sign-in.
+  const idToken=await firebaseUser.getIdToken(true);
+  const res=await fetch(apiBase+'/api/account/delete',{method:'POST',headers:{'Authorization':`Bearer ${idToken}`}}).catch(()=>null);
+  if(res&&res.ok){clearLocal();try{await auth.signOut();}catch(_){}window.location.reload();return;}
+  if(res&&res.status!==503&&res.status!==404){const b=await res.json().catch(()=>({}));throw new Error(b.error||`Server returned HTTP ${res.status}`);}
+  // Server unavailable: delete what the client is allowed to delete.
   if(db)await db.collection('users').doc(firebaseUser.uid).delete();
-  Object.keys(localStorage).filter(k=>k.startsWith('swasth_')||k==='swasth_loggedIn'||k==='swasth_abhaId').forEach(k=>localStorage.removeItem(k));
+  clearLocal();
   await firebaseUser.delete();window.location.reload();
  }catch(error){console.error('Account deletion failed:',error);if(status)status.textContent='Deletion failed: '+(error?.message||'unknown error')+'. Recent sign-in may be required.';}
 }
@@ -3546,6 +3564,7 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
  if(this.dataset.tab === 'predict') {
  animateRiskMeter();
  }
+ if(this.dataset.tab === 'nutrition') window.renderNutritionUpgrades?.();
  if(this.dataset.tab === 'emergency' && !qrGenerated) {
  generateEmergencyQR();
  qrGenerated = true;
@@ -4028,7 +4047,9 @@ function getCurrentMedicationList() {
  scheduledDoses.forEach(({ m, i, unit, time }) => {
      const count = medicationSlotCount(m);
      const id = medicationScheduleKey(i, unit);
-     const savedStatus = status[id] || status[legacyMedicationScheduleKey(i, unit)];
+     const storedStatus = status[id] || status[legacyMedicationScheduleKey(i, unit)];
+     // Only today's flag counts; another device may have synced yesterday's.
+     const savedStatus = storedStatus?.taken && storedStatus?.date && new Date(storedStatus.date).toDateString() === new Date().toDateString() ? storedStatus : null;
      const label = count > 1 ? `Dose ${unit + 1} of ${count}` : 'Scheduled dose';
      html += `<div class="today-med-item ${savedStatus?.taken ? 'taken' : ''}" id="${id}">
        <div class="today-med-time">${time ? formatMedicationTime(time) : 'Set time'}<small>${label}</small></div>
@@ -4668,7 +4689,8 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  function getWaterState(){
    const key=getTodayKey();
    const raw=safeJsonParse(localStorage.getItem('swasth_waterIntake'),null);
-   return raw&&raw.date===key?raw:{date:key,ml:0,target:2000};
+   // A new day resets intake but keeps the user's chosen target.
+   return raw&&raw.date===key?raw:{date:key,ml:0,target:Number(raw?.target)||2000};
  }
  function saveWaterState(state){ localStorage.setItem('swasth_waterIntake',JSON.stringify(state)); syncCloudState('swasth_waterIntake'); }
  function renderWaterIntake(){
@@ -5078,8 +5100,9 @@ LOCAL_INDIAN_FOODS.forEach(food => {
 
  const normalizeMedicineName = value => String(value || '')
    .replace(/^[\-•*]+\s*/, '')
+   .replace(/^\(?\d{1,2}\s*[.)]\s*/, '')
    .replace(/^(?:rx|medications?|medicines?)\s*[:\-]?\s*/i, '')
-   .replace(/^(?:tab(?:let)?s?|cap(?:sule)?s?|caps?|syr(?:up)?|inj(?:ection)?|injection|cream|ointment|drops?)\.?\s+/i, '')
+   .replace(/^(?:tab(?:let)?s?|cap(?:sule)?s?|caps?|syr(?:up)?|syp|inj(?:ection)?|injection|cream|ointment|drops?)\.?\s+/i, '')
    .replace(/\s+\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%|mmol)\b.*$/i, '')
    .replace(/\s+(?:tablets?|tabs?|capsules?|caps?|syrup|injection|inj\.?|cream|ointment|drops?)\b.*$/i, '')
    .replace(/\s{2,}/g, ' ')
@@ -5094,6 +5117,18 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    if (every) return `Every ${every[1]} ${/^h/i.test(every[2]) ? 'hours' : every[2].toLowerCase().replace(/s$/, '') + 's'}`;
    const q = line.match(/\bq(\d+(?:\.5)?)(?:h|hr|hrs)\b/i);
    if (q) return `Every ${q[1]} hours`;
+   // Indian dosing notation: morning-afternoon-night(-bedtime), e.g. 1-0-1, 1-1-1, 0-0-1.
+   const slots = line.match(/(?:^|[^\d./-])([0-2]|½|1\/2)\s*-\s*([0-2]|½|1\/2)\s*-\s*([0-2]|½|1\/2)(?:\s*-\s*([0-2]|½|1\/2))?(?![\d./-])/);
+   if (slots) {
+     const parts = slots.slice(1).filter(x => x !== undefined);
+     const taken = parts.filter(x => x !== '0').length;
+     const names = parts.length === 4 ? ['morning', 'afternoon', 'evening', 'night'] : ['morning', 'afternoon', 'night'];
+     const when = parts.map((x, i) => x !== '0' ? names[i] : '').filter(Boolean).join(', ');
+     if (taken === 1) return `Once daily (${when})`;
+     if (taken === 2) return `Twice daily (${when})`;
+     if (taken === 3) return 'Three times daily';
+     if (taken === 4) return 'Four times daily';
+   }
    if (/\b(?:qid|four times daily|4\s*(?:times|x)\s*(?:a\s*)?day|4-?times?\s*daily)\b/i.test(line)) return 'Four times daily';
    if (/\b(?:tds|tid|thrice daily|three times daily|3\s*(?:times|x)\s*(?:a\s*)?day|3-?times?\s*daily)\b/i.test(line)) return 'Three times daily';
    if (/\b(?:bd|bid|twice daily|2\s*(?:times|x)\s*(?:a\s*)?day|2-?times?\s*daily)\b/i.test(line)) return 'Twice daily';
@@ -5130,7 +5165,7 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    const l = String(line || '').trim();
    if (!l || isInstructionLine(l) || isAdministrativeLine(l)) return false;
    if (/^(?:\d+[.)]|[-•*])\s*$/.test(l)) return false;
-   return /^(?:[-•*]\s*)?(?:tab(?:let)?s?|cap(?:sule)?s?|syr(?:up)?|inj(?:ection)?|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\.?\s+/i.test(l)
+   return /^(?:[-•*]\s*|\(?\d{1,2}\s*[.)]\s*)?(?:tab(?:let)?s?|cap(?:sule)?s?|syr(?:up)?|syp|inj(?:ection)?|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\.?\s+/i.test(l)
      || /\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%)\b/i.test(l)
      || /\b(?:tablet|tablets|capsule|capsules|syrup|injection|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\b/i.test(l);
  };
@@ -5223,8 +5258,11 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  }
  async function parsePrescriptionWithSwasthAI(rawText){
  const fallback=parsePrescription(rawText);
+ // Only use the local model if the user already loaded it through SwasthAI;
+ // never start a large model download just to read a prescription.
+ if(!swasthaiEngine) return {...fallback,parser:'regex-fallback',structuredValidated:false};
  try{
-  const engine=await loadSwasthaiEngine();
+  const engine=swasthaiEngine;
   const response=await engine.chat.completions.create({messages:[
     {role:'system',content:'You extract prescription OCR into a strict JSON object. Return ONLY valid JSON, with no markdown. Schema: {"doctor":"string","medicines":[{"medicine":"string","dose":"string","frequency":"string","instructions":"string"}]}. Never invent or normalize away uncertain information. Use empty strings when a field is not present. Every medicine must be supported by the OCR text.'},
     {role:'user',content:`OCR TEXT:\n${String(rawText).slice(0,12000)}`}
@@ -5719,6 +5757,9 @@ function renderPersonalizedUI() {
   renderTodayMedications();
   updateRiskFactors();
   renderEmergencyQRIfReady();
+  window.renderNutritionUpgrades?.();
+  if (typeof renderDependents === 'function') renderDependents();
+  if (typeof renderActiveDoctorShare === 'function') renderActiveDoctorShare();
 }
 function buildDoctorSummary() {
   const name = patientData.name || 'This patient';
@@ -5772,10 +5813,16 @@ async function calculateClinicalRisk() {
    if(result) result.style.display='none';
    return;
  }
- const required=[['age',data.age],['sex',data.sex],['sbp',data.sbp],['totalCholesterol',data.totalCholesterol],['hdlCholesterol',data.hdlCholesterol],['egfr',data.egfr],['bmi',data.bmi]];
+ const required=[['age',data.age],['sbp',data.sbp],['totalCholesterol',data.totalCholesterol],['hdlCholesterol',data.hdlCholesterol],['egfr',data.egfr],['bmi',data.bmi]];
  const missing=required.filter(([,v]) => v === '' || v === null || !Number.isFinite(Number(v)) || Number(v) <= 0).map(([k])=>k);
- if (data.age === null || data.age < 30 || data.age > 79) missing.push('age 30–79');
- if (missing.length) { if(status) status.textContent='Complete the required fields, including height/weight and a valid age (30–79).'; if(result) result.style.display='none'; return; }
+ if (!['M','F'].includes(data.sex)) missing.push('sex');
+ if (missing.length) {
+   const reason = !['M','F'].includes(data.sex) ? 'Select sex.'
+     : (data.age === null ? 'Add your date of birth in your profile.'
+     : (!(data.bmi > 0) ? 'Add height and weight in your profile.' : 'Enter blood pressure, cholesterol, HDL and eGFR.'));
+   if(status) status.textContent=reason; if(result) result.style.display='none'; return;
+ }
+ if (data.age < 30 || data.age > 79) { if(status) status.textContent=`PREVENT is validated for ages 30–79; your profile age is ${data.age}.`; if(result) result.style.display='none'; return; }
  if(data.bmi < 18.5 || data.bmi > 39.9 || data.sbp < 90 || data.sbp > 200 || data.totalCholesterol < 130 || data.totalCholesterol > 320 || data.hdlCholesterol < 20 || data.hdlCholesterol > 100 || data.egfr < 15 || data.egfr > 140) { if(status) status.textContent='One or more values are outside the supported PREVENT input ranges.'; if(result) result.style.display='none'; return; }
  saveClinicalRiskInputs(data);
  if(status) status.textContent='Calculating…';
@@ -6155,14 +6202,14 @@ document.addEventListener('submit', async e => {
 document.querySelectorAll('[data-emergency-visibility]').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const key=btn.dataset.emergencyVisibility; const state=safeJsonParse(localStorage.getItem('swasth_emergencyVisibility')||'{}',{});
-    const next=state[key]===false ? true : false; state[key]=next; localStorage.setItem('swasth_emergencyVisibility',JSON.stringify(state));
+    const next=state[key]===false ? true : false; state[key]=next; localStorage.setItem('swasth_emergencyVisibility',JSON.stringify(state)); syncCloudState('swasth_emergencyVisibility');
     btn.classList.toggle('on',next); btn.setAttribute('aria-pressed',String(next)); generateEmergencyQR(true);
   });
 });
 document.getElementById('revokeEmergencyQrBtn')?.addEventListener('click',async()=>{
   const tokenId=localStorage.getItem('swasth_emergencyTokenId'), manageToken=localStorage.getItem('swasth_emergencyManageToken');
   if(!tokenId||!manageToken){showToast('','QR Not Ready','Generate the emergency QR first.');return;}
-  try{const base=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');const r=await fetch(base+'/api/emergency/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tokenId,manageToken})});const b=await r.json().catch(()=>({}));if(!r.ok)throw new Error(b.error||'Could not revoke QR.');showToast('','Emergency QR Revoked','Generate a new QR badge before using it again.');localStorage.removeItem('swasth_emergencyTokenId');const st=document.getElementById('qrPayloadStatus');if(st)st.textContent='Emergency QR revoked. Generate a new badge when needed.';}catch(e){showToast('','Revoke Failed',e.message);}}
+  try{const base=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');const r=await fetch(base+'/api/emergency/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tokenId,manageToken})});const b=await r.json().catch(()=>({}));if(!r.ok)throw new Error(b.error||'Could not revoke QR.');showToast('','Emergency QR Revoked','Generate a new QR badge before using it again.');['swasth_emergencyTokenId','swasth_emergencyQrCache'].forEach(k=>{localStorage.removeItem(k);if(typeof syncCloudState==='function')syncCloudState(k);});const st=document.getElementById('qrPayloadStatus');if(st)st.textContent='Emergency QR revoked. Generate a new badge when needed.';}catch(e){showToast('','Revoke Failed',e.message);}}
 );
 document.getElementById('emergencyAccessLogBtn')?.addEventListener('click',async()=>{const out=document.getElementById('emergencyAccessLog');const tokenId=localStorage.getItem('swasth_emergencyTokenId'),manageToken=localStorage.getItem('swasth_emergencyManageToken');if(!out||!tokenId||!manageToken)return;try{const base=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');const r=await fetch(base+'/api/emergency/activity?tokenId='+encodeURIComponent(tokenId)+'&manageToken='+encodeURIComponent(manageToken),{cache:'no-store'});const b=await r.json();if(!r.ok)throw new Error(b.error||'Unavailable');out.style.display='block';out.innerHTML='<b>Access activity</b><br>Opened '+(b.accessLog?.length||0)+' time(s). Last access: '+(b.accessLog?.length?new Date(b.accessLog[b.accessLog.length-1].at).toLocaleString():'Never')+'.';}catch(e){out.style.display='block';out.textContent='Access activity unavailable: '+e.message;}});
 
@@ -6219,6 +6266,10 @@ function renderEmergencyQRIfReady(){
    document.getElementById('recordEntryHelp').textContent=isVisit?'Add a consultation to your longitudinal health record.':'Add a diagnostic report and its result/value.';
    document.getElementById('visitEntryFields').hidden=!isVisit;
    document.getElementById('labEntryFields').hidden=isVisit;
+   // Start each entry blank so the previous record is not saved again by accident.
+   const setValue=(id,value)=>{const el=document.getElementById(id);if(el)el.value=value;};
+   setValue('recordDoctorInput','');setValue('recordSpecialtyInput','General Medicine');setValue('recordFacilityInput','');
+   setValue('recordReportNameInput','Blood test');setValue('recordResultInput','');
    document.getElementById('recordDateInput').value=getTodayKey();
    overlay.dataset.kind=kind;
    overlay.hidden=false;
@@ -6297,7 +6348,11 @@ function renderEmergencyQRIfReady(){
      meta:{profile:'SwasthID Health Summary', format:'FHIR-ish portable prototype bundle', prototype:true},
      patient:{resourceType:'Patient', id:profile.ownerUid||profile.email||'patient', name:profile.name||'', birthDate:profile.dob||'', bloodGroup:profile.bloodGroup||'', telecom:profile.email?[{system:'email',value:profile.email}]:[]},
      conditions:conditions.map((c,i)=>({resourceType:'Condition',id:`condition-${i+1}`,code:{text:c.name||''},clinicalStatus:{text:c.status||''},onsetYear:c.year||'',note:c.details||''})),
-     medications:meds.map((m,i)=>({resourceType:'MedicationStatement',id:`medication-${i+1}`,medication:{text:m.name||m.medicine||''},dose:{text:m.dose||''},frequency:{text:m.frequency||''},instructions:m.instructions||''})),
+     allergies:{
+       drug:(Array.isArray(profile.allergies)?profile.allergies:[]).map(String).filter(a=>a&&a!=='__NONE__'),
+       other:(Array.isArray(profile.normalAllergies)?profile.normalAllergies:[]).map(String).filter(a=>a&&a!=='__NONE__')
+     },
+     medications:meds.map((m,i)=>({resourceType:'MedicationStatement',id:`medication-${i+1}`,medication:{text:m.name||m.medicine||''},dose:{text:m.dose||''},frequency:{text:m.frequency||m.schedule||''},instructions:m.instructions||''})),
      prescriptions:prescriptions.map(r=>({resourceType:'MedicationRequest',id:r.id||`rx-${Date.now()}`,authoredOn:r.date||'',requester:{display:r.doctor||''},medications:r.medicines||[]})),
      encounters:visits.map((v,i)=>({resourceType:'Encounter',id:`encounter-${i+1}`,date:v.date||'',provider:v.doctor||'',specialty:v.specialty||'',facility:v.facility||''})),
      diagnosticReports:reports.map((r,i)=>({resourceType:'DiagnosticReport',id:`report-${i+1}`,date:r.date||'',code:{text:r.name||''},result:{text:r.result||''}})),
@@ -6353,7 +6408,7 @@ function renderEmergencyQRIfReady(){
  }
  function initLabTrendView(){const btn=document.getElementById('labTrendBtn'),panel=document.getElementById('labTrendPanel'),select=document.getElementById('labTrendMetric');if(!btn||!panel)return;btn.addEventListener('click',()=>{const open=panel.style.display!=='none';panel.style.display=open?'none':'block';btn.textContent=open?'View trends':'Hide trends';if(!open)renderLabTrendChart();});select?.addEventListener('change',renderLabTrendChart);}
  function renderActiveDoctorShare(){const panel=document.getElementById('activeDoctorSharePanel'),meta=document.getElementById('activeDoctorShareMeta');if(!panel||!meta)return;const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){panel.style.display='none';return;}if(saved.expiresAt&&Date.now()>=Number(saved.expiresAt)){localStorage.removeItem('swasth_activeDoctorShare');panel.style.display='none';return;}panel.style.display='block';meta.textContent=`Share ID ${String(saved.id).slice(0,10)}…${saved.expiresAt?` · expires ${new Date(saved.expiresAt).toLocaleString()}`:''}`;}
-async function revokeDoctorShare(){const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){renderActiveDoctorShare();return;}const btn=document.getElementById('revokeDoctorShareBtn');if(btn)btn.disabled=true;try{const apiBase=(window.SWASTH_API_BASE||((location.protocol==='http:'||location.protocol==='https:')?location.origin:'')).replace(/\/$/,'');if(!apiBase)throw new Error('Doctor sharing requires the hosted Render app.');if(!firebaseUser)throw new Error('Sign in before revoking a doctor share.');const idToken=await firebaseUser.getIdToken(true);const res=await fetch(apiBase+'/api/record-share/revoke',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':`Bearer ${idToken}`},body:JSON.stringify({shareId:saved.id})});const body=await res.json().catch(()=>({}));if(!res.ok)throw new Error(body.error||`Revoke service returned HTTP ${res.status}`);localStorage.removeItem('swasth_activeDoctorShare');renderActiveDoctorShare();setHealthShareStatus('Doctor share revoked. The previous link can no longer be opened.');showToast('','Doctor share revoked','The shared health record link is no longer active.');}catch(e){console.error('Doctor share revoke failed:',e);setHealthShareStatus('Could not revoke doctor share: '+(e?.message||'unknown error'),true);}finally{if(btn)btn.disabled=false;}}
+async function revokeDoctorShare(){const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){renderActiveDoctorShare();return;}const btn=document.getElementById('revokeDoctorShareBtn');if(btn)btn.disabled=true;try{const apiBase=(window.SWASTH_API_BASE||((location.protocol==='http:'||location.protocol==='https:')?location.origin:'')).replace(/\/$/,'');if(!apiBase)throw new Error('Doctor sharing requires the hosted Render app.');if(!firebaseUser)throw new Error('Sign in before revoking a doctor share.');const idToken=await firebaseUser.getIdToken(true);const res=await fetch(apiBase+'/api/record-share/revoke',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':`Bearer ${idToken}`},body:JSON.stringify({shareId:saved.id})});const body=await res.json().catch(()=>({}));if(!res.ok)throw new Error(body.error||`Revoke service returned HTTP ${res.status}`);localStorage.removeItem('swasth_activeDoctorShare');syncCloudState('swasth_activeDoctorShare');renderActiveDoctorShare();setHealthShareStatus('Doctor share revoked. The previous link can no longer be opened.');showToast('','Doctor share revoked','The shared health record link is no longer active.');}catch(e){console.error('Doctor share revoke failed:',e);setHealthShareStatus('Could not revoke doctor share: '+(e?.message||'unknown error'),true);}finally{if(btn)btn.disabled=false;}}
 async function shareHealthRecordWithDoctor(){
  const btn=document.getElementById('shareHealthRecordBtn');if(btn)btn.disabled=true;setHealthShareStatus('Creating an authenticated, time-limited doctor link…');
  try{
@@ -6364,7 +6419,7 @@ async function shareHealthRecordWithDoctor(){
   const bundle={...full,emergencyContact:undefined,nutrition:undefined,meta:{...(full.meta||{}),shareScope:'doctor-clinical-summary'}};
   const res=await fetch(apiBase+'/api/record-share/create',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':`Bearer ${idToken}`},body:JSON.stringify({record:bundle,expiresInHours:24,scope:'clinical-summary'})});
   const body=await res.json().catch(()=>({}));if(!res.ok||!body.url)throw new Error(body.error||`Share service returned HTTP ${res.status}`);
-  const shareId=body.shareId||body.id||'';if(shareId)localStorage.setItem('swasth_activeDoctorShare',JSON.stringify({id:shareId,expiresAt:body.expiresAt||null}));
+  const shareId=body.shareId||body.id||'';if(shareId){localStorage.setItem('swasth_activeDoctorShare',JSON.stringify({id:shareId,expiresAt:body.expiresAt||null}));syncCloudState('swasth_activeDoctorShare');}
   renderActiveDoctorShare();
   await navigator.clipboard?.writeText(body.url).catch(()=>{});
   setHealthShareStatus(`Authenticated doctor link created. It expires ${body.expiresAt?new Date(body.expiresAt).toLocaleString():'after 24 hours'}. ${body.url}${shareId?' — share ID saved for revocation.':''}`);
@@ -6418,14 +6473,20 @@ async function shareHealthRecordWithDoctor(){
  const q=query.trim().toLowerCase();
  if(!q) return [];
  const tokens=q.split(/\s+/).filter(Boolean);
+ // Units and numbers ("mg", "5") appear in almost every item, so they only rank
+ // results; at least one medicine-name token has to match.
+ const isDoseToken=t => /^[\d.,]+$/.test(t) || /^(?:mg|mcg|µg|ug|g|ml|iu|units?|%|tabs?|tablets?|caps?|capsules?|syp|syrup|inj|x|od|bd|tds)$/.test(t) || /^\d/.test(t);
+ const nameTokens=tokens.filter(t => !isDoseToken(t) && t.replace(/[^a-z]/g,'').length >= 3);
+ if(!nameTokens.length) return [];
  return medicineCatalogue.map((m, index) => {
   const haystack=[m.name,m.salt,m.brand,m.pack].join(' ').toLowerCase();
   const compact=haystack.replace(/[^a-z0-9]+/g,'');
-  const tokenHits=tokens.filter(t => haystack.includes(t) || compact.includes(t.replace(/[^a-z0-9]+/g,''))).length;
+  const hit=t => haystack.includes(t) || compact.includes(t.replace(/[^a-z0-9]+/g,''));
+  if(!nameTokens.some(hit)) return null;
+  const tokenHits=tokens.filter(hit).length;
   const exact=haystack.includes(q) ? 100 : 0;
-  const baseMatch=tokens.some(t => t.length >= 4 && haystack.includes(t)) ? 10 : 0;
-  return { ...m, __score: exact + tokenHits*5 + baseMatch, __index:index };
- }).filter(m => m.__score > 0).sort((a,b) => b.__score-a.__score || a.__index-b.__index).map(({__score,__index,...m}) => m);
+  return { ...m, __score: exact + tokenHits*5 + 10, __index:index };
+ }).filter(Boolean).sort((a,b) => b.__score-a.__score || a.__index-b.__index).map(({__score,__index,...m}) => m);
  }
  async function searchMedicines(){
  const input=document.getElementById('medSearch');
@@ -6579,6 +6640,20 @@ async function shareHealthRecordWithDoctor(){
   badge.textContent='Prescription search';
   window.__prescriptionOrderResults=allResults;
  }
+
+ window.showPharmacyOptions=function(resultIndex){
+  const med=(window.__medicineResults || [])[resultIndex];
+  const row=document.querySelectorAll('#priceList > .price-row')[resultIndex];
+  if(!med || !row) return;
+  document.querySelectorAll('#priceList .rx-pharmacy-options').forEach(x=>x.remove());
+  const box=document.createElement('div'); box.className='rx-pharmacy-options';
+  box.style.cssText='margin:-4px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);';
+  box.innerHTML='<div style="font-weight:650;font-size:12.5px;">Continue to a pharmacy</div>' +
+   `<div style="font-size:11.5px;color:var(--muted);margin:4px 0 8px;">${escMed(med.name)}${med.pack?' · '+escMed(med.pack):''}</div>` +
+   pharmacyLinks.map(p=>`<a class="n-btn" style="margin:3px;" href="${p.url}" target="_blank" rel="noopener">${p.platform}</a>`).join('') +
+   '<div style="font-size:11px;color:var(--muted);margin-top:7px;line-height:1.4;">The pharmacy will determine current selling price, availability, pack size and prescription requirements.</div>';
+  row.after(box); box.scrollIntoView({behavior:'smooth',block:'nearest'});
+ };
 
  window.showPrescriptionPharmacyOptions=function(cardIndex,resultIndex){
   const med=(window.__prescriptionOrderResults?.[cardIndex] || [])[resultIndex];
@@ -6903,7 +6978,14 @@ async function getEmergencyQRText() {
     const bytes = new Uint8Array(24); crypto.getRandomValues(bytes);
     manageToken = Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
     localStorage.setItem('swasth_emergencyManageToken', manageToken);
+    if (typeof syncCloudState === 'function') syncCloudState('swasth_emergencyManageToken');
   }
+  // Reuse the current badge while the emergency details are unchanged, so every
+  // dashboard render does not mint (and store) a new server-side badge.
+  const { exp: _ignoredExp, ...signaturePayload } = getEmergencyCompactPayload();
+  const signature = JSON.stringify(signaturePayload);
+  const cached = safeJsonParse(localStorage.getItem('swasth_emergencyQrCache') || 'null', null);
+  if (cached && cached.sig === signature && cached.url && Number(cached.expiresAt) > Date.now() + 86400000) return cached.url;
   compact.manageToken = manageToken;
   const apiBase = (window.SWASTH_API_BASE || ((location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : '')).replace(/\/$/, '');
   if (apiBase) {
@@ -6918,7 +7000,13 @@ async function getEmergencyQRText() {
           signal: controller.signal
         });
         const body = await res.json();
-        if (res.ok && body.url) { if(body.tokenId) localStorage.setItem('swasth_emergencyTokenId', body.tokenId); return body.url; }
+        if (res.ok && body.url) {
+          if (body.tokenId) localStorage.setItem('swasth_emergencyTokenId', body.tokenId);
+          if (body.expiresAt) localStorage.setItem('swasth_emergencyExpiresAt', String(body.expiresAt));
+          localStorage.setItem('swasth_emergencyQrCache', JSON.stringify({ sig: signature, url: body.url, expiresAt: body.expiresAt }));
+          if (typeof syncCloudState === 'function') ['swasth_emergencyTokenId', 'swasth_emergencyExpiresAt', 'swasth_emergencyQrCache'].forEach(syncCloudState);
+          return body.url;
+        }
       } finally {
         clearTimeout(timer);
       }
@@ -6953,9 +7041,11 @@ async function generateEmergencyQR(force = false) {
    const qrText = await getEmergencyQRText();
    qrContainer.innerHTML = '';
    new QRCode(qrContainer, {text: qrText,width:220,height:220,colorDark:'#111814',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-   if (status) status.textContent = (qrText.includes('/api/emergency/view') || qrText.includes('?emergency='))
-     ? 'Secure emergency QR ready. The server encrypts the emergency payload. The badge remains valid long-term until revoked or expired.'
-     : 'Emergency QR preview ready. Host the Render server on HTTPS to enable the secure server-backed QR.';
+   const serverBacked = /[?&]emergency=v1\./.test(qrText);
+   const expiresAt = Number(localStorage.getItem('swasth_emergencyExpiresAt') || 0);
+   if (status) status.textContent = serverBacked
+     ? `Secure emergency QR ready. The server encrypts the emergency payload. Valid until ${expiresAt ? new Date(expiresAt).toLocaleDateString() : 'its expiry date'} unless you revoke it.`
+     : 'Emergency QR preview ready. This preview is not encrypted or revocable; the secure QR needs the SwasthID server.';
  } catch (error) {
    qrContainer.innerHTML = '<span style="font-size:12px;color:#8f2d24;padding:16px;text-align:center;">QR generation failed. Refresh and try again.</span>';
    if (status) status.textContent = 'The emergency QR could not be generated.';
@@ -6974,7 +7064,7 @@ function showEmergencyPublicView(payload) {
    document.body.appendChild(overlay);
  }
  if (expired) {
-   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency information expired</h2><p>This QR payload is no longer valid.</p></div><span class="public-emergency-badge">EXPIRED</span></div><div class="public-emergency-expired">For safety, ask the patient or caregiver for a newly generated Emergency QR Badge. If this is an active emergency, call 112.</div><div class="public-emergency-actions" style="padding:0 24px 22px;"><a class="emergency-call primary" href="tel:112">Call 112</a><button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div><div class="public-emergency-foot">SwasthID emergency view. Prototype only; verify critical information when possible.</div></div>`;
+   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency information unavailable</h2><p>${escapeHtml(payload.reason || 'This QR payload is no longer valid.')}</p></div><span class="public-emergency-badge">${/revoked/i.test(payload.reason || '') ? 'REVOKED' : 'EXPIRED'}</span></div><div class="public-emergency-expired">For safety, ask the patient or caregiver for a newly generated Emergency QR Badge. If this is an active emergency, call 112.</div><div class="public-emergency-actions" style="padding:0 24px 22px;"><a class="emergency-call primary" href="tel:112">Call 112</a><button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div><div class="public-emergency-foot">SwasthID emergency view. Prototype only; verify critical information when possible.</div></div>`;
  } else {
    const contact = Array.isArray(payload.ec) ? payload.ec : [];
    const contactName = contact[0] || 'Not provided';
@@ -6983,7 +7073,7 @@ function showEmergencyPublicView(payload) {
    const conditions = Array.isArray(payload.c) && payload.c.length ? payload.c.join(', ') : 'None recorded';
    const meds = Array.isArray(payload.m) && payload.m.length ? payload.m.join(', ') : 'None recorded';
    const insurance = Array.isArray(payload.ins) && payload.ins.some(Boolean) ? payload.ins.filter(Boolean).join(' · ') : 'Not provided';
-   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency Health Information</h2><p>Read-only emergency information shared by the patient</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-grid"><div class="public-emergency-item full"><label>Patient</label><div>${escapeHtml(payload.n)}</div></div><div class="public-emergency-item"><label>Blood group</label><div>${escapeHtml(payload.bg || 'Not provided')}</div></div><div class="public-emergency-item"><label>Drug allergies</label><div>${escapeHtml(payload.da || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Other allergies</label><div>${escapeHtml(payload.oa || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Ongoing conditions</label><div>${escapeHtml(conditions)}</div></div><div class="public-emergency-item full"><label>Critical daily medicines</label><div>${escapeHtml(meds)}</div></div><div class="public-emergency-item full"><label>Health insurance</label><div>${escapeHtml(insurance)}</div></div><div class="public-emergency-item full"><label>Emergency contact</label><div>${escapeHtml(contactName)}${contactRelation ? ' (' + escapeHtml(contactRelation) + ')' : ''}${contactPhone ? ' · ' + escapeHtml(contactPhone) : ''}</div></div></div><div class="public-emergency-actions"><a class="emergency-call primary" href="tel:112">Call 112</a>${contactPhone ? `<a class="emergency-call" href="tel:${String(contactPhone).replace(/[^+0-9]/g, '')}">Call emergency contact</a>` : ''}<button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div></div><div class="public-emergency-foot">QR payload remains valid until revoked or its long-term expiry date. It is not encrypted, so only place minimum necessary emergency information in the QR. In an active emergency, call 112.</div></div>`;
+   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency Health Information</h2><p>Read-only emergency information shared by the patient</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-grid"><div class="public-emergency-item full"><label>Patient</label><div>${escapeHtml(payload.n)}</div></div><div class="public-emergency-item"><label>Blood group</label><div>${escapeHtml(payload.bg || 'Not provided')}</div></div><div class="public-emergency-item"><label>Drug allergies</label><div>${escapeHtml(payload.da || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Other allergies</label><div>${escapeHtml(payload.oa || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Ongoing conditions</label><div>${escapeHtml(conditions)}</div></div><div class="public-emergency-item full"><label>Critical daily medicines</label><div>${escapeHtml(meds)}</div></div><div class="public-emergency-item full"><label>Health insurance</label><div>${escapeHtml(insurance)}</div></div><div class="public-emergency-item full"><label>Emergency contact</label><div>${escapeHtml(contactName)}${contactRelation ? ' (' + escapeHtml(contactRelation) + ')' : ''}${contactPhone ? ' · ' + escapeHtml(contactPhone) : ''}</div></div></div><div class="public-emergency-actions"><a class="emergency-call primary" href="tel:112">Call 112</a>${contactPhone ? `<a class="emergency-call" href="tel:${String(contactPhone).replace(/[^+0-9]/g, '')}">Call emergency contact</a>` : ''}<button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div></div><div class="public-emergency-foot">This QR stays valid until the patient revokes it or it reaches its expiry date. Only the minimum necessary emergency information is shared. In an active emergency, call 112.</div></div>`;
  }
  overlay.classList.add('show');
 }
@@ -7005,6 +7095,10 @@ async function openEmergencyPayloadFromUrl() {
    clearTimeout(timer);
    const body = await res.json();
    if (res.ok && body.payload) { showEmergencyPublicView(body.payload); return true; }
+   if (res.status === 410 && /^v1\./.test(token)) {
+    showEmergencyPublicView({ n: 'Unavailable', exp: 0, reason: body.error });
+    return false;
+   }
   } catch (error) { console.warn('Secure emergency viewer unavailable; trying local token.', error); }
  }
  const payload = decodeEmergencyToken(token);
@@ -7179,8 +7273,9 @@ async function downloadEmergencyPDF() {
     doc.setTextColor(...muted);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.text('Emergency QR validity: long-term until revoked or the configured expiry date.', margin, metaY);
-    doc.text('QR is not encrypted. Share only with intended emergency responders.', pageW - margin, metaY, { align: 'right' });
+    const pdfExpiry = Number(localStorage.getItem('swasth_emergencyExpiresAt') || 0);
+    doc.text(`Emergency QR valid until ${pdfExpiry ? new Date(pdfExpiry).toLocaleDateString() : 'revoked or expired'} unless revoked.`, margin, metaY);
+    doc.text('Share only with intended emergency responders.', pageW - margin, metaY, { align: 'right' });
 
     const filename = `SwasthID-Emergency-${String(payload.n).replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'') || 'Passport'}.pdf`;
     const blob = doc.output('blob');
@@ -7195,17 +7290,6 @@ async function downloadEmergencyPDF() {
     document.body.appendChild(link);
     link.click();
     link.remove();
-
-    setTimeout(() => {
-      try {
-        if (document.visibilityState === 'visible') {
-          const fallback = window.open(blobUrl, '_blank', 'noopener,noreferrer');
-          if (!fallback) setStatus('Browser blocked the PDF download. Allow downloads/pop-ups for this site and try again.', true);
-        }
-      } catch (e) {
-        console.warn('[Emergency PDF] fallback open failed:', e);
-      }
-    }, 250);
 
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
     setStatus(qrEmbedded ? `PDF ready: ${filename}` : `PDF ready: ${filename} (QR not embedded)`, !qrEmbedded);
@@ -8205,7 +8289,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)window.renderNutritionUpgrades();});
 })();
 </script>
-\n<script id="swasth-v8-profile-wizard">
+<script id="swasth-v8-profile-wizard">
 (function(){
   const $=(id)=>document.getElementById(id);
   const safe=(fn)=>{try{return fn()}catch(e){console.warn('SwasthID v8 hardening:',e);}};
@@ -8237,7 +8321,10 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
     const kind=o.dataset.kind, value=Number(input.value);
     if(kind==='water'){
       if(!Number.isFinite(value)||value<500||value>5000){window.showToast?.('', 'Invalid water target','Choose a value between 500 and 5,000 ml.');return;}
-      const st=safe(()=>JSON.parse(localStorage.getItem('swasth_waterIntake')||'{}'))||{}; st.target=Math.round(value); if(!Array.isArray(st.logs))st.logs=[];
+      const today=typeof getTodayKey==='function'?getTodayKey():new Date().toISOString().slice(0,10);
+      let st=safe(()=>JSON.parse(localStorage.getItem('swasth_waterIntake')||'{}'))||{};
+      if(st.date!==today)st={date:today,ml:0};
+      st.target=Math.round(value); if(!Array.isArray(st.logs))st.logs=[];
       localStorage.setItem('swasth_waterIntake',JSON.stringify(st)); window.syncCloudState?.('swasth_waterIntake'); window.renderWaterIntake?.();
       window.showToast?.('', 'Water target updated',`Daily reference target set to ${Math.round(value).toLocaleString()} ml.`);
     }else{
