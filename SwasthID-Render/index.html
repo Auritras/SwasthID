@@ -3038,7 +3038,9 @@ function clearCloudCacheForUserSwitch() {
        CLOUD_KEYS.forEach(key => {
          if (Object.prototype.hasOwnProperty.call(localState, key)) {
            const value = localState[key];
-           localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+           // Older builds synced missing keys as null; never turn that into the string "null".
+           if (value === null || value === undefined) localStorage.removeItem(key);
+           else localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
          }
        });
 
@@ -3117,7 +3119,7 @@ function clearCloudCacheForUserSwitch() {
    if (!ref || !CLOUD_KEYS.includes(changedKey)) return false;
    try {
      const raw = localStorage.getItem(changedKey);
-     const value = raw === null ? null : (safeJsonParse(raw, raw));
+     const value = raw === null ? firebase.firestore.FieldValue.delete() : (safeJsonParse(raw, raw));
      await ref.set({
        localState: { [changedKey]: value },
        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -8205,7 +8207,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)window.renderNutritionUpgrades();});
 })();
 </script>
-\n<script id="swasth-v8-profile-wizard">
+<script id="swasth-v8-profile-wizard">
 (function(){
   const $=(id)=>document.getElementById(id);
   const safe=(fn)=>{try{return fn()}catch(e){console.warn('SwasthID v8 hardening:',e);}};
