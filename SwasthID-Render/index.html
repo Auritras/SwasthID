@@ -1845,6 +1845,43 @@ body.dark-mode .record-day-head,body.dark-mode .type-log{background:#15211d}
 body.dark-mode .type-lab .record-type{color:#c4a6ec!important}
 @media(max-width:620px){.record-row{grid-template-columns:58px 1fr;row-gap:4px}.record-row-value,.record-row-check{grid-column:2}}
 </style>
+<style id="places-polish">
+/* Nearby healthcare */
+.places-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.places-head .section-sub{margin-bottom:0}
+.places-panel{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.places-empty{padding:22px 18px;text-align:center;font-size:13px;color:var(--muted)}
+.places-source{padding:10px 16px;border-top:1px solid var(--line);background:var(--surface-2,#f7faf8);font-size:11px;color:var(--muted)}
+.places-filters{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.places-filter{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.places-filter span{color:var(--muted);font-weight:500;margin-left:2px}
+.places-filter:hover{background:var(--sage)}
+.places-filter.active{background:var(--teal,#143831);border-color:var(--teal,#143831);color:#fff}
+.places-filter.active span{color:rgba(255,255,255,.75)}
+.place-row{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;border-top:1px solid var(--line)}
+.places-list .place-row:first-child{border-top:0}
+.place-dist{font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.place-dist small{font-size:11px;font-weight:600;color:var(--muted);margin-left:2px}
+.place-name{font-size:14.5px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.place-meta{font-size:12.5px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.place-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.place-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#e8eff7;color:#2a5585}
+.place-tag.er{background:#fdecea;color:#a23b2e}
+.place-actions{display:grid;grid-template-columns:repeat(2,96px);gap:8px}
+.place-actions .n-btn{justify-content:center;text-align:center;min-height:36px;padding:8px 10px}
+.places-panel .record-more-btn{margin:0 auto;padding:12px;width:100%;border-radius:0;border-top:1px solid var(--line)}
+body.dark-mode .places-source{background:#15211d}
+body.dark-mode .place-tag{background:#1b2c3d;color:#9cc4ec}
+body.dark-mode .place-tag.er{background:#3a1d19;color:#f0a092}
+body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
+@media(max-width:620px){
+ .place-row{grid-template-columns:52px minmax(0,1fr);row-gap:10px}
+ .place-actions{grid-column:1/-1;grid-template-columns:1fr 1fr}
+ .place-action-gap{display:none}
+ .place-actions .n-btn.solid:only-of-type{grid-column:1/-1}
+ .places-head .n-btn{width:100%}
+}
+</style>
 </head>
 <body><div id="offlineBanner" class="offline-banner" role="status">You are offline. Saved information remains available, but live services may be unavailable until your connection returns.</div><!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
@@ -1993,15 +2030,14 @@ body.dark-mode .type-lab .record-type{color:#c4a6ec!important}
  </section>
 
  <section>
- <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap;">
+ <div class="places-head">
  <div>
- <h3>Nearby healthcare centers</h3>
- <p class="section-sub" id="nearbySubtitle">Allow location access to find hospitals and clinics near you.</p>
+ <h3>Nearby healthcare</h3>
+ <p class="section-sub" id="nearbySubtitle">Find hospitals, clinics and doctors near you.</p>
  </div>
- <button class="n-btn solid" id="findNearbyBtn" type="button"> Find near me</button>
+ <button class="n-btn solid" id="findNearbyBtn" type="button">Find near me</button>
  </div>
- <div style="font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:10px;">Healthcare data: © OpenStreetMap contributors</div>
- <div class="nearby-panel">
+ <div class="places-panel">
  <div id="nearbyLoadingState" style="display:none; text-align:center; padding:18px; color:var(--muted);">
  <div style="font-size:20px; margin-bottom:6px;"></div>
  <b style="color:var(--ink);">Finding your location…</b>
@@ -2014,8 +2050,9 @@ body.dark-mode .type-lab .record-type{color:#c4a6ec!important}
  <button class="n-btn" id="retryLocationBtn" type="button">Try again</button>
  </div>
  <div id="nearbyItemsList">
- <div style="text-align:center; padding:18px; font-size:13px; color:var(--muted);">Click <b>Find near me</b> to load real nearby hospitals.</div>
+ <div class="places-empty">Use <b>Find near me</b> to list hospitals and clinics around your current location.</div>
  </div>
+ <div class="places-source">Data © OpenStreetMap contributors. Details can be out of date, so call ahead when you can.</div>
  </div>
  </section>
 
@@ -6744,7 +6781,7 @@ async function fetchNearbyHospitals(lat, lon) {
            emergency: tags.emergency === 'yes' || tags.emergency === '24/7',
            govt: tags.operator_type === 'government' || /government|govt|state|district hospital/i.test(`${tags.operator || ''} ${tags.name}`),
            phone: tags.phone || tags['contact:phone'] || null,
-           address: tags['addr:street'] || tags['addr:full'] || ''
+           address: tags['addr:full'] || [[tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '), tags['addr:suburb'] || tags['addr:city']].filter(Boolean).join(', ')
          };
        })
        .filter(Boolean)
@@ -6809,36 +6846,63 @@ function showNearbyError(message) {
  }
 }
 
+let nearbyPlaces = [];
+let nearbyFilter = 'all';
+let nearbyShowAll = false;
+const NEARBY_FILTERS = [
+  ['all', 'All', () => true],
+  ['hospital', 'Hospitals', p => p.type === 'Hospital'],
+  ['clinic', 'Clinics & doctors', p => p.type !== 'Hospital'],
+  ['emergency', '24×7 emergency', p => p.emergency]
+];
+
 function renderNearbyList(hospitals, lat, lon) {
  setNearbyLoading(false);
  const fallback = document.getElementById('nearbyFallback');
- const list = document.getElementById('nearbyItemsList');
  if (fallback) fallback.style.display = 'none';
- if (!list) return;
+ nearbyPlaces = Array.isArray(hospitals) ? hospitals : [];
+ nearbyFilter = 'all'; nearbyShowAll = false;
+ const subtitle = document.getElementById('nearbySubtitle');
+ if (subtitle && nearbyPlaces.length) {
+   const farthest = Math.max(...nearbyPlaces.map(p => Number(p.dist) || 0));
+   subtitle.textContent = `${nearbyPlaces.length} ${nearbyPlaces.length === 1 ? 'place' : 'places'} within ${Math.max(1, Math.ceil(farthest))} km, closest first.`;
+ }
+ renderNearbyPlaces();
+}
 
- if (!hospitals || !hospitals.length) {
-   list.innerHTML = '<div style="text-align:center;padding:18px;font-size:13px;color:var(--muted);">No nearby healthcare centers were found. Try again from a different location.</div>';
+function renderNearbyPlaces() {
+ const list = document.getElementById('nearbyItemsList');
+ if (!list) return;
+ if (!nearbyPlaces.length) {
+   list.innerHTML = '<div class="places-empty">No hospitals or clinics were found nearby. Try again from a different location.</div>';
    return;
  }
-
- list.innerHTML = hospitals.map(h => `
-   <div class="nearby-item">
-     <div>
-       <div class="n-name">${escapeHtml(h.name)}</div>
-       <div class="n-meta">
-         <span class="n-badge dist">${Number(h.dist).toFixed(1)} km</span>
-         <span>${escapeHtml(h.type)}</span>
-         ${h.emergency ? '<span class="n-badge er">24/7 Emergency</span>' : ''}
-         ${h.govt ? '<span class="n-badge govt">Government</span>' : ''}
-         ${h.address ? '· ' + escapeHtml(h.address) : ''}
-       </div>
+ const filters = NEARBY_FILTERS.filter(([key,,test]) => key === 'all' || nearbyPlaces.some(test));
+ const test = (NEARBY_FILTERS.find(([key]) => key === nearbyFilter) || NEARBY_FILTERS[0])[2];
+ const matches = nearbyPlaces.filter(test);
+ const shown = nearbyShowAll ? matches : matches.slice(0, 6);
+ const chips = filters.length > 2 ? `<div class="places-filters" role="group" aria-label="Filter places">${filters.map(([key, label, t]) =>
+   `<button type="button" class="places-filter${key === nearbyFilter ? ' active' : ''}" data-nearby-filter="${key}" aria-pressed="${key === nearbyFilter}">${label} <span>${nearbyPlaces.filter(t).length}</span></button>`).join('')}</div>` : '';
+ list.innerHTML = chips + '<div class="places-list">' + shown.map(h => {
+   const km = Number(h.dist);
+   const distance = km < 1 ? `${Math.round(km * 1000 / 10) * 10}<small>m</small>` : `${km.toFixed(1)}<small>km</small>`;
+   const phone = h.phone ? String(h.phone).split(/[;,]/)[0].trim() : '';
+   const tags = [h.emergency ? '<span class="place-tag er">24×7 emergency</span>' : '', h.govt ? '<span class="place-tag">Government</span>' : ''].join('');
+   return `<div class="place-row">
+     <div class="place-dist">${distance}</div>
+     <div class="place-main">
+       <div class="place-name">${escapeHtml(h.name)}</div>
+       <div class="place-meta">${escapeHtml(h.type)}${h.address ? ' · ' + escapeHtml(h.address) : ''}</div>
+       ${tags ? `<div class="place-tags">${tags}</div>` : ''}
      </div>
-     <div class="nearby-actions">
-       <a class="n-btn" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${h.lat},${h.lon}`)}" target="_blank" rel="noopener">Directions</a>
-       ${h.phone ? `<a class="n-btn solid" href="tel:${String(h.phone).replace(/[^+0-9]/g,'')}">Call</a>` : ''}
+     <div class="place-actions">
+       ${phone ? `<a class="n-btn" href="tel:${phone.replace(/[^+0-9]/g,'')}" aria-label="Call ${escapeHtml(h.name)}">Call</a>` : '<span class="place-action-gap" aria-hidden="true"></span>'}
+       <a class="n-btn solid" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${h.lat},${h.lon}`)}" target="_blank" rel="noopener" aria-label="Directions to ${escapeHtml(h.name)}">Directions</a>
      </div>
-   </div>
- `).join('');
+   </div>`;
+ }).join('') + '</div>' + (!nearbyShowAll && matches.length > shown.length ? `<button type="button" class="record-more-btn" data-nearby-more>Show all ${matches.length}</button>` : '');
+ list.querySelectorAll('[data-nearby-filter]').forEach(btn => btn.addEventListener('click', () => { nearbyFilter = btn.dataset.nearbyFilter; nearbyShowAll = false; renderNearbyPlaces(); }));
+ list.querySelector('[data-nearby-more]')?.addEventListener('click', () => { nearbyShowAll = true; renderNearbyPlaces(); });
 }
 
 async function loadNearbyHospitals() {
@@ -6849,7 +6913,7 @@ async function loadNearbyHospitals() {
      const hospitals = await fetchNearbyHospitals(networkPos.coords.latitude, networkPos.coords.longitude);
      setNearbyLoading(false);
      renderNearbyList(hospitals, networkPos.coords.latitude, networkPos.coords.longitude);
-     document.getElementById('nearbySubtitle').textContent = `Approximate network location • ${hospitals.length} nearby centers found.`;
+     document.getElementById('nearbySubtitle').textContent = `Based on your approximate location. ` + document.getElementById('nearbySubtitle').textContent;
      return;
    } catch(err) {
      showNearbyError('This browser has no location service and approximate network location was unavailable.');
@@ -6878,7 +6942,7 @@ async function loadNearbyHospitals() {
    document.getElementById('nearbyFallback').style.display = 'none';
    renderNearbyList(hospitals, latitude, longitude);
    document.getElementById('nearbySubtitle').title = `Location accuracy: approximately ${Math.round(accuracy || 5000)} m${pos.approximate ? ' (network estimate)' : ''}`;
-   if(pos.approximate) document.getElementById('nearbySubtitle').textContent = `Approximate network location • ${hospitals.length} nearby centers found.`;
+   if(pos.approximate) document.getElementById('nearbySubtitle').textContent = `Based on your approximate location. ` + document.getElementById('nearbySubtitle').textContent;
  } catch(err) {
    console.error('Nearby hospital search:', err);
    if(err && err.code) {
