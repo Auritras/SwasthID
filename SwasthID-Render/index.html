@@ -2274,6 +2274,7 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  <div class="scan-kicker">PRESCRIPTION SCANNER</div>
  <h3 style="color:#28425d;">Smart Prescription Scanner</h3>
  <p class="section-sub" style="padding-left:0;">Upload a photo or PDF of a prescription. SwasthID reads the text in your browser and suggests the medicines, doses and doctor. Check every field before saving.</p>
+ <p class="section-sub" style="padding-left:0;margin-top:-8px;font-size:12.5px;">Works best with printed prescriptions photographed flat and in good light. Handwritten prescriptions usually cannot be read; add those medicines in your profile instead.</p>
  <div class="scan-upload">
  <div style="font-size:32px; margin-bottom:8px;"></div>
  <h4 style="margin:0 0 6px;">Select or drop a prescription file</h4>
@@ -5024,6 +5025,15 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  function cleanOcrText(text) {
  return String(text || '')
  .replace(/\r/g, '')
+ // Common OCR misreads on prescriptions.
+ .replace(/\b([0-9SOIl]*[0-9SO][0-9SOIl]*)(\s*)(mg|mcg|m[Il1i]|ml|g)\b/g, (all, num, space, unit) =>
+   /^[0-9]+$/.test(num) ? all : (/[0-9]/.test(num) || num.length >= 2 || num === 'S') ? num.replace(/S/g, '5').replace(/O/g, '0').replace(/[Il]/g, '1') + space + unit : all)
+ .replace(/(\d)\s*m[Il1i]\b/g, '$1 ml')
+ .replace(/\b0D\b/g, 'OD')
+ .replace(/\bT\.\s?D\.\s?S\.?/gi, 'TDS')
+ .replace(/\bB\.\s?D\.?(?=\s|$)/gi, 'BD')
+ .replace(/\bO\.\s?D\.?(?=\s|$)/gi, 'OD')
+ .replace(/\bH\.\s?S\.?(?=\s|$)/gi, 'HS')
  .replace(/[ \t]+/g, ' ')
  .replace(/\n{3,}/g, '\n\n')
  .trim();
@@ -5037,8 +5047,11 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  const normalizeMedicineName = value => String(value || '')
    .replace(/^[\-•*]+\s*/, '')
    .replace(/^\(?\d{1,2}\s*[.)]\s*/, '')
+   .replace(/^\d{1,2}\s+(?=[A-Za-z])/, '')
    .replace(/^(?:rx|medications?|medicines?)\s*[:\-]?\s*/i, '')
-   .replace(/^(?:tab(?:let)?s?|cap(?:sule)?s?|caps?|syr(?:up)?|syp|inj(?:ection)?|injection|cream|ointment|drops?)\.?\s+/i, '')
+   .replace(/^(?:(?:tab(?:let)?s?|cap(?:sule)?s?|caps?|syr(?:up)?|syp|inj(?:ection)?|injection|cream|ointment|drops?)\.?\s+|(?:t|tab|c|cap|syp|syr|inj)\.\s*)/i, '')
+   // Stop the name where the dosing instructions begin (1-0-1, x 5 days, OD, after food...).
+   .replace(/\s+(?:\(?\s*[0-2½]\s*-\s*[0-2½]\s*-\s*[0-2½]|x\s*\d|for\s+\d|\((?:after|before|with|at)\b|(?:od|bd|bid|tds|tid|qid|hs|sos|prn|stat)\b|once\b|twice\b|thrice\b|daily\b|before\s+(?:food|meals?|breakfast)|after\s+(?:food|meals?)|at\s+(?:night|bedtime)).*$/i, '')
    .replace(/\s+\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%|mmol)\b.*$/i, '')
    .replace(/\s+(?:tablets?|tabs?|capsules?|caps?|syrup|injection|inj\.?|cream|ointment|drops?)\b.*$/i, '')
    .replace(/\s{2,}/g, ' ')
@@ -5091,8 +5104,10 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  };
 
  const durationFrom = value => {
-   const m = String(value || '').match(/\b(?:for|x)\s*(\d+)\s*(days?|weeks?|months?)\b/i);
-   return m ? `for ${m[1]} ${m[2]}` : '';
+   const m = String(value || '').match(/\b(?:for|x)\s*(\d+)\s*(days?|d|weeks?|wks?|w|months?|m)\b/i);
+   if (!m) return '';
+   const unit = /^d/i.test(m[2]) ? 'day' : /^w/i.test(m[2]) ? 'week' : 'month';
+   return `for ${m[1]} ${unit}${m[1] === '1' ? '' : 's'}`;
  };
 
  const isInstructionLine = line => /^(?:take|give|apply|use|inject|inhale|swallow|dissolve|drink|instill|place|insert|chew|crush|dilute|mix|administer)\b/i.test(String(line || '').trim());
@@ -5101,7 +5116,8 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    const l = String(line || '').trim();
    if (!l || isInstructionLine(l) || isAdministrativeLine(l)) return false;
    if (/^(?:\d+[.)]|[-•*])\s*$/.test(l)) return false;
-   return /^(?:[-•*]\s*|\(?\d{1,2}\s*[.)]\s*)?(?:tab(?:let)?s?|cap(?:sule)?s?|syr(?:up)?|syp|inj(?:ection)?|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\.?\s+/i.test(l)
+   if (/^(?:[-•*]\s*|\(?\d{1,2}\s*[.)]?\s*)?(?:t|c|tab|cap|syp|syr|inj)\.\s*[A-Za-z]/i.test(l)) return true;
+   return /^(?:[-•*]\s*|\(?\d{1,2}\s*[.)]\s*|\d{1,2}\s+)?(?:tab(?:let)?s?|cap(?:sule)?s?|syr(?:up)?|syp|inj(?:ection)?|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\.?\s+/i.test(l)
      || /\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%)\b/i.test(l)
      || /\b(?:tablet|tablets|capsule|capsules|syrup|injection|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\b/i.test(l);
  };
@@ -5320,15 +5336,61 @@ function renderEditablePrescription(parsed) {
  const ctx = canvas.getContext('2d', { willReadFrequently: true });
  if (!ctx) throw new Error('The browser could not prepare the prescription image.');
  ctx.drawImage(img, 0, 0, width, height);
- const image = ctx.getImageData(0, 0, width, height);
+ // Two versions: a simple contrast boost (best for clean or slightly blurred
+ // scans) and a background-normalised one (needed for phone photos).
+ const contrast = document.createElement('canvas');
+ contrast.width = width; contrast.height = height;
+ const cctx = contrast.getContext('2d', { willReadFrequently: true });
+ cctx.drawImage(canvas, 0, 0);
+ const image = cctx.getImageData(0, 0, width, height);
  const d = image.data;
  for (let i = 0; i < d.length; i += 4) {
    const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-   const boosted = Math.max(0, Math.min(255, (gray - 128) * 1.35 + 128));
-   d[i] = d[i + 1] = d[i + 2] = boosted;
+   d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, (gray - 128) * 1.35 + 128));
  }
- ctx.putImageData(image, 0, 0);
- return canvas.toDataURL('image/png');
+ cctx.putImageData(image, 0, 0);
+ normalizeCanvasForOcr(canvas);
+ return { normalized: canvas.toDataURL('image/png'), contrast: contrast.toDataURL('image/png') };
+ }
+
+ // Phone photos have grey, unevenly lit paper, and Tesseract then finds no text
+ // at all. Divide each pixel by an estimate of the local paper brightness so the
+ // page becomes white and the ink dark, then stretch the contrast.
+ function normalizeCanvasForOcr(canvas) {
+   const width = canvas.width, height = canvas.height;
+   const ctx = canvas.getContext('2d', { willReadFrequently: true });
+   // Background estimate: shrink the page (small text disappears) and scale it back up.
+   const small = document.createElement('canvas');
+   small.width = Math.max(1, Math.round(width / 24));
+   small.height = Math.max(1, Math.round(height / 24));
+   const sctx = small.getContext('2d');
+   sctx.imageSmoothingQuality = 'high';
+   sctx.drawImage(canvas, 0, 0, small.width, small.height);
+   const bg = document.createElement('canvas');
+   bg.width = width; bg.height = height;
+   const bctx = bg.getContext('2d', { willReadFrequently: true });
+   bctx.imageSmoothingQuality = 'high';
+   bctx.drawImage(small, 0, 0, width, height);
+   const image = ctx.getImageData(0, 0, width, height);
+   const d = image.data;
+   const b = bctx.getImageData(0, 0, width, height).data;
+   const ratio = new Float32Array(width * height);
+   for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+     const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+     const paper = Math.max(1, 0.299 * b[i] + 0.587 * b[i + 1] + 0.114 * b[i + 2]);
+     ratio[j] = Math.min(1, lum / paper); // 1 = paper, lower = ink
+   }
+   // Map the darkest 2% of pixels to black and the paper to white.
+   const sample = [];
+   for (let j = 0; j < ratio.length; j += 97) sample.push(ratio[j]);
+   sample.sort((x, y) => x - y);
+   const dark = sample[Math.floor(sample.length * 0.02)] || 0;
+   const range = Math.max(0.05, 1 - dark);
+   for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+     const v = Math.max(0, Math.min(255, (ratio[j] - dark) / range * 255));
+     d[i] = d[i + 1] = d[i + 2] = v;
+   }
+   ctx.putImageData(image, 0, 0);
  }
 
  async function pdfPrescriptionPages(file) {
@@ -5350,6 +5412,7 @@ function renderEditablePrescription(parsed) {
    canvas.height = Math.ceil(viewport.height);
    const ctx = canvas.getContext('2d', { willReadFrequently: true });
    await page.render({ canvasContext: ctx, viewport }).promise;
+   normalizeCanvasForOcr(canvas);
    pages.push(canvas.toDataURL('image/png'));
  }
  return pages;
@@ -5373,8 +5436,12 @@ function renderEditablePrescription(parsed) {
    if (!pages.length) throw new Error('The PDF contains no readable pages.');
    return ocrDataUrls(pages);
  }
- const image = await preprocessRxImage(file);
- return ocrDataUrls([image]);
+ const versions = await preprocessRxImage(file);
+ // Read both versions and keep the one from which more medicines can be parsed.
+ const normalizedText = await ocrDataUrls([versions.normalized]);
+ const contrastText = await ocrDataUrls([versions.contrast]);
+ const count = text => parsePrescription(text).medicines.filter(m => !/verify manually/i.test(m.medicine)).length;
+ return count(contrastText) > count(normalizedText) ? contrastText : normalizedText;
  }
 
  chooseRxBtn.addEventListener('click', () => rxFileInput.click());
