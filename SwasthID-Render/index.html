@@ -6447,14 +6447,20 @@ async function shareHealthRecordWithDoctor(){
  const q=query.trim().toLowerCase();
  if(!q) return [];
  const tokens=q.split(/\s+/).filter(Boolean);
+ // Units and numbers ("mg", "5") appear in almost every item, so they only rank
+ // results; at least one medicine-name token has to match.
+ const isDoseToken=t => /^[\d.,]+$/.test(t) || /^(?:mg|mcg|µg|ug|g|ml|iu|units?|%|tabs?|tablets?|caps?|capsules?|syp|syrup|inj|x|od|bd|tds)$/.test(t) || /^\d/.test(t);
+ const nameTokens=tokens.filter(t => !isDoseToken(t) && t.replace(/[^a-z]/g,'').length >= 3);
+ if(!nameTokens.length) return [];
  return medicineCatalogue.map((m, index) => {
   const haystack=[m.name,m.salt,m.brand,m.pack].join(' ').toLowerCase();
   const compact=haystack.replace(/[^a-z0-9]+/g,'');
-  const tokenHits=tokens.filter(t => haystack.includes(t) || compact.includes(t.replace(/[^a-z0-9]+/g,''))).length;
+  const hit=t => haystack.includes(t) || compact.includes(t.replace(/[^a-z0-9]+/g,''));
+  if(!nameTokens.some(hit)) return null;
+  const tokenHits=tokens.filter(hit).length;
   const exact=haystack.includes(q) ? 100 : 0;
-  const baseMatch=tokens.some(t => t.length >= 4 && haystack.includes(t)) ? 10 : 0;
-  return { ...m, __score: exact + tokenHits*5 + baseMatch, __index:index };
- }).filter(m => m.__score > 0).sort((a,b) => b.__score-a.__score || a.__index-b.__index).map(({__score,__index,...m}) => m);
+  return { ...m, __score: exact + tokenHits*5 + 10, __index:index };
+ }).filter(Boolean).sort((a,b) => b.__score-a.__score || a.__index-b.__index).map(({__score,__index,...m}) => m);
  }
  async function searchMedicines(){
  const input=document.getElementById('medSearch');
@@ -6608,6 +6614,20 @@ async function shareHealthRecordWithDoctor(){
   badge.textContent='Prescription search';
   window.__prescriptionOrderResults=allResults;
  }
+
+ window.showPharmacyOptions=function(resultIndex){
+  const med=(window.__medicineResults || [])[resultIndex];
+  const row=document.querySelectorAll('#priceList > .price-row')[resultIndex];
+  if(!med || !row) return;
+  document.querySelectorAll('#priceList .rx-pharmacy-options').forEach(x=>x.remove());
+  const box=document.createElement('div'); box.className='rx-pharmacy-options';
+  box.style.cssText='margin:-4px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);';
+  box.innerHTML='<div style="font-weight:650;font-size:12.5px;">Continue to a pharmacy</div>' +
+   `<div style="font-size:11.5px;color:var(--muted);margin:4px 0 8px;">${escMed(med.name)}${med.pack?' · '+escMed(med.pack):''}</div>` +
+   pharmacyLinks.map(p=>`<a class="n-btn" style="margin:3px;" href="${p.url}" target="_blank" rel="noopener">${p.platform}</a>`).join('') +
+   '<div style="font-size:11px;color:var(--muted);margin-top:7px;line-height:1.4;">The pharmacy will determine current selling price, availability, pack size and prescription requirements.</div>';
+  row.after(box); box.scrollIntoView({behavior:'smooth',block:'nearest'});
+ };
 
  window.showPrescriptionPharmacyOptions=function(cardIndex,resultIndex){
   const med=(window.__prescriptionOrderResults?.[cardIndex] || [])[resultIndex];
