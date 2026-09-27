@@ -2819,7 +2819,8 @@ body.dark-mode [style*="background: white"]{
    'swasth_chatHistory',
   'swasth_riskInputs', 'swasth_clinicalRiskResult',
    'swasth_waterIntake',
-   'swasth_profile_medications'
+   'swasth_profile_medications',
+   'swasth_emergencyManageToken', 'swasth_emergencyTokenId', 'swasth_emergencyExpiresAt', 'swasth_emergencyQrCache'
  ];
 
  function cloudDoc() {
@@ -6164,7 +6165,7 @@ document.querySelectorAll('[data-emergency-visibility]').forEach(btn=>{
 document.getElementById('revokeEmergencyQrBtn')?.addEventListener('click',async()=>{
   const tokenId=localStorage.getItem('swasth_emergencyTokenId'), manageToken=localStorage.getItem('swasth_emergencyManageToken');
   if(!tokenId||!manageToken){showToast('','QR Not Ready','Generate the emergency QR first.');return;}
-  try{const base=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');const r=await fetch(base+'/api/emergency/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tokenId,manageToken})});const b=await r.json().catch(()=>({}));if(!r.ok)throw new Error(b.error||'Could not revoke QR.');showToast('','Emergency QR Revoked','Generate a new QR badge before using it again.');localStorage.removeItem('swasth_emergencyTokenId');const st=document.getElementById('qrPayloadStatus');if(st)st.textContent='Emergency QR revoked. Generate a new badge when needed.';}catch(e){showToast('','Revoke Failed',e.message);}}
+  try{const base=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');const r=await fetch(base+'/api/emergency/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tokenId,manageToken})});const b=await r.json().catch(()=>({}));if(!r.ok)throw new Error(b.error||'Could not revoke QR.');showToast('','Emergency QR Revoked','Generate a new QR badge before using it again.');['swasth_emergencyTokenId','swasth_emergencyQrCache'].forEach(k=>{localStorage.removeItem(k);if(typeof syncCloudState==='function')syncCloudState(k);});const st=document.getElementById('qrPayloadStatus');if(st)st.textContent='Emergency QR revoked. Generate a new badge when needed.';}catch(e){showToast('','Revoke Failed',e.message);}}
 );
 document.getElementById('emergencyAccessLogBtn')?.addEventListener('click',async()=>{const out=document.getElementById('emergencyAccessLog');const tokenId=localStorage.getItem('swasth_emergencyTokenId'),manageToken=localStorage.getItem('swasth_emergencyManageToken');if(!out||!tokenId||!manageToken)return;try{const base=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');const r=await fetch(base+'/api/emergency/activity?tokenId='+encodeURIComponent(tokenId)+'&manageToken='+encodeURIComponent(manageToken),{cache:'no-store'});const b=await r.json();if(!r.ok)throw new Error(b.error||'Unavailable');out.style.display='block';out.innerHTML='<b>Access activity</b><br>Opened '+(b.accessLog?.length||0)+' time(s). Last access: '+(b.accessLog?.length?new Date(b.accessLog[b.accessLog.length-1].at).toLocaleString():'Never')+'.';}catch(e){out.style.display='block';out.textContent='Access activity unavailable: '+e.message;}});
 
@@ -6905,7 +6906,14 @@ async function getEmergencyQRText() {
     const bytes = new Uint8Array(24); crypto.getRandomValues(bytes);
     manageToken = Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
     localStorage.setItem('swasth_emergencyManageToken', manageToken);
+    if (typeof syncCloudState === 'function') syncCloudState('swasth_emergencyManageToken');
   }
+  // Reuse the current badge while the emergency details are unchanged, so every
+  // dashboard render does not mint (and store) a new server-side badge.
+  const { exp: _ignoredExp, ...signaturePayload } = getEmergencyCompactPayload();
+  const signature = JSON.stringify(signaturePayload);
+  const cached = safeJsonParse(localStorage.getItem('swasth_emergencyQrCache') || 'null', null);
+  if (cached && cached.sig === signature && cached.url && Number(cached.expiresAt) > Date.now() + 86400000) return cached.url;
   compact.manageToken = manageToken;
   const apiBase = (window.SWASTH_API_BASE || ((location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : '')).replace(/\/$/, '');
   if (apiBase) {
@@ -6920,7 +6928,13 @@ async function getEmergencyQRText() {
           signal: controller.signal
         });
         const body = await res.json();
-        if (res.ok && body.url) { if(body.tokenId) localStorage.setItem('swasth_emergencyTokenId', body.tokenId); return body.url; }
+        if (res.ok && body.url) {
+          if (body.tokenId) localStorage.setItem('swasth_emergencyTokenId', body.tokenId);
+          if (body.expiresAt) localStorage.setItem('swasth_emergencyExpiresAt', String(body.expiresAt));
+          localStorage.setItem('swasth_emergencyQrCache', JSON.stringify({ sig: signature, url: body.url, expiresAt: body.expiresAt }));
+          if (typeof syncCloudState === 'function') ['swasth_emergencyTokenId', 'swasth_emergencyExpiresAt', 'swasth_emergencyQrCache'].forEach(syncCloudState);
+          return body.url;
+        }
       } finally {
         clearTimeout(timer);
       }
@@ -6955,9 +6969,11 @@ async function generateEmergencyQR(force = false) {
    const qrText = await getEmergencyQRText();
    qrContainer.innerHTML = '';
    new QRCode(qrContainer, {text: qrText,width:220,height:220,colorDark:'#111814',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-   if (status) status.textContent = (qrText.includes('/api/emergency/view') || qrText.includes('?emergency='))
-     ? 'Secure emergency QR ready. The server encrypts the emergency payload. The badge remains valid long-term until revoked or expired.'
-     : 'Emergency QR preview ready. Host the Render server on HTTPS to enable the secure server-backed QR.';
+   const serverBacked = /[?&]emergency=v1\./.test(qrText);
+   const expiresAt = Number(localStorage.getItem('swasth_emergencyExpiresAt') || 0);
+   if (status) status.textContent = serverBacked
+     ? `Secure emergency QR ready. The server encrypts the emergency payload. Valid until ${expiresAt ? new Date(expiresAt).toLocaleDateString() : 'its expiry date'} unless you revoke it.`
+     : 'Emergency QR preview ready. This preview is not encrypted or revocable; the secure QR needs the SwasthID server.';
  } catch (error) {
    qrContainer.innerHTML = '<span style="font-size:12px;color:#8f2d24;padding:16px;text-align:center;">QR generation failed. Refresh and try again.</span>';
    if (status) status.textContent = 'The emergency QR could not be generated.';
@@ -6976,7 +6992,7 @@ function showEmergencyPublicView(payload) {
    document.body.appendChild(overlay);
  }
  if (expired) {
-   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency information expired</h2><p>This QR payload is no longer valid.</p></div><span class="public-emergency-badge">EXPIRED</span></div><div class="public-emergency-expired">For safety, ask the patient or caregiver for a newly generated Emergency QR Badge. If this is an active emergency, call 112.</div><div class="public-emergency-actions" style="padding:0 24px 22px;"><a class="emergency-call primary" href="tel:112">Call 112</a><button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div><div class="public-emergency-foot">SwasthID emergency view. Prototype only; verify critical information when possible.</div></div>`;
+   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency information unavailable</h2><p>${escapeHtml(payload.reason || 'This QR payload is no longer valid.')}</p></div><span class="public-emergency-badge">${/revoked/i.test(payload.reason || '') ? 'REVOKED' : 'EXPIRED'}</span></div><div class="public-emergency-expired">For safety, ask the patient or caregiver for a newly generated Emergency QR Badge. If this is an active emergency, call 112.</div><div class="public-emergency-actions" style="padding:0 24px 22px;"><a class="emergency-call primary" href="tel:112">Call 112</a><button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div><div class="public-emergency-foot">SwasthID emergency view. Prototype only; verify critical information when possible.</div></div>`;
  } else {
    const contact = Array.isArray(payload.ec) ? payload.ec : [];
    const contactName = contact[0] || 'Not provided';
@@ -6985,7 +7001,7 @@ function showEmergencyPublicView(payload) {
    const conditions = Array.isArray(payload.c) && payload.c.length ? payload.c.join(', ') : 'None recorded';
    const meds = Array.isArray(payload.m) && payload.m.length ? payload.m.join(', ') : 'None recorded';
    const insurance = Array.isArray(payload.ins) && payload.ins.some(Boolean) ? payload.ins.filter(Boolean).join(' · ') : 'Not provided';
-   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency Health Information</h2><p>Read-only emergency information shared by the patient</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-grid"><div class="public-emergency-item full"><label>Patient</label><div>${escapeHtml(payload.n)}</div></div><div class="public-emergency-item"><label>Blood group</label><div>${escapeHtml(payload.bg || 'Not provided')}</div></div><div class="public-emergency-item"><label>Drug allergies</label><div>${escapeHtml(payload.da || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Other allergies</label><div>${escapeHtml(payload.oa || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Ongoing conditions</label><div>${escapeHtml(conditions)}</div></div><div class="public-emergency-item full"><label>Critical daily medicines</label><div>${escapeHtml(meds)}</div></div><div class="public-emergency-item full"><label>Health insurance</label><div>${escapeHtml(insurance)}</div></div><div class="public-emergency-item full"><label>Emergency contact</label><div>${escapeHtml(contactName)}${contactRelation ? ' (' + escapeHtml(contactRelation) + ')' : ''}${contactPhone ? ' · ' + escapeHtml(contactPhone) : ''}</div></div></div><div class="public-emergency-actions"><a class="emergency-call primary" href="tel:112">Call 112</a>${contactPhone ? `<a class="emergency-call" href="tel:${String(contactPhone).replace(/[^+0-9]/g, '')}">Call emergency contact</a>` : ''}<button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div></div><div class="public-emergency-foot">QR payload remains valid until revoked or its long-term expiry date. It is not encrypted, so only place minimum necessary emergency information in the QR. In an active emergency, call 112.</div></div>`;
+   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency Health Information</h2><p>Read-only emergency information shared by the patient</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-grid"><div class="public-emergency-item full"><label>Patient</label><div>${escapeHtml(payload.n)}</div></div><div class="public-emergency-item"><label>Blood group</label><div>${escapeHtml(payload.bg || 'Not provided')}</div></div><div class="public-emergency-item"><label>Drug allergies</label><div>${escapeHtml(payload.da || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Other allergies</label><div>${escapeHtml(payload.oa || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Ongoing conditions</label><div>${escapeHtml(conditions)}</div></div><div class="public-emergency-item full"><label>Critical daily medicines</label><div>${escapeHtml(meds)}</div></div><div class="public-emergency-item full"><label>Health insurance</label><div>${escapeHtml(insurance)}</div></div><div class="public-emergency-item full"><label>Emergency contact</label><div>${escapeHtml(contactName)}${contactRelation ? ' (' + escapeHtml(contactRelation) + ')' : ''}${contactPhone ? ' · ' + escapeHtml(contactPhone) : ''}</div></div></div><div class="public-emergency-actions"><a class="emergency-call primary" href="tel:112">Call 112</a>${contactPhone ? `<a class="emergency-call" href="tel:${String(contactPhone).replace(/[^+0-9]/g, '')}">Call emergency contact</a>` : ''}<button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div></div><div class="public-emergency-foot">This QR stays valid until the patient revokes it or it reaches its expiry date. Only the minimum necessary emergency information is shared. In an active emergency, call 112.</div></div>`;
  }
  overlay.classList.add('show');
 }
@@ -7007,6 +7023,10 @@ async function openEmergencyPayloadFromUrl() {
    clearTimeout(timer);
    const body = await res.json();
    if (res.ok && body.payload) { showEmergencyPublicView(body.payload); return true; }
+   if (res.status === 410 && /^v1\./.test(token)) {
+    showEmergencyPublicView({ n: 'Unavailable', exp: 0, reason: body.error });
+    return false;
+   }
   } catch (error) { console.warn('Secure emergency viewer unavailable; trying local token.', error); }
  }
  const payload = decodeEmergencyToken(token);
@@ -7181,8 +7201,9 @@ async function downloadEmergencyPDF() {
     doc.setTextColor(...muted);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.text('Emergency QR validity: long-term until revoked or the configured expiry date.', margin, metaY);
-    doc.text('QR is not encrypted. Share only with intended emergency responders.', pageW - margin, metaY, { align: 'right' });
+    const pdfExpiry = Number(localStorage.getItem('swasth_emergencyExpiresAt') || 0);
+    doc.text(`Emergency QR valid until ${pdfExpiry ? new Date(pdfExpiry).toLocaleDateString() : 'revoked or expired'} unless revoked.`, margin, metaY);
+    doc.text('Share only with intended emergency responders.', pageW - margin, metaY, { align: 'right' });
 
     const filename = `SwasthID-Emergency-${String(payload.n).replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'') || 'Passport'}.pdf`;
     const blob = doc.output('blob');
@@ -7197,17 +7218,6 @@ async function downloadEmergencyPDF() {
     document.body.appendChild(link);
     link.click();
     link.remove();
-
-    setTimeout(() => {
-      try {
-        if (document.visibilityState === 'visible') {
-          const fallback = window.open(blobUrl, '_blank', 'noopener,noreferrer');
-          if (!fallback) setStatus('Browser blocked the PDF download. Allow downloads/pop-ups for this site and try again.', true);
-        }
-      } catch (e) {
-        console.warn('[Emergency PDF] fallback open failed:', e);
-      }
-    }, 250);
 
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
     setStatus(qrEmbedded ? `PDF ready: ${filename}` : `PDF ready: ${filename} (QR not embedded)`, !qrEmbedded);

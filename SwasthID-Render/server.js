@@ -16,14 +16,17 @@ const FIREBASE_CLIENT_EMAIL = process.env.FIREBASE_CLIENT_EMAIL || '';
 const FIREBASE_PRIVATE_KEY = (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
 
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
+const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
 
 const MAX_BODY_BYTES = 250000;
 const MAX_RECORD_SHARE_BYTES = 180000;
 const RECORD_SHARE_TTL_MS = 24 * 60 * 60 * 1000;
-const EMERGENCY_TTL_MS = 24 * 60 * 60 * 1000;
-
-const recordShares = new Map();
-const revokedEmergencyTokens = new Map();
+const EMERGENCY_TTL_DAYS = Math.min(
+  730,
+  Math.max(1, Number(process.env.EMERGENCY_TTL_DAYS || 180) || 180)
+);
+const EMERGENCY_TTL_MS = EMERGENCY_TTL_DAYS * 24 * 60 * 60 * 1000;
+const MAX_ACCESS_LOG = 50;
 
 let firebaseAdmin = null;
 let firebaseInitError = null;
@@ -58,6 +61,12 @@ function tryInitFirebaseAdmin() {
 }
 
 tryInitFirebaseAdmin();
+
+if (!firebaseAdmin) {
+  console.warn(
+    'WARNING: Firebase Admin is not configured. Doctor share links and emergency QR revocations are kept in memory and reset when the server restarts.'
+  );
+}
 
 if (!EMERGENCY_SECRET) {
   console.warn(
@@ -193,6 +202,89 @@ function decryptEmergency(token) {
   return JSON.parse(
     decrypted.toString('utf8')
   );
+}
+
+// Share links and emergency badges must survive restarts (Render instances
+// sleep when idle), so they live in server-only Firestore collections when
+// Firebase Admin is configured. Without it they fall back to process memory.
+function createStore(collectionName) {
+  const memory = new Map();
+  const collection = () =>
+    firebaseAdmin ? firebaseAdmin.firestore().collection(collectionName) : null;
+
+  return {
+    async get(id) {
+      const c = collection();
+      if (!c) return memory.get(id) || null;
+      const snap = await c.doc(id).get();
+      return snap.exists ? snap.data() : null;
+    },
+    async set(id, value) {
+      const c = collection();
+      if (!c) return void memory.set(id, value);
+      await c.doc(id).set(value);
+    },
+    async update(id, patch) {
+      const c = collection();
+      if (!c) {
+        const current = memory.get(id);
+        if (current) memory.set(id, { ...current, ...patch });
+        return;
+      }
+      await c.doc(id).set(patch, { merge: true });
+    },
+    async delete(id) {
+      const c = collection();
+      if (!c) return void memory.delete(id);
+      await c.doc(id).delete();
+    },
+    async listWhere(field, value) {
+      const c = collection();
+      if (!c) return [...memory.values()].filter(item => item[field] === value);
+      const snap = await c.where(field, '==', value).get();
+      return snap.docs.map(doc => doc.data());
+    },
+    async updateWhere(field, value, patch) {
+      const c = collection();
+      if (!c) {
+        for (const [id, item] of memory) {
+          if (item[field] === value) memory.set(id, { ...item, ...patch });
+        }
+        return;
+      }
+      const snap = await c.where(field, '==', value).get();
+      await Promise.all(snap.docs.map(doc => doc.ref.set(patch, { merge: true })));
+    },
+    async deleteWhere(field, value) {
+      const c = collection();
+      if (!c) {
+        for (const [id, item] of memory) {
+          if (item[field] === value) memory.delete(id);
+        }
+        return;
+      }
+      const snap = await c.where(field, '==', value).get();
+      await Promise.all(snap.docs.map(doc => doc.ref.delete()));
+    },
+    pruneMemory(isExpired) {
+      for (const [id, item] of memory) {
+        if (!item || isExpired(item)) memory.delete(id);
+      }
+    }
+  };
+}
+
+const recordShareStore = createStore('recordShares');
+const emergencyBadgeStore = createStore('emergencyBadges');
+
+function safeEqual(a, b) {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
+function appendAccess(list, entry) {
+  return [...(Array.isArray(list) ? list : []), entry].slice(-MAX_ACCESS_LOG);
 }
 
 function readBody(req) {
@@ -547,258 +639,167 @@ async function handleRisk(req, res) {
   }
 }
 
-async function handleEmergencyCreate(
-  req,
-  res
-) {
+async function handleEmergencyCreate(req, res) {
   if (!EMERGENCY_SECRET) {
     return json(res, 503, {
-      error:
-        'Emergency token service is not configured.'
+      error: 'Emergency token service is not configured.'
     });
   }
 
-  const p =
-    await readBody(req);
+  const p = await readBody(req);
+  const manageToken = String(p.manageToken || '').trim();
+
+  if (manageToken.length < 32 || manageToken.length > 128) {
+    return json(res, 400, {
+      error: 'A manage token is required to create a revocable emergency QR.'
+    });
+  }
+
+  const list = (value, count, length) =>
+    Array.isArray(value)
+      ? value.slice(0, count).map(x => String(x).slice(0, length))
+      : [];
+
+  const tokenId = base64url(crypto.randomBytes(16));
+  const expiresAt = Date.now() + EMERGENCY_TTL_MS;
 
   const payload = {
-    v: 5,
-
-    exp:
-      Date.now() +
-      EMERGENCY_TTL_MS,
-
-    n:
-      String(
-        p.n ||
-        'Unknown patient'
-      ).slice(0, 120),
-
-    bg:
-      String(
-        p.bg ||
-        'Not provided'
-      ).slice(0, 30),
-
-    da:
-      String(
-        p.da ||
-        'No known drug allergies'
-      ).slice(0, 500),
-
-    oa:
-      String(
-        p.oa ||
-        'None recorded'
-      ).slice(0, 500),
-
-    c:
-      Array.isArray(p.c)
-        ? p.c
-            .slice(0, 6)
-            .map(
-              x =>
-                String(x)
-                  .slice(0, 100)
-            )
-        : [],
-
-    m:
-      Array.isArray(p.m)
-        ? p.m
-            .slice(0, 5)
-            .map(
-              x =>
-                String(x)
-                  .slice(0, 140)
-            )
-        : [],
-
-    ec:
-      Array.isArray(p.ec)
-        ? p.ec
-            .slice(0, 3)
-            .map(
-              x =>
-                String(x)
-                  .slice(0, 100)
-            )
-        : []
+    v: 6,
+    i: tokenId,
+    exp: expiresAt,
+    n: String(p.n || 'Unknown patient').slice(0, 120),
+    bg: String(p.bg || 'Not provided').slice(0, 30),
+    da: String(p.da || 'No known drug allergies').slice(0, 500),
+    oa: String(p.oa || 'None recorded').slice(0, 500),
+    c: list(p.c, 6, 100),
+    m: list(p.m, 5, 140),
+    ec: list(p.ec, 3, 100),
+    ins: list(p.ins, 2, 100)
   };
 
-  const token =
-    encryptEmergency(payload);
+  await emergencyBadgeStore.set(tokenId, {
+    manageHash: hashToken(manageToken),
+    createdAt: Date.now(),
+    expiresAt,
+    revoked: false,
+    accesses: []
+  });
 
-  const tokenHash =
-    hashToken(token);
-
-  revokedEmergencyTokens.delete(
-    tokenHash
-  );
-
-  const origin =
-    getRequestOrigin(req);
+  const token = encryptEmergency(payload);
+  const origin = getRequestOrigin(req);
 
   return json(res, 200, {
-    url:
-      `${origin}/?emergency=${encodeURIComponent(token)}`,
-
-    expiresAt:
-      payload.exp,
-
+    url: `${origin}/?emergency=${encodeURIComponent(token)}`,
+    tokenId,
+    expiresAt,
     revocable: true
   });
 }
 
-async function handleEmergencyView(
-  req,
-  res,
-  url
-) {
-  try {
-    const token =
-      String(
-        url.searchParams.get(
-          'token'
-        ) || ''
-      );
-
-    if (!token) {
-      return json(res, 400, {
-        error:
-          'Missing token.'
-      });
-    }
-
-    const tokenHash =
-      hashToken(token);
-
-    if (
-      revokedEmergencyTokens.has(
-        tokenHash
-      )
-    ) {
-      return json(res, 410, {
-        error:
-          'Emergency token has been revoked.'
-      });
-    }
-
-    const payload =
-      decryptEmergency(token);
-
-    if (
-      !payload.exp ||
-      Date.now() >
-        Number(payload.exp)
-    ) {
-      return json(res, 410, {
-        error:
-          'Emergency token expired.'
-      });
-    }
-
-    return json(res, 200, {
-      payload
-    });
-  } catch {
-    return json(res, 410, {
-      error:
-        'Invalid or expired emergency token.'
-    });
-  }
-}
-
-async function handleEmergencyRevoke(
-  req,
-  res
-) {
-  const body =
-    await readBody(req);
-
-  const token =
-    String(
-      body.token || ''
-    ).trim();
+async function handleEmergencyView(req, res, url) {
+  const token = String(url.searchParams.get('token') || '');
 
   if (!token) {
-    return json(res, 400, {
-      error:
-        'Emergency token is required.'
-    });
+    return json(res, 400, { error: 'Missing token.' });
   }
 
+  let payload;
   try {
-    decryptEmergency(token);
+    payload = decryptEmergency(token);
   } catch {
-    return json(res, 400, {
-      error:
-        'Invalid emergency token.'
-    });
+    return json(res, 410, { error: 'Invalid or expired emergency token.' });
   }
 
-  const tokenHash =
-    hashToken(token);
+  if (!payload.exp || Date.now() > Number(payload.exp)) {
+    return json(res, 410, { error: 'Emergency token expired.' });
+  }
 
-  revokedEmergencyTokens.set(
-    tokenHash,
-    Date.now()
-  );
+  if (payload.i) {
+    const badge = await emergencyBadgeStore.get(payload.i);
+
+    if (badge && badge.revoked) {
+      return json(res, 410, { error: 'Emergency token has been revoked.' });
+    }
+
+    if (badge) {
+      await emergencyBadgeStore.update(payload.i, {
+        accesses: appendAccess(badge.accesses, { at: Date.now() })
+      });
+    }
+  }
+
+  return json(res, 200, { payload });
+}
+
+async function findManagedBadge(tokenId, manageToken) {
+  if (!tokenId || !manageToken) return { status: 400, error: 'tokenId and manageToken are required.' };
+
+  const badge = await emergencyBadgeStore.get(tokenId);
+  if (!badge) return { status: 404, error: 'Emergency QR not found or already expired.' };
+
+  if (!safeEqual(badge.manageHash, hashToken(manageToken))) {
+    return { status: 403, error: 'You are not allowed to manage this emergency QR.' };
+  }
+
+  return { badge };
+}
+
+async function handleEmergencyRevoke(req, res) {
+  const body = await readBody(req);
+  const tokenId = String(body.tokenId || '').trim();
+  const manageToken = String(body.manageToken || '').trim();
+
+  const found = await findManagedBadge(tokenId, manageToken);
+  if (found.error) return json(res, found.status, { error: found.error });
+
+  // Every refresh issues a new badge, so revoke all badges this owner created;
+  // otherwise an older printed or shared copy would stay valid.
+  await emergencyBadgeStore.updateWhere('manageHash', found.badge.manageHash, {
+    revoked: true,
+    revokedAt: Date.now()
+  });
+
+  return json(res, 200, { ok: true, revoked: true });
+}
+
+async function handleEmergencyActivity(req, res, url) {
+  const tokenId = String(url.searchParams.get('tokenId') || '').trim();
+  const manageToken = String(url.searchParams.get('manageToken') || '').trim();
+
+  const found = await findManagedBadge(tokenId, manageToken);
+  if (found.error) return json(res, found.status, { error: found.error });
+
+  // Report opens across every badge this owner created, oldest first.
+  const badges = await emergencyBadgeStore.listWhere('manageHash', found.badge.manageHash);
+  const accessLog = badges
+    .flatMap(badge => badge.accesses || [])
+    .sort((a, b) => a.at - b.at);
 
   return json(res, 200, {
-    ok: true,
-    revoked: true
+    tokenId,
+    createdAt: found.badge.createdAt,
+    expiresAt: found.badge.expiresAt,
+    revoked: Boolean(found.badge.revoked),
+    accessLog
   });
 }
 
 function cleanupStores() {
-  const now =
-    Date.now();
-
-  for (
-    const [
-      token,
-      share
-    ] of recordShares
-  ) {
-    if (
-      !share ||
-      now >= share.expiresAt
-    ) {
-      recordShares.delete(
-        token
-      );
-    }
-  }
-
-  for (
-    const [
-      tokenHash,
-      revokedAt
-    ] of revokedEmergencyTokens
-  ) {
-    if (
-      now - revokedAt >
-      EMERGENCY_TTL_MS
-    ) {
-      revokedEmergencyTokens.delete(
-        tokenHash
-      );
-    }
-  }
+  const now = Date.now();
+  recordShareStore.pruneMemory(item => now >= item.expiresAt);
+  emergencyBadgeStore.pruneMemory(item => now >= item.expiresAt);
 }
 
-setInterval(
-  cleanupStores,
-  10 * 60 * 1000
-).unref();
+setInterval(cleanupStores, 10 * 60 * 1000).unref();
 
 function getRequestOrigin(req) {
+  if (PUBLIC_BASE_URL) return PUBLIC_BASE_URL;
+
   const proto =
     String(
       req.headers[
         'x-forwarded-proto'
-      ] || 'https'
+      ] || (req.socket.encrypted ? 'https' : 'http')
     )
       .split(',')[0]
       .trim();
@@ -1548,319 +1549,145 @@ fetch(
 </html>`;
 }
 
-async function handleRecordShareCreate(
-  req,
-  res
-) {
-  cleanupStores();
-
-  const user =
-    await requireFirebaseUser(
-      req,
-      res
-    );
-
+async function handleRecordShareCreate(req, res) {
+  const user = await requireFirebaseUser(req, res);
   if (!user) return;
 
-  const body =
-    await readBody(req);
+  const body = await readBody(req);
+  const record = body && body.record;
 
-  const record =
-    body &&
-    body.record;
-
-  if (
-    !record ||
-    typeof record !== 'object' ||
-    Array.isArray(record)
-  ) {
-    return json(res, 400, {
-      error:
-        'A valid health record is required.'
-    });
+  if (!record || typeof record !== 'object' || Array.isArray(record)) {
+    return json(res, 400, { error: 'A valid health record is required.' });
   }
 
-  const requestedHours =
-    Number(
-      body.expiresInHours
-    );
+  const requestedHours = Number(body.expiresInHours);
+  const expiresInHours = Number.isFinite(requestedHours)
+    ? Math.min(24, Math.max(1, requestedHours))
+    : 24;
+  const expiresAt = Date.now() + expiresInHours * 60 * 60 * 1000;
 
-  const expiresInHours =
-    Number.isFinite(
-      requestedHours
-    )
-      ? Math.min(
-          24,
-          Math.max(
-            1,
-            requestedHours
-          )
-        )
-      : 24;
-
-  const expiresAt =
-    Date.now() +
-    expiresInHours *
-      60 *
-      60 *
-      1000;
-
-  const serialized =
-    JSON.stringify(record);
-
-  if (
-    Buffer.byteLength(
-      serialized,
-      'utf8'
-    ) >
-    MAX_RECORD_SHARE_BYTES
-  ) {
+  // Stored as a JSON string: Firestore rejects nested arrays, which records can contain.
+  const serialized = JSON.stringify(record);
+  if (Buffer.byteLength(serialized, 'utf8') > MAX_RECORD_SHARE_BYTES) {
     return json(res, 413, {
-      error:
-        'Health record is too large to create a temporary share link.'
+      error: 'Health record is too large to create a temporary share link.'
     });
   }
 
-  const token =
-    createRecordShareToken();
+  const token = createRecordShareToken();
 
-  recordShares.set(
-    token,
-    {
-      uid: user.uid,
-      record,
-      expiresAt,
-      createdAt:
-        Date.now(),
-      accessedAt: [],
-      revoked: false
-    }
-  );
+  await recordShareStore.set(hashToken(token), {
+    uid: user.uid,
+    record: serialized,
+    expiresAt,
+    createdAt: Date.now(),
+    accesses: [],
+    revoked: false
+  });
 
-  const origin =
-    getRequestOrigin(req);
+  const origin = getRequestOrigin(req);
 
   return json(res, 200, {
-    shareId:
-      token,
-
-    url:
-      `${origin}/record-share?token=${encodeURIComponent(token)}`,
-
+    shareId: token,
+    url: `${origin}/record-share?token=${encodeURIComponent(token)}`,
     expiresAt,
-
     expiresInHours,
-
     readOnly: true
   });
 }
 
-async function handleRecordShareView(
-  req,
-  res,
-  url
-) {
-  cleanupStores();
-
-  const token =
-    String(
-      url.searchParams.get(
-        'token'
-      ) || ''
-    ).trim();
+async function handleRecordShareView(req, res, url) {
+  const token = String(url.searchParams.get('token') || '').trim();
 
   if (!token) {
-    return json(res, 400, {
-      error:
-        'Missing share token.'
-    });
+    return json(res, 400, { error: 'Missing share token.' });
   }
 
-  const share =
-    recordShares.get(token);
+  const id = hashToken(token);
+  const share = await recordShareStore.get(id);
 
   if (!share) {
-    return json(res, 410, {
-      error:
-        'This doctor sharing link is invalid or has expired.'
-    });
+    return json(res, 410, { error: 'This doctor sharing link is invalid or has expired.' });
   }
 
   if (share.revoked) {
-    return json(res, 410, {
-      error:
-        'This doctor sharing link has been revoked.'
-    });
+    return json(res, 410, { error: 'This doctor sharing link has been revoked.' });
   }
 
-  if (
-    Date.now() >=
-    share.expiresAt
-  ) {
-    recordShares.delete(
-      token
-    );
-
-    return json(res, 410, {
-      error:
-        'This doctor sharing link has expired.'
-    });
+  if (Date.now() >= share.expiresAt) {
+    await recordShareStore.delete(id);
+    return json(res, 410, { error: 'This doctor sharing link has expired.' });
   }
 
-  share.accessedAt.push({
-    timestamp:
-      Date.now(),
-
-    userAgent:
-      String(
-        req.headers[
-          'user-agent'
-        ] || ''
-      ).slice(0, 300)
+  await recordShareStore.update(id, {
+    accesses: appendAccess(share.accesses, {
+      timestamp: Date.now(),
+      userAgent: String(req.headers['user-agent'] || '').slice(0, 300)
+    })
   });
-
-  if (
-    share.accessedAt.length >
-    20
-  ) {
-    share.accessedAt.shift();
-  }
 
   return json(res, 200, {
     payload: {
-      ...share.record,
-      expiresAt:
-        share.expiresAt,
+      ...JSON.parse(share.record),
+      expiresAt: share.expiresAt,
       readOnly: true
     }
   });
 }
 
-async function handleRecordShareRevoke(
-  req,
-  res
-) {
-  const user =
-    await requireFirebaseUser(
-      req,
-      res
-    );
-
-  if (!user) return;
-
-  const body =
-    await readBody(req);
-
-  const shareId =
-    String(
-      body.shareId || ''
-    ).trim();
+async function findOwnedShare(req, res, shareId) {
+  const user = await requireFirebaseUser(req, res);
+  if (!user) return null;
 
   if (!shareId) {
-    return json(res, 400, {
-      error:
-        'shareId is required.'
-    });
+    json(res, 400, { error: 'shareId is required.' });
+    return null;
   }
 
-  const share =
-    recordShares.get(
-      shareId
-    );
+  const id = hashToken(shareId);
+  const share = await recordShareStore.get(id);
 
-  if (!share) {
-    return json(res, 404, {
-      error:
-        'Share link not found or already expired.'
-    });
+  if (!share || Date.now() >= share.expiresAt) {
+    json(res, 404, { error: 'Share link not found or already expired.' });
+    return null;
   }
 
-  if (
-    share.uid !==
-    user.uid
-  ) {
-    return json(res, 403, {
-      error:
-        'You are not allowed to revoke this share.'
-    });
+  if (share.uid !== user.uid) {
+    json(res, 403, { error: 'You are not allowed to manage this share.' });
+    return null;
   }
 
-  share.revoked = true;
-
-  recordShares.delete(
-    shareId
-  );
-
-  return json(res, 200, {
-    ok: true,
-    revoked: true,
-    shareId
-  });
+  return { id, share };
 }
 
-async function handleRecordShareAccessLog(
-  req,
-  res,
-  url
-) {
-  const user =
-    await requireFirebaseUser(
-      req,
-      res
-    );
+async function handleRecordShareRevoke(req, res) {
+  // Read the body before awaiting auth so the request stream is not missed.
+  const body = await readBody(req);
+  const shareId = String(body.shareId || '').trim();
 
-  if (!user) return;
+  const found = await findOwnedShare(req, res, shareId);
+  if (!found) return;
 
-  const shareId =
-    String(
-      url.searchParams.get(
-        'shareId'
-      ) || ''
-    ).trim();
+  await recordShareStore.update(found.id, { revoked: true, revokedAt: Date.now() });
 
-  if (!shareId) {
-    return json(res, 400, {
-      error:
-        'shareId is required.'
-    });
-  }
+  return json(res, 200, { ok: true, revoked: true, shareId });
+}
 
-  const share =
-    recordShares.get(
-      shareId
-    );
+async function handleRecordShareAccessLog(req, res, url) {
+  const shareId = String(url.searchParams.get('shareId') || '').trim();
 
-  if (!share) {
-    return json(res, 404, {
-      error:
-        'Share link not found or expired.'
-    });
-  }
+  const found = await findOwnedShare(req, res, shareId);
+  if (!found) return;
 
-  if (
-    share.uid !==
-    user.uid
-  ) {
-    return json(res, 403, {
-      error:
-        'You are not allowed to view this access log.'
-    });
-  }
+  const accesses = found.share.accesses || [];
 
   return json(res, 200, {
     shareId,
-
-    createdAt:
-      share.createdAt,
-
-    expiresAt:
-      share.expiresAt,
-
-    accessCount:
-      share.accessedAt.length,
-
-    accesses:
-      share.accessedAt
+    createdAt: found.share.createdAt,
+    expiresAt: found.share.expiresAt,
+    revoked: Boolean(found.share.revoked),
+    accessCount: accesses.length,
+    accesses
   });
 }
 
@@ -1898,6 +1725,11 @@ async function handleAccountDelete(
       'medications',
       'emergencyProfiles'
     ];
+
+    await recordShareStore.deleteWhere(
+      'uid',
+      user.uid
+    );
 
     for (
       const collectionName of
@@ -2084,6 +1916,18 @@ const server =
         }
 
         if (
+          req.method === 'GET' &&
+          url.pathname ===
+            '/api/emergency/activity'
+        ) {
+          return await handleEmergencyActivity(
+            req,
+            res,
+            url
+          );
+        }
+
+        if (
           req.method === 'POST' &&
           url.pathname ===
             '/api/record-share/create'
@@ -2175,13 +2019,31 @@ const server =
         }
 
         if (
-          req.method === 'GET' &&
+          (
+            req.method === 'GET' ||
+            req.method === 'HEAD'
+          ) &&
           (
             url.pathname === '/' ||
             url.pathname ===
               '/index.html'
           )
         ) {
+          res.writeHead(
+            200,
+            {
+              'Content-Type':
+                'text/html; charset=utf-8',
+
+              'Cache-Control':
+                'no-cache'
+            }
+          );
+
+          if (req.method === 'HEAD') {
+            return res.end();
+          }
+
           return fs
             .createReadStream(
               path.join(
