@@ -1183,6 +1183,32 @@ body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:#1
 .inline-editor-card{width:min(420px,100%);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.22)}
 .inline-editor-card input{width:100%;box-sizing:border-box;margin-top:8px;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
 .inline-editor-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.lab-scan-card{width:min(560px,100%);max-height:calc(100vh - 36px);overflow-y:auto}
+.lab-scan-meta{display:grid;grid-template-columns:1fr 170px;gap:12px;margin-top:4px}
+.lab-scan-meta label{font-size:12px;font-weight:600;color:var(--muted)}
+.lab-scan-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
+.lab-scan-table th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:0 6px 6px;border-bottom:1px solid var(--line)}
+.lab-scan-table td{padding:6px;border-bottom:1px solid var(--line);vertical-align:middle}
+.lab-scan-table td:nth-child(2){width:110px}
+.lab-scan-unit{color:var(--muted);font-size:12px;white-space:nowrap;width:1%}
+.lab-scan-check{display:flex;align-items:center;gap:9px;cursor:pointer;margin:0}
+.inline-editor-card .lab-scan-check input{width:17px;height:17px;margin:0;padding:0;flex:none;accent-color:var(--accent,#2f6956)}
+.inline-editor-card .lab-scan-value{margin-top:0;padding:7px 9px;text-align:right;font-variant-numeric:tabular-nums}
+.lab-scan-table tr:has(input[type=checkbox]:not(:checked)) td{opacity:.45}
+.lab-scan-table tr.lab-scan-note td{border-bottom:1px solid var(--line);padding:0 6px 8px 32px;font-size:11.5px;color:#9a5b00;margin-top:-4px}
+body.dark-mode .lab-scan-table tr.lab-scan-note td{color:#f0c27a}
+.lab-scan-table tr:has(+ tr.lab-scan-note) td{border-bottom:none}
+.lab-scan-add{width:100%;margin-top:12px;padding:9px 10px}
+.lab-scan-raw{margin-top:12px;font-size:12px;color:var(--muted)}
+.lab-scan-raw summary{cursor:pointer}
+.lab-scan-raw pre{white-space:pre-wrap;max-height:180px;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:8px;font-size:11px}
+.lab-values{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.lab-value-chip{font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-variant-numeric:tabular-nums}
+.lab-value-chip b{font-weight:600}
+.report-actions{display:flex;justify-content:flex-end;margin-top:10px}
+.report-delete{font-size:12px;color:#b3261e;background:none;border:none;cursor:pointer;padding:4px 2px}
+body.dark-mode .report-delete{color:#f2b8b5}
+@media(max-width:560px){.lab-scan-meta{grid-template-columns:1fr}.lab-scan-table td:nth-child(2){width:90px}}
 .profile-wizard-progress{display:flex;gap:6px;margin:14px 0 18px}
 .profile-wizard-progress span{height:5px;flex:1;border-radius:999px;background:var(--line);transition:.2s}
 .profile-wizard-progress span.active{background:var(--teal)}
@@ -2452,14 +2478,14 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;">
   <div>
    <h3 style="margin-bottom:4px;">Diagnostic Lab Reports</h3>
-   <p class="section-sub" style="margin-bottom:0;">Lab records currently available in the patient's profile.</p>
+   <p class="section-sub" style="margin-bottom:0;">Scan a photo or PDF of a lab report to add its values to your trends, or type one in.</p>
   </div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="n-btn" type="button" id="addLabReportBtn">+ Add report</button><button class="n-btn" type="button" id="labTrendBtn">View trends</button></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="n-btn solid" type="button" id="scanLabReportBtn">Scan report</button><input type="file" id="labReportFileInput" accept="image/*,application/pdf" hidden><button class="n-btn" type="button" id="addLabReportBtn">+ Add report</button><button class="n-btn" type="button" id="labTrendBtn">View trends</button></div>
  </div>
  <div id="reportList" style="margin-top:14px;"></div>
  <div id="labTrendPanel" style="display:none;margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-   <div><b>Lab report trends</b><div class="section-sub" style="margin:3px 0 0;">Structured values detected from your saved report results.</div></div>
+   <div><b>Lab report trends</b><div class="section-sub" style="margin:3px 0 0;">Values from your scanned and typed reports.</div></div>
    <select id="labTrendMetric" class="profile-input" style="min-width:150px;padding:8px 10px;"></select>
   </div>
   <div id="labTrendChart" style="margin-top:12px;overflow-x:auto;"></div>
@@ -2725,6 +2751,29 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
   </div>
 </div>
 
+<!-- ===== LAB REPORT SCAN REVIEW ===== -->
+<div id="labScanReview" class="inline-editor-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="labScanTitle">
+  <div class="inline-editor-card lab-scan-card">
+    <h3 id="labScanTitle">Check the scanned values</h3>
+    <p id="labScanSummary" class="section-sub"></p>
+    <div class="lab-scan-meta">
+      <div><label for="labScanName">Report name</label><input id="labScanName" type="text" placeholder="e.g. Lipid profile"></div>
+      <div><label for="labScanDate">Test date</label><input id="labScanDate" type="date"></div>
+    </div>
+    <table id="labScanTable" class="lab-scan-table">
+      <thead><tr><th>Test</th><th>Value</th><th>Unit</th></tr></thead>
+      <tbody id="labScanRows"></tbody>
+    </table>
+    <div id="labScanEmpty" class="record-empty" hidden>No values yet.</div>
+    <select id="labScanAddSelect" class="profile-input lab-scan-add" aria-label="Add a test"></select>
+    <details class="lab-scan-raw"><summary>Text read from the report</summary><pre id="labScanRaw"></pre></details>
+    <div class="inline-editor-actions">
+      <button type="button" class="n-btn" id="labScanCancel">Cancel</button>
+      <button type="button" class="n-btn solid" id="labScanSave">Save report</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== REAL AI ASSISTANT (SWASTHAI) ===== -->
 <div id="aiAssistantDock">
  <div id="aiChatWindow">
@@ -2923,6 +2972,7 @@ function isProfileSkippedForCurrentAccount() {
 }
 
 function clearCloudCacheForUserSwitch() {
+   if (typeof stopRecordSync === 'function') stopRecordSync();
    CLOUD_KEYS.forEach(key => localStorage.removeItem(key));
    // An unfinished profile draft belongs to whoever typed it.
    localStorage.removeItem('swasth_profileWizardDraft');
@@ -3065,6 +3115,8 @@ function clearCloudCacheForUserSwitch() {
        }, { merge: true });
      }
      if (loadSequence !== authLoadSequence || firebaseUser?.uid !== uidAtStart) return false;
+     await initRecordSync(localState, data.profile);
+     if (loadSequence !== authLoadSequence || firebaseUser?.uid !== uidAtStart) return false;
      return true;
    } catch (error) {
      if (loadSequence !== authLoadSequence || firebaseUser?.uid !== uidAtStart) return false;
@@ -3088,12 +3140,213 @@ function clearCloudCacheForUserSwitch() {
 
  async function setLastSyncStatus(text, ok=true) { const el=document.getElementById('lastSyncText'); if(el){ el.textContent=text; el.style.color=ok?'var(--ok)':'var(--danger)'; } }
 
+
+ /* ---------------------------------------------------------------
+    Record sync. Lists (meals, vitals, prescriptions, doses, family,
+    lab reports, visits) are stored as one small Firestore document per
+    item under users/{uid}/entries, so two devices never overwrite each
+    other's items, deletions are explicit, and the account is not
+    limited by Firestore's 1 MB-per-document cap. A live listener keeps
+    open devices up to date. If the security rules for entries have not
+    been published yet, everything falls back to the older whole-list
+    storage in the user document.
+    --------------------------------------------------------------- */
+ function stableHash(text) {
+   let h = 0x811c9dc5;
+   for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+   return (h >>> 0).toString(36) + text.length.toString(36);
+ }
+ function listEntries(items) {
+   const map = new Map();
+   (Array.isArray(items) ? items : []).forEach(item => {
+     if (!item || typeof item !== 'object') return;
+     const json = JSON.stringify(item);
+     map.set(item.id != null && item.id !== '' ? String(item.id) : 'c' + stableHash(json), json);
+   });
+   return map;
+ }
+ function storageList(key, sortFn) {
+   return {
+     read: () => listEntries(safeJsonParse(localStorage.getItem(key) || '[]', [])),
+     write: map => {
+       const items = [...map.values()].map(v => safeJsonParse(v, null)).filter(Boolean);
+       if (sortFn) items.sort(sortFn);
+       if (items.length) localStorage.setItem(key, JSON.stringify(items)); else localStorage.removeItem(key);
+     },
+     legacyField: `localState.${key}`
+   };
+ }
+ function profileList(field) {
+   return {
+     read: () => listEntries(patientData[field]),
+     write: map => {
+       patientData[field] = [...map.values()].map(v => safeJsonParse(v, null)).filter(Boolean)
+         .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+     },
+     legacyField: `profile.${field}`
+   };
+ }
+ const byTime = field => (a, b) => new Date(a[field] || 0) - new Date(b[field] || 0);
+ const RECORD_COLLECTIONS = {
+   swasth_foodLogs: storageList('swasth_foodLogs', (a, b) => Number(a.id || 0) - Number(b.id || 0)),
+   swasth_vitals: storageList('swasth_vitals', byTime('at')),
+   swasth_prescriptions: storageList('swasth_prescriptions', (a, b) => new Date(b.date || 0) - new Date(a.date || 0)),
+   swasth_dependents: storageList('swasth_dependents', (a, b) => String(b.id).localeCompare(String(a.id))),
+   'profile.reports': profileList('reports'),
+   'profile.visits': profileList('visits'),
+   swasth_medStatus: {
+     // History events and today's "taken" flags become separate entries.
+     read: () => {
+       const status = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+       const map = new Map();
+       (Array.isArray(status.history) ? status.history : []).forEach(e => { if (e) map.set(`h:${e.id}|${e.date}`, JSON.stringify(e)); });
+       Object.entries(status).forEach(([k, v]) => { if (k !== 'history' && v) map.set(`f:${k}`, JSON.stringify(v)); });
+       return map;
+     },
+     write: map => {
+       const status = { history: [] };
+       map.forEach((json, k) => {
+         const v = safeJsonParse(json, null); if (!v) return;
+         if (k.startsWith('h:')) status.history.push(v); else status[k.slice(2)] = v;
+       });
+       status.history.sort(byTime('date'));
+       localStorage.setItem('swasth_medStatus', JSON.stringify(status));
+     },
+     legacyField: 'localState.swasth_medStatus'
+   }
+ };
+ let recordSyncMode = 'legacy';          // 'entries' once the entries collection is readable
+ let recordSyncUid = '';
+ let recordSyncUnsubscribe = null;
+ const recordBase = new Map();           // collection -> Map(entryKey -> json) as last seen in the cloud
+ const recordQueues = new Map();
+ let recordRenderTimer = null;
+
+ function entriesRef() { return cloudDoc()?.collection('entries') || null; }
+ function entryDocId(collection, key) {
+   const id = `${collection}~${encodeURIComponent(key)}`;
+   return id.length > 700 ? `${collection}~h${stableHash(key)}` : id;
+ }
+ function stopRecordSync() {
+   if (recordSyncUnsubscribe) { try { recordSyncUnsubscribe(); } catch (_) {} }
+   recordSyncUnsubscribe = null; recordSyncMode = 'legacy'; recordSyncUid = ''; recordBase.clear();
+ }
+
+ // Write only what changed since the cloud copy we know, and delete only what
+ // this device actually removed.
+ function syncRecordCollection(collection) {
+   const adapter = RECORD_COLLECTIONS[collection];
+   const col = entriesRef();
+   if (!adapter || !col || recordSyncMode !== 'entries') return Promise.resolve(false);
+   const uid = recordSyncUid;
+   const prev = recordQueues.get(collection) || Promise.resolve();
+   const next = prev.catch(() => {}).then(async () => {
+     if (recordSyncUid !== uid) return false;
+     const base = recordBase.get(collection) || new Map();
+     const current = adapter.read();
+     const ops = [];
+     current.forEach((json, k) => { if (base.get(k) !== json) ops.push(['set', k, json]); });
+     base.forEach((_, k) => { if (!current.has(k)) ops.push(['delete', k]); });
+     for (let i = 0; i < ops.length; i += 400) {
+       const batch = db.batch();
+       ops.slice(i, i + 400).forEach(([op, k, json]) => {
+         const doc = col.doc(entryDocId(collection, k));
+         if (op === 'set') batch.set(doc, { c: collection, k, v: json, t: firebase.firestore.FieldValue.serverTimestamp() });
+         else batch.delete(doc);
+       });
+       await batch.commit();
+     }
+     if (recordSyncUid === uid) recordBase.set(collection, new Map(current));
+     if (ops.length) setLastSyncStatus('Saved just now', true);
+     return true;
+   }).catch(error => {
+     console.error('Record sync failed for', collection, error);
+     setLastSyncStatus('Sync failed — local only', false);
+     return false;
+   });
+   recordQueues.set(collection, next);
+   return next;
+ }
+
+ // Three-way merge: start from the cloud, then re-apply this device's changes
+ // that the cloud has not seen yet (relative to the last known cloud copy).
+ function mergeRecordMaps(base, local, remote) {
+   const out = new Map(remote);
+   local.forEach((json, k) => { if (base.get(k) !== json) out.set(k, json); });
+   base.forEach((_, k) => { if (!local.has(k)) out.delete(k); });
+   return out;
+ }
+ function sameMap(a, b) { if (a.size !== b.size) return false; for (const [k, v] of a) if (b.get(k) !== v) return false; return true; }
+
+ function scheduleRecordRender() {
+   clearTimeout(recordRenderTimer);
+   recordRenderTimer = setTimeout(() => {
+     try {
+       if (typeof syncTodayCalories === 'function') syncTodayCalories();
+       if (typeof renderTodayFoodLogs === 'function') renderTodayFoodLogs();
+       if (document.getElementById('dashboard')?.style.display === 'block') renderPersonalizedUI();
+       if (typeof renderMedicationInsights === 'function') renderMedicationInsights();
+     } catch (e) { console.warn('Refresh after sync failed:', e); }
+   }, 120);
+ }
+
+ async function initRecordSync(legacyState, legacyProfile) {
+   stopRecordSync();
+   const col = entriesRef();
+   if (!col || !firebaseUser) return;
+   const uid = firebaseUser.uid;
+   let snap;
+   try { snap = await col.get(); }
+   catch (error) {
+     console.warn('Per-record sync unavailable (publish the updated firestore.rules); using whole-list storage.', error?.code || error);
+     return;
+   }
+   if (firebaseUser?.uid !== uid) return;
+   recordSyncMode = 'entries'; recordSyncUid = uid;
+   const remote = new Map(Object.keys(RECORD_COLLECTIONS).map(c => [c, new Map()]));
+   snap.forEach(doc => { const d = doc.data(); if (remote.has(d.c) && typeof d.v === 'string') remote.get(d.c).set(d.k, d.v); });
+   const cleanup = {};
+   for (const [collection, adapter] of Object.entries(RECORD_COLLECTIONS)) {
+     // Items still in the old whole-list fields are merged in once, then those fields are removed.
+     const legacy = adapter.read();
+     const merged = new Map(remote.get(collection));
+     legacy.forEach((json, k) => { if (!merged.has(k)) merged.set(k, json); });
+     adapter.write(merged);
+     recordBase.set(collection, remote.get(collection));
+     const [scope, field] = adapter.legacyField.split('.');
+     const hadLegacy = scope === 'profile' ? Array.isArray(legacyProfile?.[field]) : legacyState && Object.prototype.hasOwnProperty.call(legacyState, field);
+     if (hadLegacy) { cleanup[scope] = cleanup[scope] || {}; cleanup[scope][field] = firebase.firestore.FieldValue.delete(); }
+   }
+   await Promise.all(Object.keys(RECORD_COLLECTIONS).map(c => syncRecordCollection(c)));
+   if (Object.keys(cleanup).length && firebaseUser?.uid === uid) {
+     try { await cloudDoc().set(cleanup, { merge: true }); } catch (e) { console.warn('Could not remove old list fields:', e); }
+   }
+   if (firebaseUser?.uid !== uid) return;
+   recordSyncUnsubscribe = col.onSnapshot(live => {
+     if (recordSyncUid !== uid) return;
+     const touched = new Set();
+     const remoteNow = new Map(Object.keys(RECORD_COLLECTIONS).map(c => [c, new Map()]));
+     live.forEach(doc => { const d = doc.data(); if (remoteNow.has(d.c) && typeof d.v === 'string') remoteNow.get(d.c).set(d.k, d.v); });
+     live.docChanges().forEach(ch => { const c = ch.doc.data()?.c; if (c) touched.add(c); });
+     touched.forEach(collection => {
+       const adapter = RECORD_COLLECTIONS[collection]; if (!adapter) return;
+       const base = recordBase.get(collection) || new Map();
+       const local = adapter.read();
+       const merged = mergeRecordMaps(base, local, remoteNow.get(collection));
+       recordBase.set(collection, remoteNow.get(collection));
+       if (!sameMap(merged, local)) { adapter.write(merged); scheduleRecordRender(); }
+       if (!sameMap(merged, remoteNow.get(collection))) syncRecordCollection(collection);
+     });
+   }, error => console.warn('Live sync stopped:', error));
+ }
+
  async function syncCloudState(changedKey) {
    // Do not make the in-memory cloudSyncReady flag the gate for persistence.
    // Firebase Auth/Firestore can finish initializing a moment after a login, and
    // the old gate could silently leave data only in localStorage. If a signed-in
    // Firebase user and Firestore are available, always attempt the write.
    if (!firebaseUser || !db) return false;
+   if (RECORD_COLLECTIONS[changedKey] && recordSyncMode === 'entries') return syncRecordCollection(changedKey);
    const ref = cloudDoc();
    if (!ref || !CLOUD_KEYS.includes(changedKey)) return false;
    try {
@@ -3128,10 +3381,17 @@ function clearCloudCacheForUserSwitch() {
    const ref = cloudDoc();
    if (!ref) return false;
    try {
+     const profile = { ...patientData, ownerUid: firebaseUser.uid, ownerEmail: firebaseUser.email || '', email: firebaseUser.email || patientData.email || '' };
+     if (recordSyncMode === 'entries') {
+       // Lab reports and visits are stored as separate records; keep them out of the profile document.
+       profile.reports = firebase.firestore.FieldValue.delete();
+       profile.visits = firebase.firestore.FieldValue.delete();
+     }
      await ref.set({
-       profile: { ...patientData, ownerUid: firebaseUser.uid, ownerEmail: firebaseUser.email || '', email: firebaseUser.email || patientData.email || '' },
+       profile,
        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
      }, { merge: true });
+     if (recordSyncMode === 'entries') await Promise.all([syncRecordCollection('profile.reports'), syncRecordCollection('profile.visits')]);
      cloudSyncReady = true;
      cacheProfileLocally();
      return true;
@@ -3497,7 +3757,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   if(res&&res.ok){clearLocal();try{await auth.signOut();}catch(_){}window.location.reload();return;}
   if(res&&res.status!==503&&res.status!==404){const b=await res.json().catch(()=>({}));throw new Error(b.error||`Server returned HTTP ${res.status}`);}
   // Server unavailable: delete what the client is allowed to delete.
-  if(db)await db.collection('users').doc(firebaseUser.uid).delete();
+  if(db){
+    const userRef=db.collection('users').doc(firebaseUser.uid);
+    try{const entries=await userRef.collection('entries').get();for(let i=0;i<entries.docs.length;i+=400){const batch=db.batch();entries.docs.slice(i,i+400).forEach(d=>batch.delete(d.ref));await batch.commit();}}catch(e){console.warn('Could not delete record entries:',e);}
+    await userRef.delete();
+  }
   clearLocal();
   await firebaseUser.delete();window.location.reload();
  }catch(error){console.error('Account deletion failed:',error);if(status)status.textContent='Deletion failed: '+(error?.message||'unknown error')+'. Recent sign-in may be required.';}
@@ -4700,6 +4964,7 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  const scanResults = document.getElementById('scanResults');
  let currentPrescription = null;
  let rxOcrWorkerPromise = null;
+ let ocrStatusButton = null; // the button showing OCR progress (prescription or lab report)
 
  function getSavedPrescriptions() {
  try { return JSON.parse(localStorage.getItem('swasth_prescriptions')) || []; }
@@ -4962,10 +5227,11 @@ function renderEditablePrescription(parsed) {
 
  function rxProgress(status, progress) {
  const pct = Math.round((Number(progress) || 0) * 100);
- if (!chooseRxBtn) return;
- if (status === 'recognizing text') chooseRxBtn.textContent = `Extracting via OCR… ${pct}%`;
- else if (status === 'loading language traineddata') chooseRxBtn.textContent = `Loading OCR language… ${pct}%`;
- else if (status === 'initializing api') chooseRxBtn.textContent = `Starting OCR… ${pct}%`;
+ const btn = ocrStatusButton || chooseRxBtn;
+ if (!btn) return;
+ if (status === 'recognizing text') btn.textContent = `Extracting via OCR… ${pct}%`;
+ else if (status === 'loading language traineddata') btn.textContent = `Loading OCR language… ${pct}%`;
+ else if (status === 'initializing api') btn.textContent = `Starting OCR… ${pct}%`;
  }
 
  async function getRxOcrWorker() {
@@ -5111,7 +5377,8 @@ function renderEditablePrescription(parsed) {
  const worker = await getRxOcrWorker();
  const texts = [];
  for (let i = 0; i < dataUrls.length; i++) {
-   if (chooseRxBtn) chooseRxBtn.textContent = dataUrls.length > 1 ? `Extracting page ${i + 1}/${dataUrls.length}…` : 'Extracting via OCR…';
+   const btn = ocrStatusButton || chooseRxBtn;
+   if (btn) btn.textContent = dataUrls.length > 1 ? `Reading page ${i + 1}/${dataUrls.length}…` : 'Extracting via OCR…';
    const result = await worker.recognize(dataUrls[i]);
    texts.push(result?.data?.text || '');
  }
@@ -5957,13 +6224,21 @@ function renderEmergencyQRIfReady(){
    el.innerHTML=visits.slice().sort((a,b)=>new Date(b.date)-new Date(a.date)).map((v,i)=>`<div class="visit-item"><div class="visit-head" onclick="toggleVisit(${i})"><div><div class="doc">${escapeHtml(v.doctor)} — ${escapeHtml(v.specialty)}</div><div class="meta">${escapeHtml(v.facility)} · ${formatRecordDate(v.date)}</div></div><span class="visit-toggle" id="visitToggle${i}">View ▾</span></div><div class="visit-body" id="visitBody${i}"><div class="rx-caption">Visit stored in the patient's longitudinal record.</div></div></div>`).join('');
  }
  window.toggleVisit=function(i){const body=document.getElementById('visitBody'+i),toggle=document.getElementById('visitToggle'+i);if(!body||!toggle)return;body.classList.toggle('open');toggle.textContent=body.classList.contains('open')?'Hide ▴':'View ▾';}; renderVisits();
+ let renderedReports=[];
  function renderReports(){
    const el=document.getElementById('reportList'); if(!el)return;
    const reports=Array.isArray(patientData.reports)?patientData.reports:[];
-   if(!reports.length){el.innerHTML='<div class="record-empty">No diagnostic reports recorded.</div>';return;}
-   el.innerHTML=reports.slice().sort((a,b)=>new Date(b.date)-new Date(a.date)).map((r,i)=>`<div class="visit-item"><div class="visit-head" onclick="toggleReport(${i})"><div><div class="doc">${escapeHtml(r.name)}</div><div class="meta">${formatRecordDate(r.date)}</div></div><span class="visit-toggle" id="reportToggle${i}">View ▾</span></div><div class="visit-body" id="reportBody${i}"><div class="rx-caption">${escapeHtml(r.result||'Report available')}</div></div></div>`).join('');
+   if(!reports.length){renderedReports=[];el.innerHTML='<div class="record-empty">No diagnostic reports recorded.</div>';return;}
+   renderedReports=reports.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+   el.innerHTML=renderedReports.map((r,i)=>{
+     const values=Array.isArray(r.values)?r.values:[];
+     const body=values.length?`<div class="lab-values">${values.map(v=>`<span class="lab-value-chip">${escapeHtml(v.test)} <b>${escapeHtml(String(v.value))}</b> ${escapeHtml(v.unit||'')}</span>`).join('')}</div>`:`<div class="rx-caption">${escapeHtml(r.result||'Report available')}</div>`;
+     return `<div class="visit-item"><div class="visit-head" onclick="toggleReport(${i})"><div><div class="doc">${escapeHtml(r.name)}</div><div class="meta">${formatRecordDate(r.date)}${values.length?` · ${values.length} value${values.length===1?'':'s'}${r.source==='scan'?' · scanned':''}`:''}</div></div><span class="visit-toggle" id="reportToggle${i}">View ▾</span></div><div class="visit-body" id="reportBody${i}">${body}<div class="report-actions"><button type="button" class="report-delete" onclick="deleteReport(${i})">Delete report</button></div></div></div>`;
+   }).join('');
  }
- window.toggleReport=function(i){const body=document.getElementById('reportBody'+i),toggle=document.getElementById('reportToggle'+i);if(!body||!toggle)return;body.classList.toggle('open');toggle.textContent=body.classList.contains('open')?'Hide ▴':'View ▾';}; renderReports();
+ window.toggleReport=function(i){const body=document.getElementById('reportBody'+i),toggle=document.getElementById('reportToggle'+i);if(!body||!toggle)return;body.classList.toggle('open');toggle.textContent=body.classList.contains('open')?'Hide ▴':'View ▾';};
+ window.deleteReport=function(i){const r=renderedReports[i];if(!r||!confirm(`Delete “${r.name||'this report'}”? Its values will be removed from your trends.`))return;patientData.reports=(patientData.reports||[]).filter(x=>x!==r);saveRecordCollections();showToast('','Report deleted','The report was removed from your records.');};
+ renderReports();
  function saveRecordCollections(){ cacheProfileLocally(); syncProfileToCloud(); renderVisits(); renderReports(); renderRecordTimeline(); renderLabTrendChart(); }
  // Inline record editor: replaces the old multi-step prompt() flow so record entry works on all browsers.
  function openRecordEntryEditor(kind){
@@ -6000,7 +6275,7 @@ function renderEmergencyQRIfReady(){
      const specialty=document.getElementById('recordSpecialtyInput')?.value.trim()||'General Medicine';
      const facility=document.getElementById('recordFacilityInput')?.value.trim()||'';
      if(!doctor){showToast('','Doctor name required','Enter the doctor name before saving the visit.');document.getElementById('recordDoctorInput')?.focus();return;}
-     patientData.visits=[...(patientData.visits||[]),{doctor,specialty,facility,date}];
+     patientData.visits=[...(patientData.visits||[]),{id:`visit_${Date.now()}`,doctor,specialty,facility,date}];
      saveRecordCollections();
      closeRecordEntryEditor();
      showToast('','Visit Added','The visit is now part of your health record.');
@@ -6009,7 +6284,7 @@ function renderEmergencyQRIfReady(){
      const result=document.getElementById('recordResultInput')?.value.trim();
      if(!name){showToast('','Report name required','Enter a name for the lab report.');document.getElementById('recordReportNameInput')?.focus();return;}
      if(!result){showToast('','Result required','Enter the report result or value before saving.');document.getElementById('recordResultInput')?.focus();return;}
-     patientData.reports=[...(patientData.reports||[]),{name,result,date}];
+     patientData.reports=[...(patientData.reports||[]),{id:`report_${Date.now()}`,name,result,date}];
      saveRecordCollections();
      closeRecordEntryEditor();
      showToast('','Lab Report Added','The report is now available in Records and trend extraction.');
@@ -6165,18 +6440,325 @@ function renderEmergencyQRIfReady(){
      const filename=`SwasthID-Health-Summary-${safeHealthName()}.pdf`;const blob=doc.output('blob');const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);setHealthShareStatus(`Health Summary PDF ready: ${filename}`);
    }catch(e){console.error('Health summary PDF failed:',e);setHealthShareStatus('Health Summary PDF failed: '+(e?.message||'unknown error'),true);alert('The health summary PDF could not be generated. Please try again.');}finally{if(btn)btn.disabled=false;}
  }
+ /* ---------------------------------------------------------------
+    Lab report reading. The same catalogue parses scanned reports and
+    the free-text results people type in, so both feed the trend chart.
+    Values are converted to one unit per test so trends stay comparable.
+    --------------------------------------------------------------- */
+ const LAB_TESTS = [
+   { name: 'HbA1c', unit: '%', min: 3, max: 20, dp: 1, panel: 'Diabetes',
+     re: /\b(?:h\s*b\s*a\s*[1il]{1,2}\s*c|glyc(?:ated|osylated)\s+ha?emoglobin|a1c)\b/i,
+     units: { 'mmol/mol': v => v / 10.929 + 2.15 } },
+   { name: 'Fasting glucose', unit: 'mg/dL', min: 30, max: 700, panel: 'Diabetes',
+     re: /\b(?:fasting\s+(?:blood\s+|plasma\s+|serum\s+)?(?:glucose|sugar)|(?:blood\s+|plasma\s+)?(?:glucose|sugar)\s*[,(-]?\s*\(?\s*fasting|f\.?\s?b\.?\s?s|f\.?p\.?g)\b/i,
+     units: { 'mmol/l': v => v * 18.016 } },
+   { name: 'Post-meal glucose', unit: 'mg/dL', min: 30, max: 800, panel: 'Diabetes',
+     re: /\b(?:(?:post\s*-?\s*prandial|pp|2\s*-?\s*h(?:ou)?rs?)\s+(?:blood\s+|plasma\s+)?(?:glucose|sugar)|p\.?\s?p\.?\s?b\.?\s?s|(?:glucose|sugar)\s*[,(-]?\s*\(?\s*(?:pp|post\s*-?\s*prandial))\b/i,
+     units: { 'mmol/l': v => v * 18.016 } },
+   { name: 'Random glucose', unit: 'mg/dL', min: 30, max: 900, panel: 'Diabetes',
+     re: /\b(?:random\s+(?:blood\s+|plasma\s+)?(?:glucose|sugar)|(?:glucose|sugar)\s*[,(-]?\s*\(?\s*random|r\.?b\.?s)\b/i,
+     units: { 'mmol/l': v => v * 18.016 } },
+   { name: 'Total cholesterol', unit: 'mg/dL', min: 50, max: 700, panel: 'Lipid profile',
+     re: /\b(?:total\s+cholesterol|cholesterol\s*[,(-]?\s*\(?\s*total|(?:serum\s+|s\.\s*)?cholesterol)\b/i,
+     skip: /\b(?:v?[lh]dl|ratio|non)\b/i,
+     units: { 'mmol/l': v => v * 38.67 } },
+   { name: 'LDL', unit: 'mg/dL', min: 10, max: 500, panel: 'Lipid profile',
+     re: /\b(?:ldl|low\s+density\s+lipoprotein)\b/i, skip: /\bratio\b/i,
+     units: { 'mmol/l': v => v * 38.67 } },
+   { name: 'HDL', unit: 'mg/dL', min: 5, max: 200, panel: 'Lipid profile',
+     re: /\b(?:hdl|high\s+density\s+lipoprotein)\b/i, skip: /\bratio\b|\bnon[\s-]*hdl/i,
+     units: { 'mmol/l': v => v * 38.67 } },
+   { name: 'Triglycerides', unit: 'mg/dL', min: 10, max: 5000, panel: 'Lipid profile',
+     re: /\b(?:triglycerides?|triglyceride|t\.?g\.?)\b/i, skip: /\bratio\b/i,
+     units: { 'mmol/l': v => v * 88.57 } },
+   { name: 'Creatinine', unit: 'mg/dL', min: 0.1, max: 25, panel: 'Kidney',
+     re: /\b(?:serum\s+|s\.\s*)?creatinine\b/i, skip: /clearance|urine|urinary|ratio|kinase/i,
+     units: { 'umol/l': v => v / 88.4 } },
+   { name: 'eGFR', unit: 'mL/min/1.73m²', min: 2, max: 200, panel: 'Kidney',
+     re: /\be\s*-?\s*gfr\b/i },
+   { name: 'Uric acid', unit: 'mg/dL', min: 0.5, max: 25, panel: 'Kidney',
+     re: /\buric\s+acid\b/i, units: { 'umol/l': v => v / 59.48 } },
+   { name: 'Hemoglobin', unit: 'g/dL', min: 2, max: 25, panel: 'Blood count',
+     re: /\b(?:ha?emoglobin|hb|hgb)\b/i, skip: /glyc|a\s*[1il]{1,2}\s*c|corpuscular|mchc?\b|urine/i,
+     units: { 'g/l': v => v / 10 } },
+   { name: 'TSH', unit: 'mIU/L', min: 0.001, max: 200, panel: 'Thyroid',
+     re: /\b(?:tsh|thyroid\s+stimulating\s+hormone)\b/i },
+   { name: 'Vitamin D', unit: 'ng/mL', min: 2, max: 250, panel: 'Vitamins',
+     re: /\b(?:(?:vitamin|vit\.?)\s*d\s*3?(?:\s*,?\s*\(?\s*(?:25\s*-?\s*(?:oh|hydroxy)|total)\s*\)?)?|25\s*-?\s*(?:oh|hydroxy)(?:\s*(?:vitamin|vit\.?)\s*d\s*3?)?)/i,
+     units: { 'nmol/l': v => v / 2.496 } },
+   { name: 'Vitamin B12', unit: 'pg/mL', min: 20, max: 5000, panel: 'Vitamins',
+     re: /\b(?:(?:vitamin|vit\.?)\s*b\s*-?\s*12|cobalamin)\b/i,
+     units: { 'pmol/l': v => v * 1.355 } },
+   { name: 'ALT (SGPT)', unit: 'U/L', min: 1, max: 5000, panel: 'Liver',
+     re: /\b(?:sgpt|alt|alanine\s+(?:amino)?transaminase)\b/i },
+   { name: 'AST (SGOT)', unit: 'U/L', min: 1, max: 5000, panel: 'Liver',
+     re: /\b(?:sgot|ast|aspartate\s+(?:amino)?transaminase)\b/i },
+   // Plain "glucose" last, so a more specific name on the same line wins.
+   { name: 'Glucose', unit: 'mg/dL', min: 30, max: 900, panel: 'Diabetes',
+     re: /\b(?:(?:blood|plasma|serum)\s+)?(?:glucose|sugar)\b/i, skip: /urine|urinary|estimated|average|\beag\b/i,
+     units: { 'mmol/l': v => v * 18.016 } },
+ ];
+ const LAB_UNIT_RE = /(mmol\s*\/\s*mol|mmol\s*\/\s*l|[a-zµ]mol\s*\/\s*l|nmol\s*\/\s*l|pmol\s*\/\s*l|mg\s*\/\s*d\s*l|g\s*\/\s*d\s*l|g\s*\/\s*l|pg\s*\/\s*ml|ng\s*\/\s*ml|m?[iu]u\s*\/\s*m?l|u\s*\/\s*l|ml\s*\/\s*min|%)/i;
+
+ function labRound(value, dp) {
+   if (dp != null) return Number(value.toFixed(dp));
+   const abs = Math.abs(value);
+   return Number(value.toFixed(abs >= 100 ? 0 : abs >= 10 ? 1 : abs >= 1 ? 2 : 3));
+ }
+
+ // OCR often drops the decimal point ("13.4" -> "134"). When a whole number is
+ // implausible for the test, try putting the point back, preferring the reading
+ // closest in size to the reference range printed on the same line.
+ function recoverLabDecimal(digits, test, convert, refs) {
+   const target = refs.length ? Math.max(...refs) : null;
+   // A result the same size as its reference range is not missing a point; the unit was misread.
+   if (target && Number(digits) >= target / 4 && Number(digits) <= target * 4) return null;
+   let best = null;
+   for (let i = digits.length - 1; i >= 1; i--) {
+     const raw = Number(digits.slice(0, i) + '.' + digits.slice(i));
+     const value = convert ? convert(raw) : raw;
+     if (value < test.min || value > test.max) continue;
+     const score = target ? Math.abs(Math.log(raw / target)) : digits.length - i;
+     if (!best || score < best.score) best = { value, score };
+   }
+   return best ? best.value : null;
+ }
+
+ // Reads one line: finds a test name, then the first number after it (the result;
+ // the reference range comes later on the line), then its unit.
+ function parseLabLine(line) {
+   const found = [];
+   for (const test of LAB_TESTS) {
+     if (test.skip && test.skip.test(line)) continue;
+     const m = line.match(test.re);
+     if (!m) continue;
+     const rest = line.slice(m.index + m[0].length);
+     // Numbers glued to a word (e.g. "T3") are not results.
+     const num = rest.match(/(?:^|[^A-Za-z0-9.])[<>≤≥]?\s*(\d{1,5}(?:[.,]\d{1,3})?)(?!\d)/);
+     if (!num) continue;
+     const text = num[1].replace(',', '.');
+     const after = rest.slice(num.index + num[0].length);
+     const unitMatch = after.match(LAB_UNIT_RE);
+     // "µ" is often read as u, y, h, n or p. Tests only reported in µmol/L (creatinine,
+     // uric acid) take any such unit as µmol/L.
+     let unitRaw = unitMatch && unitMatch.index <= 14 ? unitMatch[1].replace(/\s+/g, '').toLowerCase().replace(/^[µyh]mol/, 'umol') : '';
+     if (/^[a-z]mol\/l$/.test(unitRaw) && unitRaw !== 'mmol/l' && test.units && !test.units[unitRaw] && test.units['umol/l']) unitRaw = 'umol/l';
+     const convert = unitRaw && test.units ? test.units[unitRaw] : null;
+     let value = convert ? convert(Number(text)) : Number(text);
+     let guessed = false;
+     if (!Number.isFinite(value)) continue;
+     if ((value < test.min || value > test.max) && /^\d{2,4}$/.test(text)) {
+       const refs = (after.slice(unitMatch && unitMatch.index <= 14 ? unitMatch.index + unitMatch[0].length : 0).match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(n => n > 0);
+       const recovered = recoverLabDecimal(text, test, convert, refs);
+       if (recovered == null) continue;
+       value = recovered; guessed = true;
+     }
+     if (value < test.min || value > test.max) continue;
+     found.push({ index: m.index, test: test.name, value: labRound(value, test.dp), unit: test.unit, guessed });
+   }
+   // One test per line: the name found first wins (e.g. "HbA1c (glycated haemoglobin)").
+   found.sort((a, b) => a.index - b.index);
+   const hit = found[0];
+   return hit ? { test: hit.test, value: hit.value, unit: hit.unit, ...(hit.guessed ? { guessed: true } : {}) } : null;
+ }
+
+ function parseLabValues(text) {
+   const out = [];
+   const seen = new Set();
+   String(text || '').replace(/\r/g, '').split(/\n|;/).forEach(raw => {
+     const line = raw.replace(/[|_]+/g, ' ').replace(/\s+/g, ' ').trim();
+     if (line.length < 3) return;
+     const hit = parseLabLine(line);
+     if (hit && !seen.has(hit.test)) { seen.add(hit.test); out.push(hit); }
+   });
+   return out;
+ }
+
+ const LAB_MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+ function labDateFrom(text) {
+   const tryDate = (y, m, d) => {
+     y = Number(y); m = Number(m); d = Number(d);
+     if (y < 100) y += 2000;
+     const dt = new Date(Date.UTC(y, m - 1, d));
+     if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return '';
+     if (y < 1990 || dt.getTime() > Date.now() + 86400000) return '';
+     return dt.toISOString().slice(0, 10);
+   };
+   const find = line => {
+     let m = line.match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+     if (m) { const d = tryDate(m[1], m[2], m[3]); if (d) return d; }
+     // Indian reports write day first.
+     m = line.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})\b/);
+     if (m) { const d = tryDate(m[3], m[2], m[1]); if (d) return d; }
+     m = line.match(/\b(\d{1,2})(?:st|nd|rd|th)?[\s\-/.]*([a-z]{3})[a-z]*\.?[\s\-/.,]*(\d{4}|\d{2})\b/i);
+     if (m && LAB_MONTHS[m[2].toLowerCase()]) { const d = tryDate(m[3], LAB_MONTHS[m[2].toLowerCase()], m[1]); if (d) return d; }
+     m = line.match(/\b([a-z]{3})[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})\b/i);
+     if (m && LAB_MONTHS[m[1].toLowerCase()]) { const d = tryDate(m[3], LAB_MONTHS[m[1].toLowerCase()], m[2]); if (d) return d; }
+     return '';
+   };
+   const lines = String(text || '').split('\n').filter(l => !/\b(?:d\.?\s?o\.?\s?b|birth|born)\b/i.test(l));
+   // Prefer the sample collection date, then the report date, then any date.
+   for (const pattern of [/collect|sampl|drawn/i, /report|receiv|regist|date/i, /./]) {
+     for (const line of lines) {
+       if (!pattern.test(line)) continue;
+       const d = find(line);
+       if (d) return d;
+     }
+   }
+   return '';
+ }
+
+ function labReportName(values) {
+   const panels = [...new Set(values.map(v => LAB_TESTS.find(t => t.name === v.test)?.panel).filter(Boolean))];
+   if (!panels.length) return 'Lab report';
+   return panels.length > 3 ? 'Blood test' : panels.join(' · ');
+ }
+
+ function formatLabValues(values) {
+   return values.map(v => `${v.test}: ${v.value} ${v.unit}`).join('; ');
+ }
+
+
+ /* Lab report scanning: OCR a photo or PDF, show the values found for checking,
+    then save them as a report that feeds the trend chart. */
+ const scanLabReportBtn = document.getElementById('scanLabReportBtn');
+ const labReportFileInput = document.getElementById('labReportFileInput');
+ let labScanRawText = '';
+
+ async function runLabReportOCR(file) {
+   const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+   if (isPdf) {
+     const pages = await pdfPrescriptionPages(file);
+     if (!pages.length) throw new Error('The PDF contains no readable pages.');
+     return ocrDataUrls(pages);
+   }
+   if (!file.type.startsWith('image/')) throw new Error('Choose a photo (JPG/PNG) or a PDF of the lab report.');
+   const versions = await preprocessRxImage(file);
+   const normalizedText = await ocrDataUrls([versions.normalized]);
+   const contrastText = await ocrDataUrls([versions.contrast]);
+   return parseLabValues(contrastText).length > parseLabValues(normalizedText).length ? contrastText : normalizedText;
+ }
+
+ function labScanRowHtml(v) {
+   const test = LAB_TESTS.find(t => t.name === v.test);
+   return `<tr data-test="${escapeHtml(v.test)}"><td><label class="lab-scan-check"><input type="checkbox" checked aria-label="Keep ${escapeHtml(v.test)}"><span>${escapeHtml(v.test)}</span></label></td>`
+     + `<td><input class="lab-scan-value" type="number" step="any" inputmode="decimal" value="${escapeHtml(String(v.value))}" aria-label="${escapeHtml(v.test)} value"></td>`
+     + `<td class="lab-scan-unit">${escapeHtml(test?.unit || v.unit || '')}</td></tr>`
+     + (v.guessed ? `<tr class="lab-scan-note" data-note-for="${escapeHtml(v.test)}"><td colspan="3">Decimal point added by SwasthID — check this value on the report.</td></tr>` : '');
+ }
+
+ function refreshLabScanAddOptions() {
+   const select = document.getElementById('labScanAddSelect'); if (!select) return;
+   const used = new Set([...document.querySelectorAll('#labScanRows tr[data-test]')].map(r => r.dataset.test));
+   select.innerHTML = '<option value="">Add a test…</option>' + LAB_TESTS.filter(t => !used.has(t.name))
+     .map(t => `<option value="${escapeHtml(t.name)}">${escapeHtml(t.name)} (${escapeHtml(t.unit)})</option>`).join('');
+ }
+
+ function updateLabScanEmpty() {
+   const rows = document.querySelectorAll('#labScanRows tr[data-test]').length;
+   const empty = document.getElementById('labScanEmpty');
+   if (empty) empty.hidden = rows > 0;
+   const table = document.getElementById('labScanTable');
+   if (table) table.hidden = rows === 0;
+ }
+
+ function openLabScanReview(text) {
+   const values = parseLabValues(text);
+   labScanRawText = text;
+   document.getElementById('labScanName').value = labReportName(values);
+   document.getElementById('labScanDate').value = labDateFrom(text) || getTodayKey();
+   document.getElementById('labScanDate').max = getTodayKey();
+   document.getElementById('labScanRows').innerHTML = values.map(labScanRowHtml).join('');
+   document.getElementById('labScanRaw').textContent = text || '(no text found)';
+   document.getElementById('labScanSummary').textContent = values.length
+     ? `Found ${values.length} test value${values.length === 1 ? '' : 's'}. Check each one against the report, untick anything read wrongly, and correct values if needed.`
+     : 'No test values were recognised. Add them below, or try a sharper, well-lit photo taken straight on.';
+   refreshLabScanAddOptions();
+   updateLabScanEmpty();
+   document.getElementById('labScanReview').hidden = false;
+   setTimeout(() => document.querySelector('#labScanRows .lab-scan-value')?.focus(), 30);
+ }
+
+ function closeLabScanReview() {
+   document.getElementById('labScanReview').hidden = true;
+   labScanRawText = '';
+ }
+
+ function saveLabScanReview() {
+   const name = document.getElementById('labScanName').value.trim() || 'Lab report';
+   const date = document.getElementById('labScanDate').value || getTodayKey();
+   const values = [];
+   let invalid = null;
+   document.querySelectorAll('#labScanRows tr[data-test]').forEach(row => {
+     if (!row.querySelector('input[type="checkbox"]')?.checked) return;
+     const test = LAB_TESTS.find(t => t.name === row.dataset.test); if (!test) return;
+     const input = row.querySelector('.lab-scan-value');
+     const value = Number(input.value);
+     if (input.value.trim() === '' || !Number.isFinite(value) || value < test.min || value > test.max) { invalid = invalid || { input, test }; return; }
+     values.push({ test: test.name, value, unit: test.unit });
+   });
+   if (invalid) {
+     showToast('', 'Check this value', `${invalid.test.name} should be between ${invalid.test.min} and ${invalid.test.max} ${invalid.test.unit}. Untick it if it was read wrongly.`);
+     invalid.input.focus(); return;
+   }
+   if (!values.length) { showToast('', 'Nothing to save', 'Tick or add at least one test value.'); return; }
+   patientData.reports = [...(patientData.reports || []), { id: `report_${Date.now()}`, name, date, result: formatLabValues(values), values, source: 'scan' }];
+   saveRecordCollections();
+   closeLabScanReview();
+   const panel = document.getElementById('labTrendPanel'), trendBtn = document.getElementById('labTrendBtn');
+   if (panel && panel.style.display === 'none') { panel.style.display = 'block'; if (trendBtn) trendBtn.textContent = 'Hide trends'; }
+   const select = document.getElementById('labTrendMetric');
+   renderLabTrendChart();
+   if (select && [...select.options].some(o => o.value === values[0].test)) { select.value = values[0].test; renderLabTrendChart(); }
+   showToast('', 'Lab report saved', `${values.length} value${values.length === 1 ? '' : 's'} added to your records and trends.`);
+ }
+
+ scanLabReportBtn?.addEventListener('click', () => labReportFileInput?.click());
+ labReportFileInput?.addEventListener('change', async e => {
+   const file = e.target.files?.[0]; if (!file) return;
+   const label = scanLabReportBtn.textContent;
+   scanLabReportBtn.disabled = true;
+   scanLabReportBtn.textContent = 'Preparing report…';
+   ocrStatusButton = scanLabReportBtn;
+   try {
+     const text = await runLabReportOCR(file);
+     openLabScanReview(text);
+   } catch (err) {
+     console.error('Lab report OCR failed:', err);
+     showToast('', 'Could not read the report', err?.message || 'Try another photo or PDF.');
+   } finally {
+     ocrStatusButton = null;
+     scanLabReportBtn.disabled = false;
+     scanLabReportBtn.textContent = label;
+     labReportFileInput.value = '';
+   }
+ });
+ document.getElementById('labScanAddSelect')?.addEventListener('change', e => {
+   const test = LAB_TESTS.find(t => t.name === e.target.value); if (!test) return;
+   document.getElementById('labScanRows').insertAdjacentHTML('beforeend', labScanRowHtml({ test: test.name, value: '', unit: test.unit }));
+   refreshLabScanAddOptions(); updateLabScanEmpty();
+   [...document.querySelectorAll('#labScanRows .lab-scan-value')].pop()?.focus();
+ });
+ document.getElementById('labScanCancel')?.addEventListener('click', closeLabScanReview);
+ document.getElementById('labScanSave')?.addEventListener('click', saveLabScanReview);
+ document.getElementById('labScanReview')?.addEventListener('click', e => { if (e.target.id === 'labScanReview') closeLabScanReview(); });
  function extractLabTrendPoints(){
    const reports=Array.isArray(patientData?.reports)?patientData.reports:[]; const groups={};
-   const defs=[['TSH',/\bTSH\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mIU/L'],['HbA1c',/\b(?:HbA1c|A1c)\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)\s*%?/i,'%'],['Hemoglobin',/\b(?:Hb|Hgb|Hemoglobin)\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'g/dL'],['Glucose',/\b(?:fasting\s+glucose|blood\s+glucose|glucose)\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mg/dL'],['LDL',/\bLDL(?:\s*cholesterol)?\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mg/dL'],['HDL',/\bHDL(?:\s*cholesterol)?\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mg/dL'],['Total cholesterol',/\b(?:total\s+cholesterol|cholesterol)\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mg/dL'],['Creatinine',/\bcreatinine\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mg/dL'],['eGFR',/\beGFR\b\s*[:=-]?\s*([0-9]+(?:\.[0-9]+)?)/i,'mL/min/1.73m²']];
-   reports.forEach(r=>{const source=String(r.result||'');defs.forEach(([name,re,unit])=>{const m=source.match(re);if(m){(groups[name] ||= {unit,points:[]}).points.push({date:r.date||'',value:Number(m[1]),report:r.name||'Lab report'});}});});
-   Object.values(groups).forEach(g=>g.points.sort((a,b)=>new Date(a.date)-new Date(b.date)));return groups;
+   reports.forEach(r=>{
+     // Scanned reports carry their values; typed ones are read from the result text.
+     const values=Array.isArray(r.values)&&r.values.length?r.values:parseLabValues(r.result);
+     values.forEach(v=>{const value=Number(v.value);if(!v.test||!Number.isFinite(value))return;(groups[v.test] ||= {unit:v.unit||'',points:[]}).points.push({date:r.date||'',value,report:r.name||'Lab report'});});
+   });
+   const order=name=>{const i=LAB_TESTS.findIndex(t=>t.name===name);return i<0?99:i;};
+   const sorted={};Object.keys(groups).sort((a,b)=>order(a)-order(b)).forEach(k=>{groups[k].points.sort((a,b)=>new Date(a.date)-new Date(b.date));sorted[k]=groups[k];});
+   return sorted;
  }
  function renderLabTrendChart(){
    const panel=document.getElementById('labTrendPanel'),select=document.getElementById('labTrendMetric'),chart=document.getElementById('labTrendChart'),summary=document.getElementById('labTrendSummary');if(!panel||!select||!chart)return;
-   const groups=extractLabTrendPoints();const names=Object.keys(groups);if(!names.length){select.innerHTML='';chart.innerHTML='<div class="record-empty">No structured lab values could be detected yet. Add report results such as “TSH: 2.1 mIU/L” or “HbA1c: 6.1%” to enable trends.</div>';if(summary)summary.textContent='';return;}
-   const current=names.includes(select.value)?select.value:names[0];select.innerHTML=names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');select.value=current;const g=groups[current],pts=g.points;const w=Math.max(560,pts.length*120),h=230,pad=42,vals=pts.map(p=>p.value),min=Math.min(...vals),max=Math.max(...vals),range=(max-min)||1;const x=i=>pad+(i*(w-pad*2)/Math.max(1,pts.length-1)),y=v=>h-pad-((v-min)/range)*(h-pad*2);
+   const groups=extractLabTrendPoints();const names=Object.keys(groups);if(!names.length){select.innerHTML='';chart.innerHTML='<div class="record-empty">No structured lab values could be detected yet. Scan a lab report, or add results such as “TSH: 2.1 mIU/L” or “HbA1c: 6.1%”, to see trends.</div>';if(summary)summary.textContent='';return;}
+   const current=names.includes(select.value)?select.value:names[0];select.innerHTML=names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');select.value=current;const g=groups[current],pts=g.points;const w=Math.max(560,pts.length*120),h=230,pad=42,vals=pts.map(p=>p.value),min=Math.min(...vals),max=Math.max(...vals),range=(max-min)||1;const x=i=>pad+(i*(w-pad*2)/Math.max(1,pts.length-1)),y=v=>h-pad-((v-min)/range)*(h-pad*2);const manyYears=new Set(pts.map(p=>String(p.date).slice(0,4))).size>1;
    let svg=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(current)} trend"><line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#d6e0db"/><line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h-pad}" stroke="#d6e0db"/>`;
-   pts.forEach((pt,i)=>{const xx=x(i),yy=y(pt.value);if(i)svg+=`<line x1="${x(i-1)}" y1="${y(pts[i-1].value)}" x2="${xx}" y2="${yy}" stroke="#2f6956" stroke-width="2.5"/>`;svg+=`<circle cx="${xx}" cy="${yy}" r="4.5" fill="#fff" stroke="#2f6956" stroke-width="2"/><text x="${xx}" y="${h-17}" text-anchor="middle" font-size="10" fill="#65736c">${escapeHtml(pt.date?new Date(pt.date).toLocaleDateString([], {day:'numeric',month:'short'}):'Date')}</text><text x="${xx}" y="${yy-9}" text-anchor="middle" font-size="10" font-weight="600" fill="#1c2b27">${pt.value}</text>`;});svg+=`<text x="10" y="${pad+3}" font-size="10" fill="#65736c">${max} ${escapeHtml(g.unit)}</text><text x="10" y="${h-pad}" font-size="10" fill="#65736c">${min} ${escapeHtml(g.unit)}</text></svg>`;chart.innerHTML=svg;if(summary){const latest=pts[pts.length-1],first=pts[0];summary.textContent=`${pts.length} reading(s) · Latest ${latest.value} ${g.unit} on ${latest.date?new Date(latest.date).toLocaleDateString():'unknown date'}${pts.length>1?` · Change ${latest.value-first.value>=0?'+':''}${(latest.value-first.value).toFixed(2)}`:''}`;}
+   pts.forEach((pt,i)=>{const xx=x(i),yy=y(pt.value);if(i)svg+=`<line x1="${x(i-1)}" y1="${y(pts[i-1].value)}" x2="${xx}" y2="${yy}" stroke="#2f6956" stroke-width="2.5"/>`;svg+=`<circle cx="${xx}" cy="${yy}" r="4.5" fill="#fff" stroke="#2f6956" stroke-width="2"/><text x="${xx}" y="${h-17}" text-anchor="middle" font-size="10" fill="#65736c">${escapeHtml(pt.date?new Date(pt.date).toLocaleDateString([], manyYears?{day:'numeric',month:'short',year:'2-digit'}:{day:'numeric',month:'short'}):'Date')}</text><text x="${xx}" y="${yy-9}" text-anchor="middle" font-size="10" font-weight="600" fill="#1c2b27">${pt.value}</text>`;});svg+=`<text x="10" y="${pad+3}" font-size="10" fill="#65736c">${max} ${escapeHtml(g.unit)}</text><text x="10" y="${h-pad}" font-size="10" fill="#65736c">${min} ${escapeHtml(g.unit)}</text></svg>`;chart.innerHTML=svg;if(summary){const latest=pts[pts.length-1],first=pts[0];summary.textContent=`${pts.length} reading(s) · Latest ${latest.value} ${g.unit} on ${latest.date?new Date(latest.date).toLocaleDateString():'unknown date'}${pts.length>1?` · Change ${latest.value-first.value>=0?'+':''}${(latest.value-first.value).toFixed(2)}`:''}`;}
  }
  function initLabTrendView(){const btn=document.getElementById('labTrendBtn'),panel=document.getElementById('labTrendPanel'),select=document.getElementById('labTrendMetric');if(!btn||!panel)return;btn.addEventListener('click',()=>{const open=panel.style.display!=='none';panel.style.display=open?'none':'block';btn.textContent=open?'View trends':'Hide trends';if(!open)renderLabTrendChart();});select?.addEventListener('change',renderLabTrendChart);}
  function renderActiveDoctorShare(){const panel=document.getElementById('activeDoctorSharePanel'),meta=document.getElementById('activeDoctorShareMeta');if(!panel||!meta)return;const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){panel.style.display='none';return;}if(saved.expiresAt&&Date.now()>=Number(saved.expiresAt)){localStorage.removeItem('swasth_activeDoctorShare');panel.style.display='none';return;}panel.style.display='block';meta.textContent=`Share ID ${String(saved.id).slice(0,10)}…${saved.expiresAt?` · expires ${new Date(saved.expiresAt).toLocaleString()}`:''}`;}
