@@ -2923,6 +2923,7 @@ function isProfileSkippedForCurrentAccount() {
 }
 
 function clearCloudCacheForUserSwitch() {
+   if (typeof stopRecordSync === 'function') stopRecordSync();
    CLOUD_KEYS.forEach(key => localStorage.removeItem(key));
    // An unfinished profile draft belongs to whoever typed it.
    localStorage.removeItem('swasth_profileWizardDraft');
@@ -3065,6 +3066,8 @@ function clearCloudCacheForUserSwitch() {
        }, { merge: true });
      }
      if (loadSequence !== authLoadSequence || firebaseUser?.uid !== uidAtStart) return false;
+     await initRecordSync(localState, data.profile);
+     if (loadSequence !== authLoadSequence || firebaseUser?.uid !== uidAtStart) return false;
      return true;
    } catch (error) {
      if (loadSequence !== authLoadSequence || firebaseUser?.uid !== uidAtStart) return false;
@@ -3088,12 +3091,213 @@ function clearCloudCacheForUserSwitch() {
 
  async function setLastSyncStatus(text, ok=true) { const el=document.getElementById('lastSyncText'); if(el){ el.textContent=text; el.style.color=ok?'var(--ok)':'var(--danger)'; } }
 
+
+ /* ---------------------------------------------------------------
+    Record sync. Lists (meals, vitals, prescriptions, doses, family,
+    lab reports, visits) are stored as one small Firestore document per
+    item under users/{uid}/entries, so two devices never overwrite each
+    other's items, deletions are explicit, and the account is not
+    limited by Firestore's 1 MB-per-document cap. A live listener keeps
+    open devices up to date. If the security rules for entries have not
+    been published yet, everything falls back to the older whole-list
+    storage in the user document.
+    --------------------------------------------------------------- */
+ function stableHash(text) {
+   let h = 0x811c9dc5;
+   for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+   return (h >>> 0).toString(36) + text.length.toString(36);
+ }
+ function listEntries(items) {
+   const map = new Map();
+   (Array.isArray(items) ? items : []).forEach(item => {
+     if (!item || typeof item !== 'object') return;
+     const json = JSON.stringify(item);
+     map.set(item.id != null && item.id !== '' ? String(item.id) : 'c' + stableHash(json), json);
+   });
+   return map;
+ }
+ function storageList(key, sortFn) {
+   return {
+     read: () => listEntries(safeJsonParse(localStorage.getItem(key) || '[]', [])),
+     write: map => {
+       const items = [...map.values()].map(v => safeJsonParse(v, null)).filter(Boolean);
+       if (sortFn) items.sort(sortFn);
+       if (items.length) localStorage.setItem(key, JSON.stringify(items)); else localStorage.removeItem(key);
+     },
+     legacyField: `localState.${key}`
+   };
+ }
+ function profileList(field) {
+   return {
+     read: () => listEntries(patientData[field]),
+     write: map => {
+       patientData[field] = [...map.values()].map(v => safeJsonParse(v, null)).filter(Boolean)
+         .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+     },
+     legacyField: `profile.${field}`
+   };
+ }
+ const byTime = field => (a, b) => new Date(a[field] || 0) - new Date(b[field] || 0);
+ const RECORD_COLLECTIONS = {
+   swasth_foodLogs: storageList('swasth_foodLogs', (a, b) => Number(a.id || 0) - Number(b.id || 0)),
+   swasth_vitals: storageList('swasth_vitals', byTime('at')),
+   swasth_prescriptions: storageList('swasth_prescriptions', (a, b) => new Date(b.date || 0) - new Date(a.date || 0)),
+   swasth_dependents: storageList('swasth_dependents', (a, b) => String(b.id).localeCompare(String(a.id))),
+   'profile.reports': profileList('reports'),
+   'profile.visits': profileList('visits'),
+   swasth_medStatus: {
+     // History events and today's "taken" flags become separate entries.
+     read: () => {
+       const status = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+       const map = new Map();
+       (Array.isArray(status.history) ? status.history : []).forEach(e => { if (e) map.set(`h:${e.id}|${e.date}`, JSON.stringify(e)); });
+       Object.entries(status).forEach(([k, v]) => { if (k !== 'history' && v) map.set(`f:${k}`, JSON.stringify(v)); });
+       return map;
+     },
+     write: map => {
+       const status = { history: [] };
+       map.forEach((json, k) => {
+         const v = safeJsonParse(json, null); if (!v) return;
+         if (k.startsWith('h:')) status.history.push(v); else status[k.slice(2)] = v;
+       });
+       status.history.sort(byTime('date'));
+       localStorage.setItem('swasth_medStatus', JSON.stringify(status));
+     },
+     legacyField: 'localState.swasth_medStatus'
+   }
+ };
+ let recordSyncMode = 'legacy';          // 'entries' once the entries collection is readable
+ let recordSyncUid = '';
+ let recordSyncUnsubscribe = null;
+ const recordBase = new Map();           // collection -> Map(entryKey -> json) as last seen in the cloud
+ const recordQueues = new Map();
+ let recordRenderTimer = null;
+
+ function entriesRef() { return cloudDoc()?.collection('entries') || null; }
+ function entryDocId(collection, key) {
+   const id = `${collection}~${encodeURIComponent(key)}`;
+   return id.length > 700 ? `${collection}~h${stableHash(key)}` : id;
+ }
+ function stopRecordSync() {
+   if (recordSyncUnsubscribe) { try { recordSyncUnsubscribe(); } catch (_) {} }
+   recordSyncUnsubscribe = null; recordSyncMode = 'legacy'; recordSyncUid = ''; recordBase.clear();
+ }
+
+ // Write only what changed since the cloud copy we know, and delete only what
+ // this device actually removed.
+ function syncRecordCollection(collection) {
+   const adapter = RECORD_COLLECTIONS[collection];
+   const col = entriesRef();
+   if (!adapter || !col || recordSyncMode !== 'entries') return Promise.resolve(false);
+   const uid = recordSyncUid;
+   const prev = recordQueues.get(collection) || Promise.resolve();
+   const next = prev.catch(() => {}).then(async () => {
+     if (recordSyncUid !== uid) return false;
+     const base = recordBase.get(collection) || new Map();
+     const current = adapter.read();
+     const ops = [];
+     current.forEach((json, k) => { if (base.get(k) !== json) ops.push(['set', k, json]); });
+     base.forEach((_, k) => { if (!current.has(k)) ops.push(['delete', k]); });
+     for (let i = 0; i < ops.length; i += 400) {
+       const batch = db.batch();
+       ops.slice(i, i + 400).forEach(([op, k, json]) => {
+         const doc = col.doc(entryDocId(collection, k));
+         if (op === 'set') batch.set(doc, { c: collection, k, v: json, t: firebase.firestore.FieldValue.serverTimestamp() });
+         else batch.delete(doc);
+       });
+       await batch.commit();
+     }
+     if (recordSyncUid === uid) recordBase.set(collection, new Map(current));
+     if (ops.length) setLastSyncStatus('Saved just now', true);
+     return true;
+   }).catch(error => {
+     console.error('Record sync failed for', collection, error);
+     setLastSyncStatus('Sync failed — local only', false);
+     return false;
+   });
+   recordQueues.set(collection, next);
+   return next;
+ }
+
+ // Three-way merge: start from the cloud, then re-apply this device's changes
+ // that the cloud has not seen yet (relative to the last known cloud copy).
+ function mergeRecordMaps(base, local, remote) {
+   const out = new Map(remote);
+   local.forEach((json, k) => { if (base.get(k) !== json) out.set(k, json); });
+   base.forEach((_, k) => { if (!local.has(k)) out.delete(k); });
+   return out;
+ }
+ function sameMap(a, b) { if (a.size !== b.size) return false; for (const [k, v] of a) if (b.get(k) !== v) return false; return true; }
+
+ function scheduleRecordRender() {
+   clearTimeout(recordRenderTimer);
+   recordRenderTimer = setTimeout(() => {
+     try {
+       if (typeof syncTodayCalories === 'function') syncTodayCalories();
+       if (typeof renderTodayFoodLogs === 'function') renderTodayFoodLogs();
+       if (document.getElementById('dashboard')?.style.display === 'block') renderPersonalizedUI();
+       if (typeof renderMedicationInsights === 'function') renderMedicationInsights();
+     } catch (e) { console.warn('Refresh after sync failed:', e); }
+   }, 120);
+ }
+
+ async function initRecordSync(legacyState, legacyProfile) {
+   stopRecordSync();
+   const col = entriesRef();
+   if (!col || !firebaseUser) return;
+   const uid = firebaseUser.uid;
+   let snap;
+   try { snap = await col.get(); }
+   catch (error) {
+     console.warn('Per-record sync unavailable (publish the updated firestore.rules); using whole-list storage.', error?.code || error);
+     return;
+   }
+   if (firebaseUser?.uid !== uid) return;
+   recordSyncMode = 'entries'; recordSyncUid = uid;
+   const remote = new Map(Object.keys(RECORD_COLLECTIONS).map(c => [c, new Map()]));
+   snap.forEach(doc => { const d = doc.data(); if (remote.has(d.c) && typeof d.v === 'string') remote.get(d.c).set(d.k, d.v); });
+   const cleanup = {};
+   for (const [collection, adapter] of Object.entries(RECORD_COLLECTIONS)) {
+     // Items still in the old whole-list fields are merged in once, then those fields are removed.
+     const legacy = adapter.read();
+     const merged = new Map(remote.get(collection));
+     legacy.forEach((json, k) => { if (!merged.has(k)) merged.set(k, json); });
+     adapter.write(merged);
+     recordBase.set(collection, remote.get(collection));
+     const [scope, field] = adapter.legacyField.split('.');
+     const hadLegacy = scope === 'profile' ? Array.isArray(legacyProfile?.[field]) : legacyState && Object.prototype.hasOwnProperty.call(legacyState, field);
+     if (hadLegacy) { cleanup[scope] = cleanup[scope] || {}; cleanup[scope][field] = firebase.firestore.FieldValue.delete(); }
+   }
+   await Promise.all(Object.keys(RECORD_COLLECTIONS).map(c => syncRecordCollection(c)));
+   if (Object.keys(cleanup).length && firebaseUser?.uid === uid) {
+     try { await cloudDoc().set(cleanup, { merge: true }); } catch (e) { console.warn('Could not remove old list fields:', e); }
+   }
+   if (firebaseUser?.uid !== uid) return;
+   recordSyncUnsubscribe = col.onSnapshot(live => {
+     if (recordSyncUid !== uid) return;
+     const touched = new Set();
+     const remoteNow = new Map(Object.keys(RECORD_COLLECTIONS).map(c => [c, new Map()]));
+     live.forEach(doc => { const d = doc.data(); if (remoteNow.has(d.c) && typeof d.v === 'string') remoteNow.get(d.c).set(d.k, d.v); });
+     live.docChanges().forEach(ch => { const c = ch.doc.data()?.c; if (c) touched.add(c); });
+     touched.forEach(collection => {
+       const adapter = RECORD_COLLECTIONS[collection]; if (!adapter) return;
+       const base = recordBase.get(collection) || new Map();
+       const local = adapter.read();
+       const merged = mergeRecordMaps(base, local, remoteNow.get(collection));
+       recordBase.set(collection, remoteNow.get(collection));
+       if (!sameMap(merged, local)) { adapter.write(merged); scheduleRecordRender(); }
+       if (!sameMap(merged, remoteNow.get(collection))) syncRecordCollection(collection);
+     });
+   }, error => console.warn('Live sync stopped:', error));
+ }
+
  async function syncCloudState(changedKey) {
    // Do not make the in-memory cloudSyncReady flag the gate for persistence.
    // Firebase Auth/Firestore can finish initializing a moment after a login, and
    // the old gate could silently leave data only in localStorage. If a signed-in
    // Firebase user and Firestore are available, always attempt the write.
    if (!firebaseUser || !db) return false;
+   if (RECORD_COLLECTIONS[changedKey] && recordSyncMode === 'entries') return syncRecordCollection(changedKey);
    const ref = cloudDoc();
    if (!ref || !CLOUD_KEYS.includes(changedKey)) return false;
    try {
@@ -3128,10 +3332,17 @@ function clearCloudCacheForUserSwitch() {
    const ref = cloudDoc();
    if (!ref) return false;
    try {
+     const profile = { ...patientData, ownerUid: firebaseUser.uid, ownerEmail: firebaseUser.email || '', email: firebaseUser.email || patientData.email || '' };
+     if (recordSyncMode === 'entries') {
+       // Lab reports and visits are stored as separate records; keep them out of the profile document.
+       profile.reports = firebase.firestore.FieldValue.delete();
+       profile.visits = firebase.firestore.FieldValue.delete();
+     }
      await ref.set({
-       profile: { ...patientData, ownerUid: firebaseUser.uid, ownerEmail: firebaseUser.email || '', email: firebaseUser.email || patientData.email || '' },
+       profile,
        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
      }, { merge: true });
+     if (recordSyncMode === 'entries') await Promise.all([syncRecordCollection('profile.reports'), syncRecordCollection('profile.visits')]);
      cloudSyncReady = true;
      cacheProfileLocally();
      return true;
@@ -3497,7 +3708,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   if(res&&res.ok){clearLocal();try{await auth.signOut();}catch(_){}window.location.reload();return;}
   if(res&&res.status!==503&&res.status!==404){const b=await res.json().catch(()=>({}));throw new Error(b.error||`Server returned HTTP ${res.status}`);}
   // Server unavailable: delete what the client is allowed to delete.
-  if(db)await db.collection('users').doc(firebaseUser.uid).delete();
+  if(db){
+    const userRef=db.collection('users').doc(firebaseUser.uid);
+    try{const entries=await userRef.collection('entries').get();for(let i=0;i<entries.docs.length;i+=400){const batch=db.batch();entries.docs.slice(i,i+400).forEach(d=>batch.delete(d.ref));await batch.commit();}}catch(e){console.warn('Could not delete record entries:',e);}
+    await userRef.delete();
+  }
   clearLocal();
   await firebaseUser.delete();window.location.reload();
  }catch(error){console.error('Account deletion failed:',error);if(status)status.textContent='Deletion failed: '+(error?.message||'unknown error')+'. Recent sign-in may be required.';}
@@ -6000,7 +6215,7 @@ function renderEmergencyQRIfReady(){
      const specialty=document.getElementById('recordSpecialtyInput')?.value.trim()||'General Medicine';
      const facility=document.getElementById('recordFacilityInput')?.value.trim()||'';
      if(!doctor){showToast('','Doctor name required','Enter the doctor name before saving the visit.');document.getElementById('recordDoctorInput')?.focus();return;}
-     patientData.visits=[...(patientData.visits||[]),{doctor,specialty,facility,date}];
+     patientData.visits=[...(patientData.visits||[]),{id:`visit_${Date.now()}`,doctor,specialty,facility,date}];
      saveRecordCollections();
      closeRecordEntryEditor();
      showToast('','Visit Added','The visit is now part of your health record.');
@@ -6009,7 +6224,7 @@ function renderEmergencyQRIfReady(){
      const result=document.getElementById('recordResultInput')?.value.trim();
      if(!name){showToast('','Report name required','Enter a name for the lab report.');document.getElementById('recordReportNameInput')?.focus();return;}
      if(!result){showToast('','Result required','Enter the report result or value before saving.');document.getElementById('recordResultInput')?.focus();return;}
-     patientData.reports=[...(patientData.reports||[]),{name,result,date}];
+     patientData.reports=[...(patientData.reports||[]),{id:`report_${Date.now()}`,name,result,date}];
      saveRecordCollections();
      closeRecordEntryEditor();
      showToast('','Lab Report Added','The report is now available in Records and trend extraction.');

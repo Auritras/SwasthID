@@ -1730,10 +1730,12 @@ async function handleAccountDelete(
     const db =
       firebaseAdmin.firestore();
 
-    await db
-      .collection('users')
-      .doc(user.uid)
-      .delete();
+    // Removes the user document and its per-item entries subcollection.
+    await db.recursiveDelete(
+      db
+        .collection('users')
+        .doc(user.uid)
+    );
 
     const collectionsToDelete = [
       'healthRecords',
