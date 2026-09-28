@@ -2014,9 +2014,6 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  <div class="hero-main">
  <h2 class="serif"><span id="heroGreeting">Hi</span>, <span id="dashboardGreetingName">there</span></h2>
  <div class="sub-line" id="heroTime"></div>
- <div class="hero-badges">
- <span class="hero-chip sync-chip">Last saved: <span id="lastSyncText">just now</span></span>
- </div>
  </div>
  </div>
 
@@ -3140,7 +3137,32 @@ function clearCloudCacheForUserSwitch() {
    }
  }
 
- async function setLastSyncStatus(text, ok=true) { const el=document.getElementById('lastSyncText'); if(el){ el.textContent=text; el.style.color=ok?'var(--ok)':'var(--danger)'; } }
+ // Cloud saves are silent when they work. When one fails, the change stays on this
+ // device, the user is told once, and the save is retried automatically.
+ const pendingCloudKeys = new Set();
+ let cloudSaveWarned = false;
+ let cloudRetryTimer = null;
+ function retryPendingCloudSaves() {
+   clearTimeout(cloudRetryTimer); cloudRetryTimer = null;
+   if (!pendingCloudKeys.size || !firebaseUser || !db) return;
+   const keys = [...pendingCloudKeys]; pendingCloudKeys.clear();
+   keys.forEach(key => key === '__profile' ? syncProfileToCloud() : syncCloudState(key));
+ }
+ function noteCloudSaveResult(ok, key) {
+   if (ok) {
+     cloudSaveWarned = false;
+     if (pendingCloudKeys.size && !cloudRetryTimer) cloudRetryTimer = setTimeout(retryPendingCloudSaves, 500);
+     return;
+   }
+   if (key) pendingCloudKeys.add(key);
+   if (!cloudRetryTimer) cloudRetryTimer = setTimeout(retryPendingCloudSaves, 60000);
+   if (!cloudSaveWarned) {
+     cloudSaveWarned = true;
+     showToast('', 'Not saved to your account yet', 'Your change is kept on this device. SwasthID will keep trying to save it to your account.');
+   }
+ }
+ window.addEventListener('online', retryPendingCloudSaves);
+ document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') retryPendingCloudSaves(); });
 
 
  /* ---------------------------------------------------------------
@@ -3259,11 +3281,11 @@ function clearCloudCacheForUserSwitch() {
        await batch.commit();
      }
      if (recordSyncUid === uid) recordBase.set(collection, new Map(current));
-     if (ops.length) setLastSyncStatus('Saved just now', true);
+     noteCloudSaveResult(true);
      return true;
    }).catch(error => {
-     console.error('Record sync failed for', collection, error);
-     setLastSyncStatus('Sync failed — local only', false);
+     console.error('Record sync failed for', collection, error?.code || '', error);
+     noteCloudSaveResult(false, collection);
      return false;
    });
    recordQueues.set(collection, next);
@@ -3359,12 +3381,12 @@ function clearCloudCacheForUserSwitch() {
        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
      }, { merge: true });
      cloudSyncReady = true;
-     setLastSyncStatus('Saved just now', true);
+     noteCloudSaveResult(true);
      return true;
    } catch (error) {
-     console.error('Firestore sync failed for', changedKey, error);
+     console.error('Firestore sync failed for', changedKey, error?.code || '', error);
      cloudSyncReady = false;
-     setLastSyncStatus('Sync failed — local only', false);
+     noteCloudSaveResult(false, changedKey);
      return false;
    }
  }
@@ -3396,11 +3418,13 @@ function clearCloudCacheForUserSwitch() {
      if (recordSyncMode === 'entries') await Promise.all([syncRecordCollection('profile.reports'), syncRecordCollection('profile.visits')]);
      cloudSyncReady = true;
      cacheProfileLocally();
+     noteCloudSaveResult(true);
      return true;
    } catch (error) {
-     console.error('Profile sync failed:', error);
+     console.error('Profile sync failed:', error?.code || '', error);
      cloudSyncReady = false;
      cacheProfileLocally();
+     noteCloudSaveResult(false, '__profile');
      return false;
    }
  }
@@ -8103,7 +8127,7 @@ Rules:
  const greetEl = document.getElementById('heroGreeting');
  if (greetEl) {
  const h = new Date().getHours();
- greetEl.textContent = h >= 5 && h < 12 ? 'Good Morning' : (h >= 12 && h < 17 ? 'Good Afternoon' : (h >= 17 && h < 21 ? 'Good Evening' : 'Good Night'));
+ greetEl.textContent = h >= 5 && h < 12 ? 'Good Morning' : (h >= 12 && h < 17 ? 'Good Afternoon' : 'Good Evening');
  }
 
  // Navbar blur while scrolling
