@@ -71,11 +71,6 @@
     await loadSwasthScript('qrcode','https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js','QRCode');
     return window.QRCode;
   }
-  async function ensureFoodVisionLoaded() {
-    await loadSwasthScript('tfjs','https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js','tf');
-    await loadSwasthScript('mobilenet','https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js','mobilenet');
-    return window.mobilenet;
-  }
 </script>
 <script>
   // Fallback for opening the HTML directly if firebase-config.js is not loaded.
@@ -417,7 +412,6 @@
  .calorie-label { font-size: 13.5px; font-weight: 500; color: var(--muted); margin-bottom: 10px; }
  .calorie-meter input[type=file]{ font-family: inherit; font-size: 13px; }
  .calorie-result { margin-top: 14px; align-items: center; gap: 14px; justify-content: center; }
- #foodGateStatus { margin-left: auto !important; margin-right: auto !important; }
  #foodSearchResults { width: 100%; box-sizing: border-box; }
 
  .nearby-panel { background: linear-gradient(135deg,#f6faf6,#eef6f0); border: 1px solid var(--sage-line); border-radius: var(--radius-md); padding: 16px 20px; position: relative; overflow: hidden; }
@@ -1974,6 +1968,7 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  <div class="tabnav" role="tablist" aria-label="Sections">
  <button class="tab-btn active" data-tab="home">Home</button>
  <button class="tab-btn" data-tab="records">Records</button>
+ <button class="tab-btn" data-tab="vitals">Vitals</button>
  <button class="tab-btn" data-tab="scan">Scan Prescription</button>
  <button class="tab-btn" data-tab="order">Medicines</button>
  <button class="tab-btn" data-tab="nutrition">Nutrition</button>
@@ -2015,6 +2010,7 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  <p class="section-sub">Doses from your profile and your latest saved prescription. Mark each one as you take it.</p>
  
  <div id="todayMedList"></div>
+ <div class="reminder-bar" id="doseReminderBar"></div>
  <div class="adherence-panel" id="medAdherencePanel" aria-live="polite"></div>
  <div class="med-alert" id="medMissedDosePanel" style="display:none;" aria-live="assertive"></div>
  <div class="refill-panel" id="medRefillPanel" aria-live="polite"></div>
@@ -2196,12 +2192,7 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  <div id="foodSearchStatus" style="font-size:12px;color:var(--muted);margin-bottom:10px;"></div>
  <div id="recentFoodQuickAdd" style="margin-bottom:12px;"></div>
  <div id="foodSearchResults"></div>
- <div class="calorie-meter" style="margin-top:16px;">
- <label class="calorie-label" for="foodPhotoNutrition">Or upload a food photo for manual identification</label>
- <input type="file" accept="image/*" id="foodPhotoNutrition">
- <div id="calorieResultNutrition" class="calorie-result" style="display:none; flex-direction:column; align-items:center; gap:12px; margin-top:16px;"></div>
-           <div id="foodGateStatus" style="display:none; margin:12px auto 0; width:100%; max-width:none; box-sizing:border-box; padding:12px 14px; border:1px solid var(--line); border-radius:8px; font-size:13px; line-height:1.45;"></div>
- </div>
+ <p class="section-sub" style="padding-left:0;margin:14px 0 0;font-size:12.5px;">Packaged food? Scan its barcode further down this page to log the label's nutrition values.</p>
  </section>
 
  <section>
@@ -2274,6 +2265,7 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  <div class="scan-kicker">PRESCRIPTION SCANNER</div>
  <h3 style="color:#28425d;">Smart Prescription Scanner</h3>
  <p class="section-sub" style="padding-left:0;">Upload a photo or PDF of a prescription. SwasthID reads the text in your browser and suggests the medicines, doses and doctor. Check every field before saving.</p>
+ <p class="section-sub" style="padding-left:0;margin-top:-8px;font-size:12.5px;">Works best with printed prescriptions photographed flat and in good light. Handwritten prescriptions usually cannot be read; add those medicines in your profile instead.</p>
  <div class="scan-upload">
  <div style="font-size:32px; margin-bottom:8px;"></div>
  <h4 style="margin:0 0 6px;">Select or drop a prescription file</h4>
@@ -2524,6 +2516,53 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  </div>
  </div>
 
+ <!-- ===== VITALS PANEL ===== -->
+ <div class="panel" id="panel-vitals">
+ <div class="content">
+ <section>
+ <h3>Vitals</h3>
+ <p class="section-sub">Log blood pressure, blood sugar, weight and oxygen level, and see how they change over time. Reference ranges are for adults and are not a diagnosis.</p>
+ <div class="vitals-latest" id="vitalsLatest"></div>
+ </section>
+
+ <section>
+ <h3>Add a reading</h3>
+ <form class="vitals-form" id="vitalsForm" novalidate>
+ <div class="vitals-types" role="radiogroup" aria-label="Measurement">
+  <label><input type="radio" name="vitalType" value="bp" checked><span>Blood pressure</span></label>
+  <label><input type="radio" name="vitalType" value="glucose"><span>Blood sugar</span></label>
+  <label><input type="radio" name="vitalType" value="weight"><span>Weight</span></label>
+  <label><input type="radio" name="vitalType" value="spo2"><span>Oxygen (SpO₂)</span></label>
+ </div>
+ <div class="vitals-fields">
+  <div class="vf" data-for="bp"><label for="vSys">Systolic (mmHg)</label><input id="vSys" type="number" inputmode="numeric" min="50" max="260" placeholder="e.g. 120"></div>
+  <div class="vf" data-for="bp"><label for="vDia">Diastolic (mmHg)</label><input id="vDia" type="number" inputmode="numeric" min="30" max="160" placeholder="e.g. 80"></div>
+  <div class="vf" data-for="bp spo2"><label for="vPulse">Pulse (bpm, optional)</label><input id="vPulse" type="number" inputmode="numeric" min="25" max="250" placeholder="e.g. 72"></div>
+  <div class="vf" data-for="glucose"><label for="vGlucose">Blood sugar (mg/dL)</label><input id="vGlucose" type="number" inputmode="numeric" min="20" max="700" placeholder="e.g. 95"></div>
+  <div class="vf" data-for="glucose"><label for="vGlucoseCtx">When</label><select id="vGlucoseCtx"><option value="fasting">Fasting</option><option value="after-meal">2 hours after a meal</option><option value="random">Random</option></select></div>
+  <div class="vf" data-for="weight"><label for="vWeight">Weight (kg)</label><input id="vWeight" type="number" inputmode="decimal" step="0.1" min="2" max="350" placeholder="e.g. 68.5"></div>
+  <div class="vf vf-check" data-for="weight"><label><input id="vWeightProfile" type="checkbox" checked> Also update the weight in my profile</label></div>
+  <div class="vf" data-for="spo2"><label for="vSpo2">SpO₂ (%)</label><input id="vSpo2" type="number" inputmode="numeric" min="50" max="100" placeholder="e.g. 97"></div>
+  <div class="vf" data-for="bp glucose weight spo2"><label for="vWhen">Date and time</label><input id="vWhen" type="datetime-local"></div>
+  <div class="vf vf-wide" data-for="bp glucose weight spo2"><label for="vNote">Note (optional)</label><input id="vNote" type="text" maxlength="120" placeholder="e.g. after walking, felt dizzy"></div>
+ </div>
+ <div class="vitals-form-actions"><span id="vitalsFormError" role="alert"></span><button type="submit" class="n-btn solid">Save reading</button></div>
+ </form>
+ </section>
+
+ <section>
+ <h3>Trends</h3>
+ <p class="section-sub">Up to your last 30 readings of each kind. Hover, or focus a chart and use the arrow keys, to see each reading.</p>
+ <div class="vitals-charts" id="vitalsCharts"></div>
+ </section>
+
+ <section>
+ <h3>All readings</h3>
+ <div id="vitalsList"></div>
+ </section>
+ </div>
+ </div>
+
  <!-- ===== PROFILE PANEL ===== -->
  <div class="panel" id="panel-profile">
  <div class="content">
@@ -2754,7 +2793,8 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
    'swasth_waterIntake',
    'swasth_profile_medications',
    'swasth_emergencyManageToken', 'swasth_emergencyTokenId', 'swasth_emergencyExpiresAt', 'swasth_emergencyQrCache',
-   'swasth_emergencyVisibility', 'swasth_dependents', 'swasth_activeDoctorShare'
+   'swasth_emergencyVisibility', 'swasth_dependents', 'swasth_activeDoctorShare',
+   'swasth_vitals'
  ];
 
  function cloudDoc() {
@@ -2886,6 +2926,7 @@ function clearCloudCacheForUserSwitch() {
    CLOUD_KEYS.forEach(key => localStorage.removeItem(key));
    // An unfinished profile draft belongs to whoever typed it.
    localStorage.removeItem('swasth_profileWizardDraft');
+   localStorage.removeItem('swasth_doseReminders');
    localStorage.removeItem('swasth_profileWizardStep');
    localStorage.removeItem('swasth_addedKcal');
    localStorage.removeItem('swasth_stepsToday');
@@ -3500,6 +3541,8 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
  animateRiskMeter();
  }
  if(this.dataset.tab === 'nutrition') window.renderNutritionUpgrades?.();
+ if(this.dataset.tab === 'vitals') window.renderVitals?.();
+ if(this.dataset.tab === 'predict') window.prefillRiskFromVitals?.();
  if(this.dataset.tab === 'emergency' && typeof wakeSwasthServer === 'function') wakeSwasthServer();
  if(this.dataset.tab === 'emergency' && !qrGenerated) {
  generateEmergencyQR();
@@ -4647,359 +4690,6 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  document.getElementById('waterResetBtn')?.addEventListener('click',()=>{const st=getWaterState();st.ml=0;saveWaterState(st);renderWaterIntake();});
  renderWaterIntake();
 
- /* Food/non-food image gate. MobileNet runs in-browser, so no image is uploaded for classification.
-    It is a screening gate, not a medical-grade food-recognition system. */
- const foodInput = document.getElementById('foodPhotoNutrition');
- const foodGateStatus = document.getElementById('foodGateStatus');
- const calorieResultNutrition = document.getElementById('calorieResultNutrition');
- let foodVisionModelPromise = null;
-
- const FOOD_LABELS = new Set([
-   'banana','pineapple','orange','lemon','fig','strawberry','apple','granny smith','pomegranate',
-   'acorn squash','butternut squash','spaghetti squash','cucumber','bell pepper','mushroom',
-   'broccoli','cauliflower','artichoke','zucchini','corn','ear','head cabbage','cardoon',
-   'potpie','pizza','cheeseburger','hamburger','hotdog','french loaf','bagel','pretzel',
-   'burrito','carbonara','meat loaf','mashed potato','guacamole','consomme','red wine','espresso',
-   'ice cream','ice lolly','chocolate sauce','chocolate syrup','trifle','cheesecake',
-   'custard apple','milk','cake','chocolate cake','bakery','confectionery','food'
- ]);
- const NON_FOOD_LABELS = new Set([
-   'cellular telephone','laptop','desktop computer','computer keyboard','mouse','remote control',
-   'television','monitor','camera','wallet','purse','backpack','handbag','book jacket','book',
-   'envelope','letter opener','pencil box','ballpoint','sunglasses','watch','seat belt','car wheel',
-   'minivan','sports car','jeep','ambulance','car','automobile','vehicle','pickup','pickup truck',
-   'sports utility vehicle','station wagon','convertible','limousine','taxi','bus','school bus','truck',
-   'tow truck','fire engine','motorcycle','motor scooter','bicycle','dog','cat','goldfish','bird','horse',
-   'person','face powder','lipstick','nail','shower cap','running shoe','jersey','tie','umbrella',
-   'guitar','violin','tennis ball','basketball','soccer ball','volleyball','hammer','screwdriver',
-   'power drill','chain saw','vacuum','washing machine','refrigerator','toilet seat','bathtub','lamp',
-   'table lamp','desk','chair','sofa','bed','traffic light','stop sign','parking meter','fire hydrant',
-   'keyboard','printer','printer device','headphones','microphone','clock','watch','door','window',
-   'bottle','water bottle','wine bottle','beer bottle','can opener','spatula','fork','knife','spoon'
- ]);
- const FOOD_LABEL_PATTERNS = [
-   /\b(cake|bakery|confectionery|bread|pizza|burger|hamburger|sandwich|fruit|vegetable|salad|soup|rice|pasta|noodle|dessert)\b/i
- ];
- const NON_FOOD_LABEL_PATTERNS = [
-   /\b(car|automobile|vehicle|truck|bus|van|jeep|motorcycle|scooter|bicycle|wheel)\b/i,
-   /\b(phone|telephone|computer|laptop|keyboard|monitor|camera|television|remote)\b/i,
-   /\b(chair|sofa|couch|bed|desk|table|lamp|door|window|printer)\b/i,
-   /\b(shoe|sneaker|boot|umbrella|guitar|violin|ball|hammer|screwdriver|drill)\b/i,
-   /\b(dog|cat|horse|bird|person)\b/i
- ];
-
- function setFoodGateStatus(message, type='neutral') {
-   if(!foodGateStatus) return;
-   foodGateStatus.style.display = 'block';
-   foodGateStatus.style.color = type === 'ok' ? 'var(--ok)' : type === 'error' ? 'var(--danger)' : 'var(--muted)';
-   foodGateStatus.style.background = type === 'ok' ? 'var(--sage)' : type === 'error' ? 'var(--danger-soft)' : 'var(--surface)';
-   foodGateStatus.innerHTML = message;
- }
-
- async function getFoodVisionModel() {
-   if(!foodVisionModelPromise) {
-     foodVisionModelPromise = (async () => {
-       const modelLib = await ensureFoodVisionLoaded();
-       if (!modelLib?.load) throw new Error('Food photo AI could not be loaded.');
-       return modelLib.load({version: 2, alpha: 1.0});
-     })();
-   }
-   return foodVisionModelPromise;
- }
-
- function scoreFoodPredictions(predictions) {
-   let foodScore = 0;
-   let nonFoodScore = 0;
-   const evidence = [];
-   const nonFoodEvidence = [];
-   predictions.forEach(p => {
-     const label = String(p.className || '').toLowerCase();
-     const confidence = Number(p.probability || 0);
-     const words = label.split(',').map(x => x.trim());
-     const exactFood = words.some(w => FOOD_LABELS.has(w));
-     const exactNonFood = words.some(w => NON_FOOD_LABELS.has(w));
-     const patternFood = FOOD_LABEL_PATTERNS.some(re => re.test(label));
-     const patternNonFood = NON_FOOD_LABEL_PATTERNS.some(re => re.test(label));
-     if(exactFood || patternFood) {
-       foodScore = Math.max(foodScore, confidence);
-       evidence.push({label:p.className, confidence});
-     }
-     if(exactNonFood || patternNonFood) {
-       nonFoodScore = Math.max(nonFoodScore, confidence);
-       nonFoodEvidence.push({label:p.className, confidence});
-     }
-   });
-   return {foodScore, nonFoodScore, evidence, nonFoodEvidence};
- }
-
- const VISION_FOOD_ALIASES = {
-   'banana':'banana', 'pineapple':'pineapple', 'orange':'orange', 'lemon':'lemon',
-   'fig':'fig', 'strawberry':'strawberry', 'apple':'apple', 'granny smith':'apple',
-   'pomegranate':'pomegranate', 'cucumber':'cucumber', 'bell pepper':'bell pepper',
-   'mushroom':'mushroom', 'broccoli':'broccoli', 'cauliflower':'cauliflower',
-   'zucchini':'zucchini', 'corn':'corn', 'potpie':'pot pie', 'pizza':'pizza',
-   'cheeseburger':'cheeseburger', 'hamburger':'hamburger', 'hotdog':'hot dog',
-   'french loaf':'bread', 'bagel':'bagel', 'pretzel':'pretzel', 'burrito':'burrito',
-   'carbonara':'carbonara', 'meat loaf':'meatloaf', 'mashed potato':'mashed potatoes',
-   'guacamole':'guacamole', 'consomme':'soup', 'ice cream':'ice cream',
-   'ice lolly':'popsicle', 'trifle':'trifle', 'cheesecake':'cheesecake',
-   'custard apple':'custard apple', 'milk':'milk'
- };
-
- function normaliseVisionFoodLabel(label) {
-   const clean = String(label || '').toLowerCase().trim();
-   return VISION_FOOD_ALIASES[clean] || null;
- }
-
- const COMMON_PORTIONS = {
-   banana: [
-     {label:'1 small banana', grams:81},
-     {label:'1 medium banana', grams:118},
-     {label:'1 large banana', grams:136},
-     {label:'1 cup sliced', grams:150}
-   ],
-   apple: [
-     {label:'1 small apple', grams:149},
-     {label:'1 medium apple', grams:182},
-     {label:'1 large apple', grams:223},
-     {label:'1 cup sliced', grams:109}
-   ],
-   orange: [
-     {label:'1 small orange', grams:96},
-     {label:'1 medium orange', grams:131},
-     {label:'1 large orange', grams:184},
-     {label:'1 cup sections', grams:180}
-   ],
-   pineapple: [
-     {label:'1 cup chunks', grams:165},
-     {label:'2 cups chunks', grams:330},
-     {label:'100 g', grams:100}
-   ],
-   strawberry: [
-     {label:'5 strawberries', grams:60},
-     {label:'1 cup whole', grams:144},
-     {label:'1 cup sliced', grams:166},
-     {label:'100 g', grams:100}
-   ]
- };
-
- function getPortionOptions(foodName) {
-   return COMMON_PORTIONS[foodName] || [
-     {label:'50 g', grams:50},
-     {label:'100 g', grams:100},
-     {label:'150 g', grams:150},
-     {label:'200 g', grams:200}
-   ];
- }
-
- function closeFoodPortionModal() {
-   const modal = document.getElementById('foodPortionModal');
-   if(modal) modal.remove();
- }
-
- async function logVisionFoodPortion(foodName, grams, portionLabel) {
-   const status = document.getElementById('foodPortionModalStatus');
-   if(status) status.textContent = 'Looking up nutrition data…';
-   const query = foodName;
-   try {
-     const url = `${FOOD_API_URL}?api_key=${encodeURIComponent(FOOD_API_KEY)}&query=${encodeURIComponent(query)}&pageSize=8&dataType=Foundation,SR%20Legacy,Branded`;
-     const res = await fetch(url);
-     if(!res.ok) throw new Error(`Food lookup failed (${res.status})`);
-     const data = await res.json();
-     const foods = data.foods || [];
-     if(!foods.length) throw new Error('No matching nutrition record was found.');
-     const food = foods[0];
-     addFoodLog(food, grams);
-     if(status) status.innerHTML = `<b>Added to today's meals.</b><br>${escapeFoodText(portionLabel)} of ${escapeFoodText(foodName)} was logged.`;
-     setFoodGateStatus(`<b>Food logged successfully.</b> ${escapeFoodText(portionLabel)} of ${escapeFoodText(foodName)} was added using nutrition data from USDA FoodData Central.`, 'ok');
-     renderTodayFoodLogs();
-     syncTodayCalories();
-     setTimeout(closeFoodPortionModal, 900);
-   } catch(err) {
-     if(status) status.textContent = err.message || 'Nutrition lookup failed. Use the food search above instead.';
-   }
- }
-
- function showFoodPortionMenu(foodName, confidence, imageDataUrl) {
-   closeFoodPortionModal();
-   const modal = document.createElement('div');
-   modal.id = 'foodPortionModal';
-   modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(20,35,30,.42);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;';
-   const options = getPortionOptions(foodName);
-   modal.innerHTML = `
-     <div style="width:min(520px,100%);background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 60px rgba(20,35,30,.22);padding:22px;box-sizing:border-box;">
-       <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
-         <div>
-           <div style="font-size:12px;font-weight:700;color:var(--ok);text-transform:uppercase;letter-spacing:.7px;">Food detected</div>
-           <h3 style="margin:5px 0 4px;color:var(--ink);">${escapeFoodText(foodName)}</h3>
-           <div style="font-size:12px;color:var(--muted);">Visual match ${Math.round(confidence*100)}%. Select your portion.</div>
-         </div>
-         <button type="button" id="closeFoodPortionBtn" style="border:0;background:transparent;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;">×</button>
-       </div>
-       ${imageDataUrl ? `<img src="${imageDataUrl}" alt="Detected ${escapeFoodText(foodName)}" style="display:block;width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line);margin:16px auto 14px;">` : ''}
-       <div style="font-size:13px;font-weight:700;color:var(--ink);margin:4px 0 10px;">How much did you eat?</div>
-       <div id="foodPortionChoices" style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
-         ${options.map((o,i)=>`<button type="button" class="n-btn solid food-portion-choice" data-grams="${o.grams}" data-label="${escapeFoodText(o.label)}" style="min-height:44px;">${escapeFoodText(o.label)}</button>`).join('')}
-       </div>
-       <div style="display:flex;gap:8px;align-items:center;margin-top:11px;">
-         <input id="customFoodGrams" type="number" min=1 max=5000 placeholder="Custom grams" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;box-sizing:border-box;">
-         <button type="button" id="customFoodPortionBtn" class="n-btn">Use grams</button>
-       </div>
-       <div id="foodPortionModalStatus" style="min-height:20px;margin-top:12px;font-size:12.5px;color:var(--muted);text-align:center;"></div>
-     </div>`;
-   document.body.appendChild(modal);
-   document.getElementById('closeFoodPortionBtn').onclick = closeFoodPortionModal;
-   modal.addEventListener('click', e => { if(e.target === modal) closeFoodPortionModal(); });
-   modal.querySelectorAll('.food-portion-choice').forEach(btn => {
-     btn.onclick = () => logVisionFoodPortion(foodName, Number(btn.dataset.grams), btn.dataset.label);
-   });
-   document.getElementById('customFoodPortionBtn').onclick = () => {
-     const grams = Number(document.getElementById('customFoodGrams').value);
-     if(!grams || grams < 1) {
-       const status = document.getElementById('foodPortionModalStatus');
-       if(status) status.textContent = 'Enter a valid amount in grams.';
-       return;
-     }
-     logVisionFoodPortion(foodName, grams, `${grams} g`);
-   };
- }
-
- async function loadImageForGate(file) {
-   if(!file || !file.size) throw new Error('The selected image file is empty or unavailable.');
-
-   // Use a data URL first. This is more reliable than immediately classifying an
-   // object URL in browsers that have not finished decoding a newly selected file.
-   const dataUrl = await new Promise((resolve, reject) => {
-     const reader = new FileReader();
-     reader.onload = () => resolve(reader.result);
-     reader.onerror = () => reject(new Error('The selected image file could not be loaded.'));
-     reader.readAsDataURL(file);
-   });
-
-   const img = new Image();
-   img.decoding = 'async';
-   img.src = dataUrl;
-
-   await new Promise((resolve, reject) => {
-     img.onload = resolve;
-     img.onerror = () => reject(new Error('The image could not be decoded by the browser. Try JPG or PNG.'));
-   });
-
-   // Wait for the browser's decoder when supported, so MobileNet receives a fully
-   // decoded image rather than a just-loaded HTMLImageElement.
-   if(typeof img.decode === 'function') {
-     try { await img.decode(); } catch(_) { /* onload already confirmed the image */ }
-   }
-
-   if(!img.naturalWidth || !img.naturalHeight) {
-     throw new Error('The image has no readable dimensions. Try JPG or PNG.');
-   }
-   return img;
- }
-
- async function runFoodGate(file) {
-   setFoodGateStatus('Checking whether this image appears to contain food…', 'neutral');
-   try {
-     const img = await loadImageForGate(file);
-     if(img.naturalWidth < 120 || img.naturalHeight < 120) throw new Error('The image is too small to classify reliably.');
-     const model = await getFoodVisionModel();
-     const predictions = await model.classify(img, 10);
-     const scored = scoreFoodPredictions(predictions);
-     const top = predictions[0];
-     const topLabel = top ? top.className : 'unknown';
-     const topConfidence = top ? top.probability : 0;
-
-     // Explicit non-food/object evidence blocks the nutrition workflow even when
-     // MobileNet is not highly confident. This prevents vehicles, electronics,
-     // furniture and animals from passing the permissive fallback below.
-     if(scored.nonFoodScore >= 0.18 && scored.nonFoodScore >= scored.foodScore) {
-       const objectLabel = scored.nonFoodEvidence[0]?.label || topLabel;
-       const objectConfidence = scored.nonFoodEvidence[0]?.confidence || topConfidence;
-       setFoodGateStatus(`<b>This doesn't appear to be a food image.</b><br>Detected object: ${escapeFoodText(objectLabel)} (${Math.round(objectConfidence*100)}%). Please upload a clear food photo or use food search.`, 'error');
-       return {accepted:false};
-     }
-
-     // Strong food evidence passes automatically.
-     if(scored.foodScore >= 0.40 && scored.foodScore > scored.nonFoodScore) {
-       const evidenceText = scored.evidence.slice(0,2).map(x => `${escapeFoodText(x.label)} ${Math.round(x.confidence*100)}%`).join(', ');
-       const detectedFood = normaliseVisionFoodLabel(scored.evidence[0]?.label || topLabel);
-       setFoodGateStatus(`<b>Food image detected.</b> ${evidenceText ? `Visual matches: ${evidenceText}.` : ''}`, 'ok');
-       return {accepted:true, predictions, detectedFood, confidence:topConfidence};
-     }
-
-     // MobileNet is an ImageNet classifier, so many real foods do not have a useful exact label.
-     // Only allow the uncertain/manual-search path when the classifier is genuinely ambiguous
-     // and there is no meaningful non-food evidence. A low-confidence car/object prediction
-     // must not be treated as food.
-     if(scored.nonFoodScore < 0.18 && topConfidence >= 0.08) {
-       setFoodGateStatus(`<b>Food photo accepted for manual identification.</b><br>The browser model cannot reliably identify every food, so enter the food name below to get the nutrition record.`, 'ok');
-       return {accepted:true, predictions, detectedFood:null, confidence:topConfidence, uncertain:true};
-     }
-
-     setFoodGateStatus(`<b>This doesn't appear to be a food image.</b><br>Detected: ${escapeFoodText(topLabel)} (${Math.round(topConfidence*100)}%). Please upload a clear food photo or use food search.`, 'error');
-     return {accepted:false, uncertain:true};
-   } catch(err) {
-     setFoodGateStatus(`<b>Food check unavailable.</b><br>${escapeFoodText(err.message || 'The image could not be classified.')} You can still use the manual food search above.`, 'error');
-     return {accepted:false, failed:true};
-   }
- }
-
- function showManualFoodIdentification() {
-   const existing = document.getElementById('manualFoodPhotoPrompt');
-   if(existing) existing.remove();
-   const wrap = document.createElement('div');
-   wrap.id = 'manualFoodPhotoPrompt';
-   wrap.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);';
-   wrap.innerHTML = `
-     <input id="manualFoodNameFromPhoto" type="text" placeholder="Enter food name, e.g. dragon fruit, cake, dal" style="flex:1 1 260px;min-width:180px;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font:inherit;">
-     <button type="button" id="manualFoodIdentifyBtn" class="n-btn solid">Use food name</button>`;
-   foodGateStatus?.parentElement?.appendChild(wrap);
-   const input = document.getElementById('manualFoodNameFromPhoto');
-   const btn = document.getElementById('manualFoodIdentifyBtn');
-   btn.onclick = () => {
-     const name = (input?.value || '').trim();
-     if(!name) { input?.focus(); return; }
-     closeFoodPortionModal();
-     showFoodPortionMenu(name, 0, null);
-     setFoodGateStatus(`<b>Food name received.</b> Choose the portion to look up nutrition data for <b>${escapeFoodText(name)}</b>.`, 'ok');
-   };
-   input?.focus();
- }
-
- if(foodInput) {
-   foodInput.addEventListener('change', async function(e){
-     const file = e.target.files[0];
-     if(!file) return;
-     if(!file.type.startsWith('image/')) {
-       setFoodGateStatus('Please select an image file.', 'error');
-       return;
-     }
-     if(calorieResultNutrition) { calorieResultNutrition.style.display = 'none'; calorieResultNutrition.innerHTML = ''; }
-     foodInput.disabled = true;
-     try {
-       const result = await runFoodGate(file);
-       if(result.accepted) {
-         const reader = new FileReader();
-         reader.onload = function(ev){
-           if(calorieResultNutrition) {
-             calorieResultNutrition.style.display = 'flex';
-             calorieResultNutrition.innerHTML = `<img src="${ev.target.result}" alt="Uploaded food" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line);"><div style="font-size:13px;color:var(--muted);text-align:center;">${result.detectedFood ? `Detected as <b>${escapeFoodText(result.detectedFood)}</b>.` : 'Food image passed the visual gate.'}</div>`;
-           }
-           if(result.detectedFood) {
-             showFoodPortionMenu(result.detectedFood, result.confidence || 0, ev.target.result);
-           } else {
-             setFoodGateStatus('<b>Food photo accepted.</b><br>Enter the food name below so SwasthID can look up the correct nutrition record.', 'ok');
-             showManualFoodIdentification();
-           }
-         };
-         reader.readAsDataURL(file);
-       }
-     } finally {
-       foodInput.disabled = false;
-     }
-   });
- }
-
  restoreNutritionState();
 
  /* =========================================================
@@ -5024,6 +4714,15 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  function cleanOcrText(text) {
  return String(text || '')
  .replace(/\r/g, '')
+ // Common OCR misreads on prescriptions.
+ .replace(/\b([0-9SOIl]*[0-9SO][0-9SOIl]*)(\s*)(mg|mcg|m[Il1i]|ml|g)\b/g, (all, num, space, unit) =>
+   /^[0-9]+$/.test(num) ? all : (/[0-9]/.test(num) || num.length >= 2 || num === 'S') ? num.replace(/S/g, '5').replace(/O/g, '0').replace(/[Il]/g, '1') + space + unit : all)
+ .replace(/(\d)\s*m[Il1i]\b/g, '$1 ml')
+ .replace(/\b0D\b/g, 'OD')
+ .replace(/\bT\.\s?D\.\s?S\.?/gi, 'TDS')
+ .replace(/\bB\.\s?D\.?(?=\s|$)/gi, 'BD')
+ .replace(/\bO\.\s?D\.?(?=\s|$)/gi, 'OD')
+ .replace(/\bH\.\s?S\.?(?=\s|$)/gi, 'HS')
  .replace(/[ \t]+/g, ' ')
  .replace(/\n{3,}/g, '\n\n')
  .trim();
@@ -5037,8 +4736,11 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  const normalizeMedicineName = value => String(value || '')
    .replace(/^[\-•*]+\s*/, '')
    .replace(/^\(?\d{1,2}\s*[.)]\s*/, '')
+   .replace(/^\d{1,2}\s+(?=[A-Za-z])/, '')
    .replace(/^(?:rx|medications?|medicines?)\s*[:\-]?\s*/i, '')
-   .replace(/^(?:tab(?:let)?s?|cap(?:sule)?s?|caps?|syr(?:up)?|syp|inj(?:ection)?|injection|cream|ointment|drops?)\.?\s+/i, '')
+   .replace(/^(?:(?:tab(?:let)?s?|cap(?:sule)?s?|caps?|syr(?:up)?|syp|inj(?:ection)?|injection|cream|ointment|drops?)\.?\s+|(?:t|tab|c|cap|syp|syr|inj)\.\s*)/i, '')
+   // Stop the name where the dosing instructions begin (1-0-1, x 5 days, OD, after food...).
+   .replace(/\s+(?:\(?\s*[0-2½]\s*-\s*[0-2½]\s*-\s*[0-2½]|x\s*\d|for\s+\d|\((?:after|before|with|at)\b|(?:od|bd|bid|tds|tid|qid|hs|sos|prn|stat)\b|once\b|twice\b|thrice\b|daily\b|before\s+(?:food|meals?|breakfast)|after\s+(?:food|meals?)|at\s+(?:night|bedtime)).*$/i, '')
    .replace(/\s+\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%|mmol)\b.*$/i, '')
    .replace(/\s+(?:tablets?|tabs?|capsules?|caps?|syrup|injection|inj\.?|cream|ointment|drops?)\b.*$/i, '')
    .replace(/\s{2,}/g, ' ')
@@ -5091,8 +4793,10 @@ LOCAL_INDIAN_FOODS.forEach(food => {
  };
 
  const durationFrom = value => {
-   const m = String(value || '').match(/\b(?:for|x)\s*(\d+)\s*(days?|weeks?|months?)\b/i);
-   return m ? `for ${m[1]} ${m[2]}` : '';
+   const m = String(value || '').match(/\b(?:for|x)\s*(\d+)\s*(days?|d|weeks?|wks?|w|months?|m)\b/i);
+   if (!m) return '';
+   const unit = /^d/i.test(m[2]) ? 'day' : /^w/i.test(m[2]) ? 'week' : 'month';
+   return `for ${m[1]} ${unit}${m[1] === '1' ? '' : 's'}`;
  };
 
  const isInstructionLine = line => /^(?:take|give|apply|use|inject|inhale|swallow|dissolve|drink|instill|place|insert|chew|crush|dilute|mix|administer)\b/i.test(String(line || '').trim());
@@ -5101,7 +4805,8 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    const l = String(line || '').trim();
    if (!l || isInstructionLine(l) || isAdministrativeLine(l)) return false;
    if (/^(?:\d+[.)]|[-•*])\s*$/.test(l)) return false;
-   return /^(?:[-•*]\s*|\(?\d{1,2}\s*[.)]\s*)?(?:tab(?:let)?s?|cap(?:sule)?s?|syr(?:up)?|syp|inj(?:ection)?|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\.?\s+/i.test(l)
+   if (/^(?:[-•*]\s*|\(?\d{1,2}\s*[.)]?\s*)?(?:t|c|tab|cap|syp|syr|inj)\.\s*[A-Za-z]/i.test(l)) return true;
+   return /^(?:[-•*]\s*|\(?\d{1,2}\s*[.)]\s*|\d{1,2}\s+)?(?:tab(?:let)?s?|cap(?:sule)?s?|syr(?:up)?|syp|inj(?:ection)?|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\.?\s+/i.test(l)
      || /\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|IU|units?|%)\b/i.test(l)
      || /\b(?:tablet|tablets|capsule|capsules|syrup|injection|cream|ointment|drops?|solution|suspension|inhaler|patch|powder)\b/i.test(l);
  };
@@ -5320,15 +5025,61 @@ function renderEditablePrescription(parsed) {
  const ctx = canvas.getContext('2d', { willReadFrequently: true });
  if (!ctx) throw new Error('The browser could not prepare the prescription image.');
  ctx.drawImage(img, 0, 0, width, height);
- const image = ctx.getImageData(0, 0, width, height);
+ // Two versions: a simple contrast boost (best for clean or slightly blurred
+ // scans) and a background-normalised one (needed for phone photos).
+ const contrast = document.createElement('canvas');
+ contrast.width = width; contrast.height = height;
+ const cctx = contrast.getContext('2d', { willReadFrequently: true });
+ cctx.drawImage(canvas, 0, 0);
+ const image = cctx.getImageData(0, 0, width, height);
  const d = image.data;
  for (let i = 0; i < d.length; i += 4) {
    const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-   const boosted = Math.max(0, Math.min(255, (gray - 128) * 1.35 + 128));
-   d[i] = d[i + 1] = d[i + 2] = boosted;
+   d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, (gray - 128) * 1.35 + 128));
  }
- ctx.putImageData(image, 0, 0);
- return canvas.toDataURL('image/png');
+ cctx.putImageData(image, 0, 0);
+ normalizeCanvasForOcr(canvas);
+ return { normalized: canvas.toDataURL('image/png'), contrast: contrast.toDataURL('image/png') };
+ }
+
+ // Phone photos have grey, unevenly lit paper, and Tesseract then finds no text
+ // at all. Divide each pixel by an estimate of the local paper brightness so the
+ // page becomes white and the ink dark, then stretch the contrast.
+ function normalizeCanvasForOcr(canvas) {
+   const width = canvas.width, height = canvas.height;
+   const ctx = canvas.getContext('2d', { willReadFrequently: true });
+   // Background estimate: shrink the page (small text disappears) and scale it back up.
+   const small = document.createElement('canvas');
+   small.width = Math.max(1, Math.round(width / 24));
+   small.height = Math.max(1, Math.round(height / 24));
+   const sctx = small.getContext('2d');
+   sctx.imageSmoothingQuality = 'high';
+   sctx.drawImage(canvas, 0, 0, small.width, small.height);
+   const bg = document.createElement('canvas');
+   bg.width = width; bg.height = height;
+   const bctx = bg.getContext('2d', { willReadFrequently: true });
+   bctx.imageSmoothingQuality = 'high';
+   bctx.drawImage(small, 0, 0, width, height);
+   const image = ctx.getImageData(0, 0, width, height);
+   const d = image.data;
+   const b = bctx.getImageData(0, 0, width, height).data;
+   const ratio = new Float32Array(width * height);
+   for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+     const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+     const paper = Math.max(1, 0.299 * b[i] + 0.587 * b[i + 1] + 0.114 * b[i + 2]);
+     ratio[j] = Math.min(1, lum / paper); // 1 = paper, lower = ink
+   }
+   // Map the darkest 2% of pixels to black and the paper to white.
+   const sample = [];
+   for (let j = 0; j < ratio.length; j += 97) sample.push(ratio[j]);
+   sample.sort((x, y) => x - y);
+   const dark = sample[Math.floor(sample.length * 0.02)] || 0;
+   const range = Math.max(0.05, 1 - dark);
+   for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+     const v = Math.max(0, Math.min(255, (ratio[j] - dark) / range * 255));
+     d[i] = d[i + 1] = d[i + 2] = v;
+   }
+   ctx.putImageData(image, 0, 0);
  }
 
  async function pdfPrescriptionPages(file) {
@@ -5350,6 +5101,7 @@ function renderEditablePrescription(parsed) {
    canvas.height = Math.ceil(viewport.height);
    const ctx = canvas.getContext('2d', { willReadFrequently: true });
    await page.render({ canvasContext: ctx, viewport }).promise;
+   normalizeCanvasForOcr(canvas);
    pages.push(canvas.toDataURL('image/png'));
  }
  return pages;
@@ -5373,8 +5125,12 @@ function renderEditablePrescription(parsed) {
    if (!pages.length) throw new Error('The PDF contains no readable pages.');
    return ocrDataUrls(pages);
  }
- const image = await preprocessRxImage(file);
- return ocrDataUrls([image]);
+ const versions = await preprocessRxImage(file);
+ // Read both versions and keep the one from which more medicines can be parsed.
+ const normalizedText = await ocrDataUrls([versions.normalized]);
+ const contrastText = await ocrDataUrls([versions.contrast]);
+ const count = text => parsePrescription(text).medicines.filter(m => !/verify manually/i.test(m.medicine)).length;
+ return count(contrastText) > count(normalizedText) ? contrastText : normalizedText;
  }
 
  chooseRxBtn.addEventListener('click', () => rxFileInput.click());
@@ -5710,6 +5466,8 @@ function renderPersonalizedUI() {
   if (typeof renderDependents === 'function') renderDependents();
   if (typeof renderMedicationInsights === 'function') renderMedicationInsights();
   renderTodayStats();
+  window.refreshDoseReminders?.();
+  window.renderVitals?.();
   if (typeof renderActiveDoctorShare === 'function') renderActiveDoctorShare();
 }
 function buildDoctorSummary() {
@@ -6730,7 +6488,7 @@ async function fetchNearbyHospitals(lat, lon) {
  // a broad unbounded healthcare query is much more likely to time out.
  const query = `[out:json][timeout:18];
  (
-   nwr["amenity"="hospital"](around:8000,${safeLat},${safeLon});
+   nwr["amenity"="hospital"](around:10000,${safeLat},${safeLon});
    nwr["amenity"="clinic"](around:5000,${safeLat},${safeLon});
    nwr["amenity"="doctors"](around:5000,${safeLat},${safeLon});
    nwr["healthcare"~"^(hospital|clinic|doctor|centre|center|polyclinic)$"](around:5000,${safeLat},${safeLon});
@@ -6779,15 +6537,19 @@ async function fetchNearbyHospitals(lat, lon) {
                  amenity === 'clinic' || healthcare === 'clinic' || healthcare === 'polyclinic' ? 'Clinic' :
                  amenity === 'doctors' || healthcare === 'doctor' ? 'Doctor' : 'Healthcare centre',
            emergency: tags.emergency === 'yes' || tags.emergency === '24/7',
-           govt: tags.operator_type === 'government' || /government|govt|state|district hospital/i.test(`${tags.operator || ''} ${tags.name}`),
+           govt: /^(government|public)$/i.test(tags['operator:type'] || tags.operator_type || '') ||
+                 /\b(government|govt|district hospital|state general hospital|sub[- ]?divisional hospital|primary health cent(?:re|er)|community health cent(?:re|er)|phc|chc|esi|esic)\b/i.test(`${tags.operator || ''} ${tags.name}`),
            phone: tags.phone || tags['contact:phone'] || null,
            address: tags['addr:full'] || [[tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '), tags['addr:suburb'] || tags['addr:city']].filter(Boolean).join(', ')
          };
        })
        .filter(Boolean)
-       .sort((a,b) => a.dist - b.dist)
-       .slice(0,10);
-     return results;
+       .sort((a,b) => a.dist - b.dist);
+     // Clinics and doctors' chambers are dense in cities; never let them push
+     // every hospital off the list. Keep the 3 nearest hospitals, then fill up.
+     const nearestHospitals = results.filter(p => p.type === 'Hospital').slice(0, 3);
+     const others = results.filter(p => !nearestHospitals.includes(p)).slice(0, 12 - nearestHospitals.length);
+     return [...nearestHospitals, ...others].sort((a,b) => a.dist - b.dist);
    } catch(err) {
      lastError = err;
      console.warn(`Nearby healthcare endpoint failed: ${endpoint}`, err);
@@ -6865,7 +6627,7 @@ function renderNearbyList(hospitals, lat, lon) {
  const subtitle = document.getElementById('nearbySubtitle');
  if (subtitle && nearbyPlaces.length) {
    const farthest = Math.max(...nearbyPlaces.map(p => Number(p.dist) || 0));
-   subtitle.textContent = `${nearbyPlaces.length} ${nearbyPlaces.length === 1 ? 'place' : 'places'} within ${Math.max(1, Math.ceil(farthest))} km, closest first.`;
+   subtitle.textContent = `${nearbyPlaces.length} ${nearbyPlaces.length === 1 ? 'place' : 'places'} within ${Math.max(1, Math.ceil(farthest))} km (straight-line distance), closest first.`;
  }
  renderNearbyPlaces();
 }
@@ -8303,5 +8065,520 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
   // Make the dashboard name generic if patient data is not populated yet.
   const medInput=$('medSearch'); if(medInput && /thyroxine/i.test(medInput.value))medInput.value='';
 })();
-</script></body>
+</script><script id="dose-reminders">
+/* Dose reminders.
+   1. Notifications while SwasthID is open (also in a background tab). A free
+      Render server sleeps, so it cannot push reminders when the app is closed.
+   2. A calendar file with a repeating event and alarm per dose, so the phone's
+      calendar reminds the user even when SwasthID is closed. */
+(function(){
+  const PREF_KEY = 'swasth_doseReminders';
+  let timers = [];
+
+  function isAsNeeded(m){ return /as needed|prn|sos|when needed/i.test(`${m.frequency||''} ${m.schedule||''}`); }
+
+  // Every scheduled dose: medicine, dose slot, time and repeat pattern.
+  function doseSchedule(){
+    const out = [];
+    getCurrentMedicationList().forEach((m, index) => {
+      if (!m?.medicine || isAsNeeded(m)) return;
+      const count = medicationSlotCount(m);
+      const times = suggestedMedicationTimes(m, count);
+      for (let unit = 0; unit < count; unit++) {
+        if (!/^\d{1,2}:\d{2}$/.test(times[unit] || '')) continue;
+        out.push({ m, index, unit, count, time: times[unit], type: medicationFrequencyType(m) });
+      }
+    });
+    return out;
+  }
+
+  function takenToday(index, unit){
+    const status = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+    const s = status[medicationScheduleKey(index, unit)];
+    return !!(s?.taken && s?.date && new Date(s.date).toDateString() === new Date().toDateString());
+  }
+
+  function doseLabel(d){ return `${d.m.medicine}${d.m.dose ? ' ' + d.m.dose : ''}`; }
+
+  function supported(){ return 'Notification' in window; }
+  function enabled(){ return localStorage.getItem(PREF_KEY) === 'on' && supported() && Notification.permission === 'granted'; }
+
+  async function showDoseNotification(d){
+    // Re-read the schedule: the dose may have been marked taken or changed since.
+    const current = doseSchedule().find(x => medicationIdentityKey(x.m.medicine) === medicationIdentityKey(d.m.medicine) && x.unit === d.unit);
+    if (!current || !enabled() || takenToday(current.index, current.unit)) return;
+    const title = `Time for ${doseLabel(current)}`;
+    const body = `${current.count > 1 ? `Dose ${current.unit + 1} of ${current.count} · ` : ''}${formatMedicationTime(current.time)}. Open SwasthID to mark it taken.`;
+    const options = { body, tag: `swasth-dose-${current.index}-${current.unit}`, renotify: true };
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration();
+      if (reg) return reg.showNotification(title, options);
+      new Notification(title, options);
+    } catch (e) { console.warn('Dose reminder could not be shown:', e); }
+  }
+
+  function schedule(){
+    timers.forEach(clearTimeout); timers = [];
+    if (!enabled()) return;
+    const now = new Date();
+    doseSchedule().forEach(d => {
+      if (!medicationExpectedOnDate(d.m, now)) return;
+      const [h, min] = d.time.split(':').map(Number);
+      const at = new Date(now); at.setHours(h, min, 0, 0);
+      const ms = at - now;
+      if (ms > 0 && !takenToday(d.index, d.unit)) timers.push(setTimeout(() => showDoseNotification(d), ms));
+    });
+    // Plan the next day's reminders just after midnight.
+    const midnight = new Date(now); midnight.setHours(24, 1, 0, 0);
+    timers.push(setTimeout(schedule, midnight - now));
+  }
+
+  async function turnOn(){
+    if (!supported()) { showToast('', 'Notifications not available', 'This browser cannot show notifications here. Add the reminders to your calendar instead.'); return; }
+    const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+    if (permission !== 'granted') { showToast('', 'Notifications blocked', 'Allow notifications for this site in your browser settings, or add the reminders to your calendar.'); render(); return; }
+    try { await navigator.serviceWorker?.register('/sw.js'); } catch (e) { console.warn('Service worker registration failed:', e); }
+    localStorage.setItem(PREF_KEY, 'on');
+    schedule(); render();
+    showToast('', 'Dose reminders on', 'You will be notified at each dose time while SwasthID is open.');
+  }
+  function turnOff(){ localStorage.removeItem(PREF_KEY); schedule(); render(); }
+
+  // ---- calendar file ----
+  const pad = n => String(n).padStart(2, '0');
+  const icsText = t => String(t).replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1');
+  function courseLength(m){
+    const match = String(m.instructions || '').match(/for (\d+) (day|week|month)s?/i);
+    if (!match) return null;
+    const n = Number(match[1]);
+    return match[2].toLowerCase() === 'day' ? n : match[2].toLowerCase() === 'week' ? n * 7 : n * 30;
+  }
+  function buildCalendar(){
+    const now = new Date();
+    const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+    const days = ['SU','MO','TU','WE','TH','FR','SA'];
+    const events = doseSchedule().map(d => {
+      const [h, min] = d.time.split(':').map(Number);
+      const start = new Date(now); start.setHours(h, min, 0, 0);
+      if (d.type !== 'daily') { while (!medicationExpectedOnDate(d.m, start)) start.setDate(start.getDate() + 1); }
+      const dt = `${start.getFullYear()}${pad(start.getMonth() + 1)}${pad(start.getDate())}T${pad(h)}${pad(min)}00`;
+      let rule = 'FREQ=DAILY';
+      if (d.type === 'weekly') rule = `FREQ=WEEKLY;BYDAY=${days[start.getDay()]}`;
+      if (d.type === 'monthly') rule = `FREQ=MONTHLY;BYMONTHDAY=${start.getDate()}`;
+      const course = d.type === 'daily' ? courseLength(d.m) : null;
+      if (course) rule += `;COUNT=${course}`;
+      const summary = `Take ${doseLabel(d)}`;
+      const note = [d.count > 1 ? `Dose ${d.unit + 1} of ${d.count}` : '', d.m.frequency, d.m.instructions, 'From SwasthID.'].filter(Boolean).join(' · ');
+      return ['BEGIN:VEVENT', `UID:swasthid-${ensureMedicationStableId(d.m)}-${d.unit}@swasthid`, `DTSTAMP:${stamp}`, `DTSTART:${dt}`, 'DURATION:PT10M', `RRULE:${rule}`,
+        `SUMMARY:${icsText(summary)}`, `DESCRIPTION:${icsText(note)}`,
+        'BEGIN:VALARM', 'ACTION:DISPLAY', 'TRIGGER:PT0M', `DESCRIPTION:${icsText(summary)}`, 'END:VALARM', 'END:VEVENT'].join('\r\n');
+    });
+    // Calendar lines longer than 75 octets must be folded (RFC 5545).
+    const fold = line => { const out = []; let cur = ''; for (const ch of line) { if (new TextEncoder().encode(cur + ch).length > (out.length ? 74 : 75)) { out.push(cur); cur = ''; } cur += ch; } out.push(cur); return out.join('\r\n '); };
+    return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SwasthID//Dose reminders//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', ...events, 'END:VCALENDAR'].join('\r\n').split('\r\n').map(fold).join('\r\n') + '\r\n';
+  }
+  function downloadCalendar(){
+    if (!doseSchedule().length) { showToast('', 'No doses to add', 'Add medicines with dose times first.'); return; }
+    const blob = new Blob([buildCalendar()], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), { href: url, download: 'SwasthID-dose-reminders.ics' });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    showToast('', 'Calendar file ready', 'Open it to add a repeating reminder for each dose to your calendar.');
+  }
+
+  function render(){
+    const bar = document.getElementById('doseReminderBar'); if (!bar) return;
+    const doses = doseSchedule();
+    if (!doses.length) { bar.innerHTML = ''; bar.style.display = 'none'; return; }
+    bar.style.display = '';
+    const on = enabled();
+    const blocked = supported() && Notification.permission === 'denied';
+    const status = on ? 'On: you will be notified at each dose time while SwasthID is open.'
+      : blocked ? 'Notifications are blocked for this site in your browser settings.'
+      : !supported() ? 'This browser cannot show notifications here.'
+      : 'Get notified at each dose time while SwasthID is open.';
+    bar.innerHTML = `<div class="reminder-bar-text"><b>Dose reminders</b><span>${escapeHtml(status)} To be reminded when the app is closed, add them to your calendar; your calendar will show the medicine names.</span></div>
+      <div class="reminder-bar-actions">${supported() && !blocked ? `<button type="button" class="n-btn${on ? '' : ' solid'}" data-reminder-toggle>${on ? 'Turn off' : 'Turn on'}</button>` : ''}<button type="button" class="n-btn" data-reminder-calendar>Add to calendar</button></div>`;
+    bar.querySelector('[data-reminder-toggle]')?.addEventListener('click', () => on ? turnOff() : turnOn());
+    bar.querySelector('[data-reminder-calendar]')?.addEventListener('click', downloadCalendar);
+  }
+
+  window.refreshDoseReminders = function(){ render(); schedule(); };
+  window.buildDoseCalendar = buildCalendar;
+  if (localStorage.getItem(PREF_KEY) === 'on' && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+})();
+</script>
+<style id="reminders-polish">
+.reminder-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:4px 0 12px;padding:12px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2,#f7faf8)}
+.reminder-bar-text{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 320px}
+.reminder-bar-text b{font-size:14px;color:var(--ink)}
+.reminder-bar-text span{font-size:12.5px;color:var(--muted);line-height:1.45}
+.reminder-bar-actions{display:flex;gap:8px;flex-wrap:wrap}
+body.dark-mode .reminder-bar{background:#15211d}
+@media(max-width:620px){.reminder-bar-actions{width:100%}.reminder-bar-actions .n-btn{flex:1}}
+</style>
+<script id="vitals-log">
+/* Vitals log: blood pressure, blood sugar, weight and SpO2, with reference
+   ranges, small-multiple trend charts and Heart Risk pre-fill. */
+(function(){
+  const KEY = 'swasth_vitals';
+  const TYPES = {
+    bp: { title: 'Blood pressure', unit: 'mmHg' },
+    glucose: { title: 'Blood sugar', unit: 'mg/dL' },
+    weight: { title: 'Weight', unit: 'kg' },
+    spo2: { title: 'Oxygen level (SpO₂)', unit: '%' }
+  };
+  const GLUCOSE_CONTEXT = { fasting: 'Fasting', 'after-meal': 'After a meal', random: 'Random' };
+
+  function load(){ const v = safeJsonParse(localStorage.getItem(KEY) || '[]', []); return Array.isArray(v) ? v : []; }
+  function save(list){ localStorage.setItem(KEY, JSON.stringify(list)); if (typeof syncCloudState === 'function') syncCloudState(KEY); }
+  function byType(type){ return load().filter(r => r.type === type).sort((a, b) => new Date(a.at) - new Date(b.at)); }
+
+  function valueText(r){
+    if (r.type === 'bp') return `${r.sys}/${r.dia}`;
+    if (r.type === 'weight') return Number(r.weight).toFixed(1);
+    if (r.type === 'glucose') return String(r.glucose);
+    return String(r.spo2);
+  }
+
+  // Adult reference ranges: AHA blood-pressure categories, ADA glucose ranges.
+  function assess(r){
+    if (r.type === 'bp') {
+      if (r.sys >= 180 || r.dia >= 120) return { level: 'critical', label: 'Very high', advice: 'Seek medical help now if you have chest pain, breathlessness, weakness or trouble speaking.' };
+      if (r.sys >= 140 || r.dia >= 90) return { level: 'serious', label: 'High (stage 2)' };
+      if (r.sys >= 130 || r.dia >= 80) return { level: 'warning', label: 'High (stage 1)' };
+      if (r.sys >= 120) return { level: 'warning', label: 'Elevated' };
+      if (r.sys < 90 || r.dia < 60) return { level: 'warning', label: 'Low' };
+      return { level: 'good', label: 'Normal' };
+    }
+    if (r.type === 'glucose') {
+      if (r.glucose < 70) return { level: 'serious', label: 'Low', advice: 'If you feel shaky, sweaty or confused, take fast-acting sugar and seek help.' };
+      if (r.context === 'fasting') {
+        if (r.glucose >= 126) return { level: 'serious', label: 'High' };
+        if (r.glucose >= 100) return { level: 'warning', label: 'Above normal' };
+        return { level: 'good', label: 'Normal' };
+      }
+      if (r.glucose >= 200) return { level: 'serious', label: 'High' };
+      if (r.glucose >= 140) return { level: 'warning', label: 'Above normal' };
+      return { level: 'good', label: 'Normal' };
+    }
+    if (r.type === 'spo2') {
+      if (r.spo2 < 92) return { level: 'critical', label: 'Low', advice: 'Contact a doctor promptly, sooner if you are breathless.' };
+      if (r.spo2 < 95) return { level: 'warning', label: 'Below typical' };
+      return { level: 'good', label: 'Typical' };
+    }
+    const h = Number.parseFloat(patientData.vitals?.height);
+    if (h > 0) {
+      const bmi = r.weight / Math.pow(h / 100, 2);
+      return { level: 'none', label: `BMI ${bmi.toFixed(1)}` };
+    }
+    return { level: 'none', label: '' };
+  }
+  const STATUS_ICON = { good: '✓', warning: '!', serious: '!', critical: '!!' };
+  function statusHtml(a){
+    if (!a.label) return '';
+    if (a.level === 'none') return `<span class="vital-status none">${escapeHtml(a.label)}</span>`;
+    return `<span class="vital-status ${a.level}"><span aria-hidden="true">${STATUS_ICON[a.level]}</span> ${escapeHtml(a.label)}</span>`;
+  }
+  function when(at){ const d = new Date(at); return `${d.toLocaleDateString([], { day: 'numeric', month: 'short' })} · ${d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`; }
+
+  // ---------- latest tiles ----------
+  function renderLatest(){
+    const el = document.getElementById('vitalsLatest'); if (!el) return;
+    const tiles = Object.entries(TYPES).map(([type, t]) => {
+      const list = byType(type); const r = list[list.length - 1];
+      if (!r) return `<div class="vital-tile empty"><div class="vital-tile-label">${t.title}</div><div class="vital-tile-value">—</div><div class="vital-tile-meta">No readings yet</div></div>`;
+      const a = assess(r);
+      const extra = r.type === 'glucose' ? ` · ${GLUCOSE_CONTEXT[r.context] || ''}` : (r.pulse ? ` · pulse ${r.pulse}` : '');
+      return `<div class="vital-tile"><div class="vital-tile-label">${t.title}</div><div class="vital-tile-value">${escapeHtml(valueText(r))} <small>${t.unit}</small></div>
+        <div class="vital-tile-meta">${escapeHtml(when(r.at) + extra)}</div>${statusHtml(a)}${a.advice ? `<div class="vital-advice">${escapeHtml(a.advice)}</div>` : ''}</div>`;
+    });
+    el.innerHTML = tiles.join('');
+  }
+
+  // ---------- charts ----------
+  function niceTicks(min, max, count = 4){
+    if (min === max) { min -= 1; max += 1; }
+    const span = max - min, step0 = span / count, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+    const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= step0) || 10 * mag;
+    const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
+    const ticks = []; for (let v = lo; v <= hi + step / 2; v += step) ticks.push(Math.round(v * 100) / 100);
+    return ticks;
+  }
+  const svgNS = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, attrs){ const e = document.createElementNS(svgNS, tag); Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v)); return e; }
+
+  function lineChart(container, { title, unit, series, readings, floor }){
+    const card = document.createElement('div'); card.className = 'vital-chart';
+    const head = document.createElement('div'); head.className = 'vital-chart-head';
+    const h = document.createElement('h4'); h.textContent = `${title}, ${unit}`; head.appendChild(h);
+    if (series.length > 1) {
+      const legend = document.createElement('div'); legend.className = 'vital-legend';
+      series.forEach(s => { const item = document.createElement('span'); const key = document.createElement('i'); key.style.background = `var(${s.color})`; item.appendChild(key); item.appendChild(document.createTextNode(s.name)); legend.appendChild(item); });
+      head.appendChild(legend);
+    }
+    card.appendChild(head);
+    container.appendChild(card);
+
+    const W = Math.max(260, card.clientWidth - 32), H = 170, m = { t: 12, r: 44, b: 26, l: 40 };
+    const times = readings.map(r => new Date(r.at).getTime());
+    const t0 = Math.min(...times), t1 = Math.max(...times);
+    const values = series.flatMap(s => readings.map(s.value));
+    // A fixed floor keeps small, normal changes (e.g. SpO2 96-98%) from looking dramatic.
+    const lo = floor ? Math.min(floor[0], ...values) : Math.min(...values);
+    const hi = floor ? Math.max(floor[1], ...values) : Math.max(...values);
+    const ticks = niceTicks(lo, hi);
+    const y0 = ticks[0], y1 = ticks[ticks.length - 1];
+    const x = t => readings.length === 1 ? m.l + (W - m.l - m.r) / 2 : m.l + (t - t0) / (t1 - t0 || 1) * (W - m.l - m.r);
+    const y = v => m.t + (1 - (v - y0) / (y1 - y0 || 1)) * (H - m.t - m.b);
+
+    const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', tabindex: '0', 'aria-label': `${title} trend, ${readings.length} readings. Use the arrow keys to read each one.` });
+    ticks.forEach(v => {
+      svg.appendChild(svgEl('line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: 'vc-grid' }));
+      const lbl = svgEl('text', { x: m.l - 6, y: y(v) + 4, 'text-anchor': 'end', class: 'vc-tick' }); lbl.textContent = v.toLocaleString(); svg.appendChild(lbl);
+    });
+    const fmtDate = t => new Date(t).toLocaleDateString([], { day: 'numeric', month: 'short' });
+    [[t0, 'start'], [t1, 'end']].forEach(([t, anchor], i) => {
+      if (i === 1 && t1 === t0) return;
+      const lbl = svgEl('text', { x: x(t), y: H - 6, 'text-anchor': readings.length === 1 ? 'middle' : anchor, class: 'vc-tick' }); lbl.textContent = fmtDate(t); svg.appendChild(lbl);
+    });
+    series.forEach(s => {
+      const pts = readings.map(r => `${x(new Date(r.at).getTime()).toFixed(1)},${y(s.value(r)).toFixed(1)}`);
+      if (pts.length > 1) svg.appendChild(svgEl('polyline', { points: pts.join(' '), class: 'vc-line', style: `stroke:var(${s.color})` }));
+      readings.forEach(r => svg.appendChild(svgEl('circle', { cx: x(new Date(r.at).getTime()), cy: y(s.value(r)), r: 4, class: 'vc-dot', style: `fill:var(${s.color})` })));
+      const last = readings[readings.length - 1];
+      const end = svgEl('text', { x: x(new Date(last.at).getTime()) + 8, y: y(s.value(last)) + 4, class: 'vc-end' }); end.textContent = s.fmt(s.value(last)); svg.appendChild(end);
+    });
+    const cross = svgEl('line', { y1: m.t, y2: H - m.b, class: 'vc-cross', visibility: 'hidden' }); svg.appendChild(cross);
+    const hit = svgEl('rect', { x: m.l - 10, y: 0, width: W - m.l - m.r + 20, height: H, fill: 'transparent' }); svg.appendChild(hit);
+    const plot = document.createElement('div'); plot.className = 'vital-chart-plot'; plot.appendChild(svg);
+    const tip = document.createElement('div'); tip.className = 'vital-tip'; tip.hidden = true; plot.appendChild(tip);
+    card.appendChild(plot);
+
+    let current = readings.length - 1;
+    function show(i){
+      current = Math.max(0, Math.min(readings.length - 1, i));
+      const r = readings[current], cx = x(new Date(r.at).getTime());
+      cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('visibility', 'visible');
+      tip.replaceChildren();
+      series.forEach(s => {
+        const row = document.createElement('div'); row.className = 'vital-tip-row';
+        const key = document.createElement('i'); key.style.background = `var(${s.color})`;
+        const b = document.createElement('b'); b.textContent = `${s.fmt(s.value(r))} ${unit}`;
+        row.append(key, b, document.createTextNode(series.length > 1 ? ` ${s.name}` : ''));
+        tip.appendChild(row);
+      });
+      const meta = document.createElement('div'); meta.className = 'vital-tip-meta';
+      meta.textContent = when(r.at) + (r.type === 'glucose' ? ` · ${GLUCOSE_CONTEXT[r.context] || ''}` : '') + (r.note ? ` · ${r.note}` : '');
+      tip.appendChild(meta);
+      tip.hidden = false;
+      const left = Math.min(Math.max(cx - 70, 0), W - 150);
+      tip.style.left = `${left}px`;
+    }
+    function hide(){ cross.setAttribute('visibility', 'hidden'); tip.hidden = true; }
+    hit.addEventListener('pointermove', e => {
+      const rect = svg.getBoundingClientRect(); const px = (e.clientX - rect.left) * (W / rect.width);
+      let best = 0; readings.forEach((r, i) => { if (Math.abs(x(new Date(r.at).getTime()) - px) < Math.abs(x(new Date(readings[best].at).getTime()) - px)) best = i; });
+      show(best);
+    });
+    hit.addEventListener('pointerleave', hide);
+    svg.addEventListener('focus', () => show(current));
+    svg.addEventListener('blur', hide);
+    svg.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); show(current + 1); }
+    });
+  }
+
+  function renderCharts(){
+    const el = document.getElementById('vitalsCharts'); if (!el) return;
+    el.replaceChildren();
+    const plan = [
+      ['bp', [{ name: 'Systolic', color: '--viz-1', value: r => r.sys, fmt: v => String(v) }, { name: 'Diastolic', color: '--viz-2', value: r => r.dia, fmt: v => String(v) }]],
+      ['glucose', [{ name: 'Blood sugar', color: '--viz-1', value: r => r.glucose, fmt: v => String(v) }]],
+      ['weight', [{ name: 'Weight', color: '--viz-1', value: r => Number(r.weight), fmt: v => v.toFixed(1) }]],
+      ['spo2', [{ name: 'SpO₂', color: '--viz-1', value: r => r.spo2, fmt: v => String(v) }]]
+    ];
+    let drawn = 0;
+    plan.forEach(([type, series]) => {
+      const readings = byType(type).slice(-30);
+      if (!readings.length) return;
+      drawn++;
+      lineChart(el, { title: TYPES[type].title, unit: TYPES[type].unit, series, readings, floor: type === 'spo2' ? [90, 100] : null });
+    });
+    if (!drawn) el.innerHTML = '<div class="record-empty">Charts appear here once you add readings.</div>';
+  }
+
+  // ---------- list ----------
+  let listDays = 7;
+  function renderList(){
+    const el = document.getElementById('vitalsList'); if (!el) return;
+    const all = load().slice().sort((a, b) => new Date(b.at) - new Date(a.at));
+    if (!all.length) { el.innerHTML = '<div class="record-empty">No readings yet. Add your first one above.</div>'; return; }
+    const days = new Map();
+    all.forEach(r => { const k = localDayKey(new Date(r.at)); if (!days.has(k)) days.set(k, []); days.get(k).push(r); });
+    const dayEntries = [...days.entries()];
+    el.innerHTML = dayEntries.slice(0, listDays).map(([k, items]) => `<div class="record-day"><div class="record-day-head"><span>${escapeHtml(new Date(`${k}T12:00:00`).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }))}</span><span>${items.length} ${items.length === 1 ? 'reading' : 'readings'}</span></div>` +
+      items.map(r => {
+        const a = assess(r);
+        const detail = [r.type === 'glucose' ? GLUCOSE_CONTEXT[r.context] : '', r.pulse ? `pulse ${r.pulse}` : '', r.note].filter(Boolean).join(' · ');
+        return `<div class="record-row vital-row"><span class="record-row-time">${escapeHtml(new Date(r.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }))}</span>
+          <div class="record-row-main"><b>${escapeHtml(TYPES[r.type].title)}: ${escapeHtml(valueText(r))} ${TYPES[r.type].unit}</b>${detail ? `<span>${escapeHtml(detail)}</span>` : ''}</div>
+          <span class="vital-row-end">${statusHtml(a)}<button type="button" class="vital-delete" data-vital-delete="${escapeHtml(r.id)}" aria-label="Delete this reading">Delete</button></span></div>`;
+      }).join('') + '</div>').join('') + (dayEntries.length > listDays ? '<button type="button" class="record-more-btn" data-vitals-more>Show earlier days</button>' : '');
+    el.querySelector('[data-vitals-more]')?.addEventListener('click', () => { listDays += 7; renderList(); });
+    el.querySelectorAll('[data-vital-delete]').forEach(btn => btn.addEventListener('click', () => {
+      if (!confirm('Delete this reading?')) return;
+      save(load().filter(r => r.id !== btn.dataset.vitalDelete));
+      render();
+    }));
+  }
+
+  function render(){ renderLatest(); renderCharts(); renderList(); }
+
+  // ---------- form ----------
+  function selectedType(){ return document.querySelector('input[name="vitalType"]:checked')?.value || 'bp'; }
+  function localInputValue(d){ const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
+  function syncFields(){
+    const type = selectedType();
+    document.querySelectorAll('#vitalsForm .vf').forEach(f => { f.hidden = !f.dataset.for.split(' ').includes(type); });
+    const whenInput = document.getElementById('vWhen'); if (whenInput && !whenInput.value) whenInput.value = localInputValue(new Date());
+    document.getElementById('vitalsFormError').textContent = '';
+  }
+  function num(id){ const v = document.getElementById(id)?.value; return v === '' || v == null ? null : Number(v); }
+  function submit(e){
+    e.preventDefault();
+    const type = selectedType(), err = document.getElementById('vitalsFormError');
+    const at = document.getElementById('vWhen').value ? new Date(document.getElementById('vWhen').value) : new Date();
+    if (Number.isNaN(at.getTime()) || at > new Date(Date.now() + 60000)) { err.textContent = 'Choose a date and time that is not in the future.'; return; }
+    const r = { id: `v${Date.now()}${Math.random().toString(36).slice(2, 6)}`, type, at: at.toISOString() };
+    const note = document.getElementById('vNote').value.trim(); if (note) r.note = note;
+    const inRange = (v, lo, hi) => v !== null && Number.isFinite(v) && v >= lo && v <= hi;
+    if (type === 'bp') {
+      r.sys = num('vSys'); r.dia = num('vDia');
+      if (!inRange(r.sys, 50, 260) || !inRange(r.dia, 30, 160)) { err.textContent = 'Enter systolic (50–260) and diastolic (30–160) values.'; return; }
+      if (r.dia >= r.sys) { err.textContent = 'Systolic (the top number) should be higher than diastolic.'; return; }
+    } else if (type === 'glucose') {
+      r.glucose = num('vGlucose'); r.context = document.getElementById('vGlucoseCtx').value;
+      if (!inRange(r.glucose, 20, 700)) { err.textContent = 'Enter a blood sugar value between 20 and 700 mg/dL.'; return; }
+    } else if (type === 'weight') {
+      r.weight = num('vWeight');
+      if (!inRange(r.weight, 2, 350)) { err.textContent = 'Enter a weight between 2 and 350 kg.'; return; }
+      r.weight = Math.round(r.weight * 10) / 10;
+    } else {
+      r.spo2 = num('vSpo2');
+      if (!inRange(r.spo2, 50, 100)) { err.textContent = 'Enter an SpO₂ value between 50 and 100%.'; return; }
+    }
+    const pulse = num('vPulse');
+    if ((type === 'bp' || type === 'spo2') && pulse !== null) {
+      if (!inRange(pulse, 25, 250)) { err.textContent = 'Enter a pulse between 25 and 250, or leave it empty.'; return; }
+      r.pulse = pulse;
+    }
+    save([...load(), r]);
+    if (type === 'weight' && document.getElementById('vWeightProfile')?.checked) {
+      const latest = byType('weight').pop();
+      if (latest && latest.id === r.id) {
+        patientData.vitals = { ...(patientData.vitals || {}), weight: String(r.weight) };
+        if (typeof cacheProfileLocally === 'function') cacheProfileLocally();
+        if (typeof syncProfileToCloud === 'function') syncProfileToCloud();
+        if (typeof renderPersonalizedUI === 'function') renderPersonalizedUI();
+      }
+    }
+    document.querySelectorAll('#vitalsForm input[type="number"], #vNote').forEach(i => { i.value = ''; });
+    document.getElementById('vWhen').value = localInputValue(new Date());
+    render();
+    const a = assess(r);
+    showToast('', 'Reading saved', `${TYPES[type].title}: ${valueText(r)} ${TYPES[type].unit}${a.label && a.level !== 'none' ? ` (${a.label})` : ''}.`);
+  }
+
+  // Heart Risk: offer the latest blood pressure when the field is empty.
+  window.prefillRiskFromVitals = function(){
+    const input = document.getElementById('riskSbpInput'); if (!input) return;
+    const latest = byType('bp').pop();
+    let note = document.getElementById('riskSbpFromVitals');
+    if (!latest || input.value) { if (note && !latest) note.remove(); return; }
+    input.value = latest.sys;
+    if (!note) { note = document.createElement('div'); note.id = 'riskSbpFromVitals'; note.className = 'vital-prefill-note'; input.insertAdjacentElement('afterend', note); }
+    note.textContent = `From your blood pressure reading on ${new Date(latest.at).toLocaleDateString([], { day: 'numeric', month: 'short' })}.`;
+  };
+
+  window.renderVitals = render;
+  document.getElementById('vitalsForm')?.addEventListener('submit', submit);
+  document.querySelectorAll('input[name="vitalType"]').forEach(r => r.addEventListener('change', syncFields));
+  syncFields(); render();
+  let resizeTimer; window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (document.getElementById('panel-vitals')?.classList.contains('active')) renderCharts(); }, 200); });
+})();
+</script>
+<style id="vitals-polish">
+:root{--viz-1:#2a78d6;--viz-2:#eb6834}
+body.dark-mode{--viz-1:#3987e5;--viz-2:#d95926}
+.vitals-latest{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.vital-tile{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.vital-tile-label{font-size:12.5px;color:var(--muted);font-weight:600}
+.vital-tile-value{font-size:24px;font-weight:600;color:var(--ink);line-height:1.2}
+.vital-tile-value small{font-size:12px;font-weight:500;color:var(--muted)}
+.vital-tile.empty .vital-tile-value{color:var(--muted)}
+.vital-tile-meta{font-size:12px;color:var(--muted)}
+.vital-status{align-self:flex-start;display:inline-flex;gap:5px;align-items:center;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;margin-top:4px}
+.vital-status.good{background:#e6f3ec;color:#1f6a45}
+.vital-status.warning{background:#fbf1dc;color:#8a5a00}
+.vital-status.serious{background:#fde8e4;color:#a2382a}
+.vital-status.critical{background:#a2382a;color:#fff}
+.vital-status.none{background:var(--sage);color:var(--ink);font-weight:600}
+.vital-advice{font-size:12px;color:#a2382a;line-height:1.4;margin-top:4px}
+.vitals-form{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:16px}
+.vitals-types{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.vitals-types label{position:relative;display:inline-flex;margin:0;cursor:pointer}
+.vitals-types input{position:absolute;opacity:0;width:1px;height:1px}
+.vitals-types span{padding:8px 14px;border:1px solid var(--line);border-radius:999px;font-size:13px;font-weight:600;color:var(--ink);background:var(--surface)}
+.vitals-types input:checked + span{background:var(--teal,#143831);border-color:var(--teal,#143831);color:#fff}
+.vitals-types input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+.vitals-fields{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 16px}
+.vf{display:flex;flex-direction:column;gap:6px;min-width:0}
+.vf[hidden]{display:none}
+.vf-wide{grid-column:span 2}
+.vf label{font-size:12px;font-weight:700;color:var(--ink);margin:0}
+.vf input,.vf select{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px}
+.vf-check{justify-content:flex-end}
+.vf-check label{display:flex;align-items:center;gap:8px;font-weight:500;font-size:13px}
+.vf-check input{width:auto}
+.vitals-form-actions{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:16px}
+#vitalsFormError{color:var(--danger);font-size:12.5px;margin-right:auto}
+.vitals-charts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vital-chart{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:14px 16px;min-width:0}
+.vital-chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.vital-chart-head h4{margin:0;font-size:14px;color:var(--ink)}
+.vital-legend{display:flex;gap:12px;font-size:12px;color:var(--muted)}
+.vital-legend span{display:inline-flex;align-items:center;gap:6px}
+.vital-legend i,.vital-tip-row i{display:inline-block;width:14px;height:2px;border-radius:2px}
+.vital-chart-plot{position:relative}
+.vital-chart svg{display:block;max-width:100%;height:auto;overflow:visible}
+.vital-chart svg:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
+.vc-grid{stroke:var(--line);stroke-width:1}
+.vc-tick{font-size:10.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.vc-line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.vc-dot{stroke:var(--surface,#fff);stroke-width:2}
+.vc-end{font-size:11.5px;font-weight:700;fill:var(--ink)}
+.vc-cross{stroke:var(--muted);stroke-width:1}
+.vital-tip{position:absolute;top:0;min-width:140px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:0 6px 18px rgba(0,0,0,.12);font-size:12px;pointer-events:none;z-index:2}
+.vital-tip-row{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.vital-tip-row b{color:var(--ink);font-size:13px}
+.vital-tip-meta{margin-top:4px;color:var(--muted);font-size:11.5px}
+.vital-row{grid-template-columns:72px minmax(0,1fr) auto}
+.vital-row-end{display:flex;align-items:center;gap:10px}
+.vital-row-end .vital-status{margin:0}
+.vital-delete{background:none;border:0;padding:4px 6px;border-radius:6px;font:inherit;font-size:12px;color:var(--muted);cursor:pointer}
+.vital-delete:hover{color:var(--danger);background:var(--danger-soft)}
+.vital-prefill-note{font-size:11.5px;color:var(--muted);margin-top:5px}
+body.dark-mode .vital-status.good{background:#173a2a;color:#9fe0bf}
+body.dark-mode .vital-status.warning{background:#3a2e12;color:#f1cf85}
+body.dark-mode .vital-status.serious{background:#3a1d19;color:#f0a092}
+body.dark-mode .vital-status.critical{background:#c4574a;color:#fff}
+body.dark-mode .vital-advice{color:#f0a092}
+body.dark-mode .vitals-types input:checked + span{background:#2e7d5b;border-color:#2e7d5b}
+@media(max-width:820px){.vitals-latest{grid-template-columns:1fr 1fr}.vitals-charts{grid-template-columns:1fr}}
+@media(max-width:620px){.vitals-fields{grid-template-columns:1fr 1fr}.vf-wide{grid-column:1/-1}.vital-row{grid-template-columns:58px minmax(0,1fr)}.vital-row-end{grid-column:2}}
+</style>
+</body>
 </html>
