@@ -1887,12 +1887,14 @@ body.dark-mode .type-lab .record-type{color:#c4a6ec!important}
 .place-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .place-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#e8eff7;color:#2a5585}
 .place-tag.er{background:#fdecea;color:#a23b2e}
+.place-tag.generic{background:#e6f3ec;color:#1f6445}
 .place-actions{display:grid;grid-template-columns:repeat(2,96px);gap:8px}
 .place-actions .n-btn{justify-content:center;text-align:center;min-height:36px;padding:8px 10px}
 .places-panel .record-more-btn{margin:0 auto;padding:12px;width:100%;border-radius:0;border-top:1px solid var(--line)}
 body.dark-mode .places-source{background:#15211d}
 body.dark-mode .place-tag{background:#1b2c3d;color:#9cc4ec}
 body.dark-mode .place-tag.er{background:#3a1d19;color:#f0a092}
+body.dark-mode .place-tag.generic{background:#16362a;color:#8fd6b0}
 body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
 @media(max-width:620px){
  .place-row{grid-template-columns:52px minmax(0,1fr);row-gap:10px}
@@ -2055,7 +2057,7 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  <div class="places-head">
  <div>
  <h3>Nearby healthcare</h3>
- <p class="section-sub" id="nearbySubtitle">Find hospitals, clinics and doctors near you.</p>
+ <p class="section-sub" id="nearbySubtitle">Find hospitals, clinics, doctors and pharmacies near you.</p>
  </div>
  <button class="n-btn solid" id="findNearbyBtn" type="button">Find near me</button>
  </div>
@@ -2072,7 +2074,7 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  <button class="n-btn" id="retryLocationBtn" type="button">Try again</button>
  </div>
  <div id="nearbyItemsList">
- <div class="places-empty">Use <b>Find near me</b> to list hospitals and clinics around your current location.</div>
+ <div class="places-empty">Use <b>Find near me</b> to list hospitals, clinics and pharmacies, including generic-medicine stores, around your current location.</div>
  </div>
  <div class="places-source">Data © OpenStreetMap contributors. Details can be out of date, so call ahead when you can.</div>
  </div>
@@ -7074,6 +7076,10 @@ async function fetchNearbyHospitals(lat, lon) {
    nwr["amenity"="clinic"](around:5000,${safeLat},${safeLon});
    nwr["amenity"="doctors"](around:5000,${safeLat},${safeLon});
    nwr["healthcare"~"^(hospital|clinic|doctor|centre|center|polyclinic)$"](around:5000,${safeLat},${safeLon});
+   nwr["amenity"="pharmacy"](around:3000,${safeLat},${safeLon});
+   nwr["healthcare"="pharmacy"](around:3000,${safeLat},${safeLon});
+   nwr["amenity"="pharmacy"]["name"~"aushadh|generic|amrit",i](around:10000,${safeLat},${safeLon});
+   nwr["amenity"="pharmacy"]["brand"~"aushadh|generic|amrit",i](around:10000,${safeLat},${safeLon});
  );
  out center tags qt;`;
 
@@ -7109,17 +7115,26 @@ async function fetchNearbyHospitals(lat, lon) {
          seen.add(key);
          const amenity = String(tags.amenity || '').toLowerCase();
          const healthcare = String(tags.healthcare || '').toLowerCase();
+         const pharmacy = amenity === 'pharmacy' || healthcare === 'pharmacy';
+         const storeText = `${tags.name} ${tags.brand || ''} ${tags.operator || ''}`;
+         const janAushadhi = pharmacy && /jan\s*-?\s*aushadh|janaushadh|\bpmbj[kp]\b|\bbppi\b/i.test(storeText);
          return {
            id: el.id,
            name: tags.name,
            lat: latNum,
            lon: lonNum,
            dist: haversineKm(safeLat, safeLon, latNum, lonNum),
-           type: amenity === 'hospital' || healthcare === 'hospital' ? 'Hospital' :
+           type: pharmacy ? 'Pharmacy' :
+                 amenity === 'hospital' || healthcare === 'hospital' ? 'Hospital' :
                  amenity === 'clinic' || healthcare === 'clinic' || healthcare === 'polyclinic' ? 'Clinic' :
                  amenity === 'doctors' || healthcare === 'doctor' ? 'Doctor' : 'Healthcare centre',
-           emergency: tags.emergency === 'yes' || tags.emergency === '24/7',
-           govt: /^(government|public)$/i.test(tags['operator:type'] || tags.operator_type || '') ||
+           emergency: !pharmacy && (tags.emergency === 'yes' || tags.emergency === '24/7'),
+           // Generic-medicine stores: Jan Aushadhi Kendras (PMBJP), AMRIT pharmacies (not
+           // every "Amrit Medical"), and stores that say "generic" in their name or brand.
+           generic: pharmacy && (janAushadhi || /\bgeneric\b|\bamrit\s+(?:pharmacy|deendayal)\b/i.test(storeText)),
+           janAushadhi,
+           open24: String(tags.opening_hours || '').trim() === '24/7',
+           govt: !pharmacy && /^(government|public)$/i.test(tags['operator:type'] || tags.operator_type || '') ||
                  /\b(government|govt|district hospital|state general hospital|sub[- ]?divisional hospital|primary health cent(?:re|er)|community health cent(?:re|er)|phc|chc|esi|esic)\b/i.test(`${tags.operator || ''} ${tags.name}`),
            phone: tags.phone || tags['contact:phone'] || null,
            address: tags['addr:full'] || [[tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '), tags['addr:suburb'] || tags['addr:city']].filter(Boolean).join(', ')
@@ -7129,9 +7144,15 @@ async function fetchNearbyHospitals(lat, lon) {
        .sort((a,b) => a.dist - b.dist);
      // Clinics and doctors' chambers are dense in cities; never let them push
      // every hospital off the list. Keep the 3 nearest hospitals, then fill up.
-     const nearestHospitals = results.filter(p => p.type === 'Hospital').slice(0, 3);
-     const others = results.filter(p => !nearestHospitals.includes(p)).slice(0, 12 - nearestHospitals.length);
-     return [...nearestHospitals, ...others].sort((a,b) => a.dist - b.dist);
+     // Pharmacies are chosen separately so they don't crowd out care either:
+     // the 3 nearest generic-medicine stores (searched up to 10 km) and the 8
+     // nearest other pharmacies.
+     const care = results.filter(p => p.type !== 'Pharmacy');
+     const nearestHospitals = care.filter(p => p.type === 'Hospital').slice(0, 3);
+     const others = care.filter(p => !nearestHospitals.includes(p)).slice(0, 12 - nearestHospitals.length);
+     const generics = results.filter(p => p.generic).slice(0, 3);
+     const pharmacies = results.filter(p => p.type === 'Pharmacy' && !p.generic).slice(0, 8);
+     return [...nearestHospitals, ...others, ...generics, ...pharmacies].sort((a,b) => a.dist - b.dist);
    } catch(err) {
      lastError = err;
      console.warn(`Nearby healthcare endpoint failed: ${endpoint}`, err);
@@ -7196,7 +7217,9 @@ let nearbyShowAll = false;
 const NEARBY_FILTERS = [
   ['all', 'All', () => true],
   ['hospital', 'Hospitals', p => p.type === 'Hospital'],
-  ['clinic', 'Clinics & doctors', p => p.type !== 'Hospital'],
+  ['clinic', 'Clinics & doctors', p => p.type !== 'Hospital' && p.type !== 'Pharmacy'],
+  ['pharmacy', 'Pharmacies', p => p.type === 'Pharmacy'],
+  ['generic', 'Generic medicines', p => p.generic],
   ['emergency', '24×7 emergency', p => p.emergency]
 ];
 
@@ -7218,7 +7241,7 @@ function renderNearbyPlaces() {
  const list = document.getElementById('nearbyItemsList');
  if (!list) return;
  if (!nearbyPlaces.length) {
-   list.innerHTML = '<div class="places-empty">No hospitals or clinics were found nearby. Try again from a different location.</div>';
+   list.innerHTML = '<div class="places-empty">No hospitals, clinics or pharmacies were found nearby. Try again from a different location.</div>';
    return;
  }
  const filters = NEARBY_FILTERS.filter(([key,,test]) => key === 'all' || nearbyPlaces.some(test));
@@ -7231,7 +7254,9 @@ function renderNearbyPlaces() {
    const km = Number(h.dist);
    const distance = km < 1 ? `${Math.round(km * 1000 / 10) * 10}<small>m</small>` : `${km.toFixed(1)}<small>km</small>`;
    const phone = h.phone ? String(h.phone).split(/[;,]/)[0].trim() : '';
-   const tags = [h.emergency ? '<span class="place-tag er">24×7 emergency</span>' : '', h.govt ? '<span class="place-tag">Government</span>' : ''].join('');
+   const tags = [h.emergency ? '<span class="place-tag er">24×7 emergency</span>' : '', h.govt ? '<span class="place-tag">Government</span>' : '',
+     h.janAushadhi ? '<span class="place-tag generic">Jan Aushadhi · generic medicines</span>' : h.generic ? '<span class="place-tag generic">Generic medicines</span>' : '',
+     h.open24 ? '<span class="place-tag">Open 24 hours</span>' : ''].join('');
    return `<div class="place-row">
      <div class="place-dist">${distance}</div>
      <div class="place-main">
