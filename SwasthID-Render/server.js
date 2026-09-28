@@ -2062,14 +2062,36 @@ const server =
             return res.end();
           }
 
-          return fs
-            .createReadStream(
-              path.join(
-                ROOT,
-                'index.html'
-              )
-            )
-            .pipe(res);
+          // Social previews need absolute URLs; fill in this deployment's origin.
+          const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+          const proto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() || 'https';
+          const origin = /^[a-z0-9.-]+(:\d+)?$/i.test(host) ? `${proto === 'http' ? 'http' : 'https'}://${host}` : '';
+          return res.end(
+            fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').replaceAll('__ORIGIN__', origin)
+          );
+        }
+
+        // Static design assets (stylesheets, icons, social image). Only known
+        // file types inside ./assets are served.
+        if (
+          (req.method === 'GET' || req.method === 'HEAD') &&
+          url.pathname.startsWith('/assets/')
+        ) {
+          const types = {
+            '.css': 'text/css; charset=utf-8',
+            '.svg': 'image/svg+xml',
+            '.png': 'image/png',
+            '.webmanifest': 'application/manifest+json'
+          };
+          const assetsDir = path.join(ROOT, 'assets');
+          const file = path.normalize(path.join(assetsDir, decodeURIComponent(url.pathname.slice('/assets/'.length))));
+          const type = types[path.extname(file).toLowerCase()];
+          if (!type || !file.startsWith(assetsDir + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
+            return json(res, 404, { error: 'Not found' });
+          }
+          res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
+          if (req.method === 'HEAD') return res.end();
+          return fs.createReadStream(file).pipe(res);
         }
 
         if (

@@ -3,9 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SwasthID — Universal Digital Health Suite</title>
+<title>SwasthID — Your health record, medicines and emergency card</title>
+<meta name="description" content="Keep your health record, medicines, vitals and lab results in one private place. Scan prescriptions and lab reports, get dose reminders, and carry an emergency QR card.">
+<meta name="theme-color" content="#1D6B53" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1311" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="manifest" href="/assets/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SwasthID">
+<meta property="og:title" content="SwasthID — Your health record, medicines and emergency card">
+<meta property="og:description" content="Keep your health record, medicines, vitals and lab results in one private place. Scan prescriptions and lab reports, get dose reminders, and carry an emergency QR card.">
+<meta property="og:url" content="__ORIGIN__/">
+<meta property="og:image" content="__ORIGIN__/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SwasthID: health record, medicines and emergency card">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Work+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>@layer legacy, app;</style>
+<link rel="stylesheet" href="/assets/legacy.css">
+<link rel="stylesheet" href="/assets/app.css">
 <!-- Heavy libraries are lazy-loaded only when their feature is used. -->
 <script src="firebase-config.js"></script>
 <script>
@@ -86,1826 +106,28 @@
     };
   }
 </script>
-<style>
- :root {
- --bg: #F5F8F6;
- --surface: #FFFFFF;
- --ink: #182823;
- --muted: #647671;
- --teal: #143831;
- --teal-light: #245A4D;
- --sage: #EDF4EE;
- --sage-line: #C5DBC9;
- --amber: #C68636;
- --amber-soft: #F9EEDB;
- --line: #DEE6E1;
- --danger: #B44E39;
- --danger-soft: #FFF2F0;
- --ok: #3A7D5B;
- --blue: #1F4E79;
- --gov-blue: #234976;
- --brand: #2E7D5B;
- --accent: #2F6FAE;
- --radius-sm: 8px;
- --radius-md: 12px;
- --radius-lg: 16px;
- --shadow-sm: 0 2px 8px rgba(20, 56, 49, 0.05);
- --shadow-md: 0 8px 24px rgba(20, 56, 49, 0.08);
- }
 
- * { box-sizing: border-box; }
- body {
- margin: 0;
- font-family: 'Work Sans', sans-serif;
- background: var(--bg);
- color: var(--ink);
- -webkit-font-smoothing: antialiased;
- }
- .serif { font-family: 'Newsreader', serif; }
 
- /* ---------- GOVERNMENT LOGIN SCREEN ---------- */
- #loginScreen {
- min-height: 100vh; padding: 0; position: relative; overflow: hidden;
- background: linear-gradient(135deg, #FFFDF9 0%, #F7F9F7 55%, #EDF4EE 100%);
- display: flex;
- }
- .login-shell {
- min-height: 100vh; width: 100%; display: grid;
- grid-template-columns: minmax(440px, 42%) 1fr; position: relative; z-index: 2;
- }
- .gov-brand-panel {
- position: relative; overflow: hidden; padding: 48px 52px; display: flex;
- flex-direction: column; align-items: center; justify-content: center; text-align: center;
- border-right: 1px solid var(--line);
- background: linear-gradient(165deg, rgba(255,255,255,0.95), rgba(246,250,247,0.85));
- }
- .login-bg-shape { position: absolute; pointer-events: none; filter: blur(2px); opacity: 0.5; }
- .login-saffron {
- width: 620px; height: 300px; left: -220px; top: -120px;
- background: radial-gradient(ellipse at center, rgba(47, 111, 174, 0.22), rgba(47, 111, 174, 0) 70%); transform: rotate(-12deg);
- }
- .login-green {
- width: 650px; height: 320px; left: -140px; bottom: -120px;
- background: radial-gradient(ellipse at center, rgba(46, 125, 91, 0.22), rgba(46, 125, 91, 0) 70%); transform: rotate(12deg);
- }
-
- .login-brand-logo { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 32px; position: relative; z-index: 2; }
- .tricolor-health-logo { width: 92px; height: 92px; position: relative; filter: drop-shadow(0 6px 16px rgba(20,56,49,0.12)); }
- .logo-orbit { position: absolute; width: 66px; height: 76px; top: 6px; border-radius: 55% 45% 52% 48%; border: 9px solid transparent; }
- .orbit-left { left: 0; border-left-color: var(--brand); border-bottom-color: var(--brand); transform: rotate(20deg); }
- .orbit-right { right: 0; border-right-color: var(--accent); border-bottom-color: var(--accent); transform: rotate(-20deg); }
- .logo-person { position: absolute; left: 36px; top: 9px; width: 17px; height: 17px; border-radius: 50%; background: #1F4E79; box-shadow: 0 22px 0 6px #1F4E79; }
- .logo-cross {
- position: absolute; left: 26px; top: 40px; width: 38px; height: 38px; border-radius: 50%;
- background: #FFF; color: #224972; border: 4px solid #E6EDF2; display: flex; align-items: center; justify-content: center;
- font-size: 32px; font-weight: 700; z-index: 2;
- }
- .brand-wordmark { font-size: 46px; letter-spacing: -1.5px; color: #223B60; font-weight: 600; line-height: 1; }
- .brand-wordmark b { color: var(--brand); font-weight: 700; }
- .brand-tagline { margin-top: 14px; font-family: 'Newsreader', serif; font-size: 21px; font-weight: 600; color: #304764; }
- .brand-subline { max-width: 370px; margin: 8px 0 0; color: #647278; font-size: 13.5px; line-height: 1.5; }
- .login-feature-list { list-style: none; margin: 28px 0 0; padding: 0; max-width: 360px; text-align: left; display: grid; gap: 14px; }
- .login-feature-list li { position: relative; padding-left: 22px; }
- .login-feature-list li:before { content: ''; position: absolute; left: 0; top: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 4px rgba(46,125,91,.14); }
- .login-feature-list b { display: block; font-size: 14px; color: #223B60; }
- .login-feature-list span { display: block; font-size: 12.5px; color: #647278; line-height: 1.45; margin-top: 2px; }
- body.dark-mode .login-feature-list b { color: #e3eee9; }
- body.dark-mode .login-feature-list span { color: #9fb2aa; }
-
- .gov-login-panel {
- width: 100%; max-width: 540px; align-self: center; justify-self: center;
- padding: 44px 50px; background: rgba(255,255,255,0.88);
- border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
- }
- .secure-chip {
- display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #D1E5D7;
- border-radius: 999px; background: #EEF7F1; color: #316447; font-size: 11.5px; font-weight: 600; margin-bottom: 16px;
- }
- .gov-login-panel h1 { font-family: 'Newsreader', serif; font-size: 34px; color: #203658; margin: 0 0 6px; font-weight: 600; }
- .gov-login-panel .sub { margin: 0 0 26px; color: var(--muted); font-size: 14px; line-height: 1.5; }
- .field { margin-bottom: 18px; }
- .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
- label { font-size: 13px; color: #3E4B52; font-weight: 600; display: block; }
- .forgot-link { font-size: 12px; color: var(--blue); font-weight: 600; cursor: pointer; }
- .gov-input-wrap {
- display: flex; align-items: center; width: 100%; height: 46px; background: #FDFEFE;
- border: 1px solid #CBD5D0; border-radius: var(--radius-sm); transition: 0.2s ease;
- }
- .gov-input-wrap:focus-within { border-color: #265492; box-shadow: 0 0 0 3px rgba(38, 84, 146, 0.12); }
- .gov-input-wrap input {
- border: none; outline: none; background: transparent; height: 100%; flex: 1; padding: 0 12px;
- font-size: 14px; font-family: inherit; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
- }
- .input-icon, .eye-icon { color: #64757C; width: 40px; display: flex; align-items: center; justify-content: center; }
- .input-icon { width: 4px; }
- .eye-icon { cursor: pointer; color: #8CA0A8; transition: color 0.2s; }
- .eye-icon:hover { color: #4B5C63; }
- .field-error { font-size: 12px; color: var(--danger); margin-top: 5px; display: none; }
-
- .login-btn {
- width: 100%; height: 48px; border-radius: var(--radius-sm); background: linear-gradient(135deg, #183C76, #255494);
- color: #FFF; font-size: 14.5px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
- box-shadow: 0 4px 12px rgba(24, 60, 118, 0.2); transition: 0.2s ease;
- }
- .login-btn:hover { background: linear-gradient(135deg, #133365, #1D467E); }
- .login-divider { display: flex; align-items: center; gap: 14px; color: #838F95; font-size: 11px; margin: 20px 0 16px; }
- .login-divider:before, .login-divider:after { content: ''; height: 1px; background: var(--line); flex: 1; }
- .alt-login-btn {
- width: 100%; height: 44px; border: 1px solid #CFD8D6; border-radius: var(--radius-sm); background: #FFF;
- color: #2F435C; font-family: inherit; font-weight: 600; font-size: 13.5px; margin-bottom: 10px; cursor: pointer;
- display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.15s ease;
- }
- .alt-login-btn:hover { background: #F7FAF8; border-color: #B5C4C0; }
- .alt-icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; }
- .security-note { margin-top: 18px; padding: 12px; border-top: 1px solid var(--line); display: flex; gap: 10px; color: #5F6D72; font-size: 11px; line-height: 1.45; }
-
- /* ---------- PORTAL SHELL & HEADER ---------- */
- #dashboard { position: relative; min-height: 100vh; display: none; }
- .gov-portal-strip {
- height: 30px; background: #fff; border-bottom: 1px solid #dfe5e2; display: flex; align-items: center;
- justify-content: space-between; padding: 0 32px; font-size: 11px; color: #607078; letter-spacing: .1px; position: relative; z-index: 22;
- }
-
- .topbar {
- display: flex; align-items: center; justify-content: space-between; padding: 12px 32px; background: rgba(255,255,255,.94);
- backdrop-filter: blur(12px); border-bottom: 1px solid #dfe5e2; position: sticky; top: 0; z-index: 30;
- box-shadow: 0 3px 14px rgba(30,55,48,.035);
- }
- .topbar:after { content: ''; position: absolute; bottom: -1px; left: 0; width: 140px; height: 2px; background: linear-gradient(90deg, var(--accent), var(--brand)); }
- .brand { display: flex; align-items: center; gap: 11px; font-weight: 600; font-size: 15px; }
- .gov-mini-logo {
- width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--accent));
- position: relative; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,0.12);
- }
- .gov-mini-logo:before { content: ''; width: 18px; height: 18px; border-radius: 50%; background: #FFF; position: absolute; }
- .gov-mini-logo b { position: relative; z-index: 2; color: #224972; font-size: 18px; line-height: 1; }
- .brand-name-gov { font-size: 16px; color: #223B60; }
- .brand-name-gov span { color: var(--brand); font-weight: 700; }
- .topbar-right { display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--muted); }
- .top-health-chip { padding: 6px 11px; border: 1px solid #dbe6df; background: #f4f8f5; border-radius: 8px; color: #53665f; font-size: 11px; font-weight: 600; }
- .lang-select { border: 1px solid #d7dfdc; background: #fff; border-radius: 7px; padding: 6px 8px; color: #46575f; font-family: inherit; font-size: 12px; cursor: pointer; outline: none; }
- .logout-link { color: var(--teal); font-weight: 600; cursor: pointer; }
-
- /* Tab nav */
- .tabnav {
- display: flex; gap: 6px; padding: 0 32px; background: rgba(255,255,255,0.96); border-bottom: 1px solid var(--line);
- position: sticky; top: 55px; z-index: 20; overflow-x: auto; box-shadow: 0 4px 12px rgba(24,49,42,.025);
- }
- .tab-btn {
- border: none; background: transparent; font-family: inherit; font-size: 13.5px; font-weight: 500; color: #56666b;
- padding: 14px 16px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: 0.15s ease; position: relative;
- }
- .tab-btn.active {
- color: var(--gov-blue); font-weight: 600; border-bottom-color: var(--brand);
- background: linear-gradient(180deg, rgba(19,136,8,.035), transparent);
- }
- .tab-btn.active:before {
- content: ''; position: absolute; top: 0; left: 25%; right: 25%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent);
- }
- .tab-btn.emergency-tab.active { color: var(--danger); border-bottom-color: var(--danger); }
- .tab-btn.predict-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
-
- .panel { display: none; }
- .panel.active { display: block; }
-
- .hero {
- position: relative; overflow: hidden; background: linear-gradient(115deg, #173b58 0%, #244f70 62%, #2e6354 100%);
- color: #FFF; padding: 32px 36px; display: flex; align-items: center; gap: 20px;
- border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, var(--brand), var(--accent)) 1;
- }
- .hero:before { content: ''; position: absolute; right: 5%; top: -52px; font-size: 180px; color: rgba(255,255,255,.045); line-height: 1; pointer-events: none; }
- .avatar {
- width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--brand));
- border: 3px solid rgba(255,255,255,.75); display: flex; align-items: center; justify-content: center;
- font-size: 22px; font-weight: 500; flex-shrink: 0; box-shadow: 0 6px 16px rgba(0,0,0,.15);
- }
- .hero h2 { font-size: 27px; font-weight: 500; margin: 0 0 3px; }
- .hero .sub-line { font-size: 13px; color: #CFDFD9; }
-
- .content { max-width: 1040px; margin: 0 auto; padding: 30px 24px 70px; }
- section { position: relative; margin-bottom: 34px; }
- section h3 { display: flex; align-items: center; gap: 9px; font-size: 19px; font-weight: 600; margin: 0 0 6px; color: #28425d; }
- section h3:before { content: ''; width: 4px; height: 19px; border-radius: 3px; background: var(--brand); }
- section p.section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; padding-left: 13px; }
-
- .doctor-hero h3 { font-size: 24px; margin: 4px 0 6px; color: #FFFFFF !important; }
- .doctor-hero h3:before { display: none; }
- .doctor-hero .section-sub { color: rgba(255,255,255,0.85); margin: 0; padding-left: 0; }
-
- /* Generic Cards */
- .med-item, .history-item, .visit-item, .price-row, .stat, .activity-note, .bars, .nearby-panel, .profile-vitals, .accordion-head, .accordion-body {
- box-shadow: 0 4px 14px rgba(34,58,51,.035);
- }
- .med-item {
- display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-left: 3px solid var(--accent); background: linear-gradient(90deg, #fff8ed, #fff);
- border-radius: var(--radius-sm); margin-bottom: 10px; transition: 0.3s ease;
- }
- .med-item.taken {
- border-left-color: var(--ok);
- background: linear-gradient(90deg, #EBF5F0, #FFF);
- }
- .med-item .time { font-weight: 600; font-size: 14px; min-width: 66px; }
- .med-item .details { flex: 1; }
- .med-item .name { font-weight: 600; font-size: 14.5px; }
- .med-item .dose { font-size: 13px; color: var(--muted); margin-top: 1px; }
-
- 
- .today-med-empty {
- background: var(--surface);
- border: 1px dashed #c9d8d0;
- border-radius: var(--radius-md);
- padding: 18px 20px;
- color: var(--muted);
- font-size: 13px;
- line-height: 1.5;
- box-shadow: 0 2px 8px rgba(34,58,51,.025);
- }
- .activity-empty {
- display:flex;
- align-items:center;
- justify-content:center;
- min-height:74px;
- padding:12px 18px;
- border:1px dashed #c9d8d0;
- border-radius:var(--radius-md);
- background:#fbfcfc;
- color:var(--muted);
- font-size:13px;
- text-align:center;
- box-sizing:border-box;
- }
-
-.med-action {
- padding: 8px 14px; border-radius: 6px; border: 1px solid var(--amber); color: var(--amber); 
- background: transparent; cursor: pointer; font-size: 12.5px; font-weight: 600; font-family: inherit; transition: 0.2s; white-space: nowrap;
- }
- .med-action:hover { background: var(--amber-soft); }
- .med-item.taken .med-action {
- border-color: var(--ok); color: var(--ok); background: transparent; pointer-events: none;
- }
-
- /* Mental Health Mood Banner */
- .mood-banner {
- background: linear-gradient(135deg, #e3f2fd, #eef7ff);
- border: 1px solid #bbdefb; border-radius: var(--radius-md); padding: 20px 24px;
- display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 34px; box-shadow: 0 4px 14px rgba(25,118,210,0.05);
- }
- .mood-left .kicker { color: #1976d2; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
- .mood-left h3 { margin: 0 0 6px; color: #0d47a1; font-size: 20px; }
- .mood-left h3:before { display:none; }
- .mood-left p { margin: 0; color: #546e7a; font-size: 13px; line-height: 1.5; padding-left:0; }
- .mood-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
- .emoji-group { display: flex; gap: 8px; }
- .mood-emoji {
- display: flex; flex-direction: column; align-items: center; gap: 4px;
- background: #fff; border: 1px solid #bbdefb; border-radius: 8px;
- padding: 8px 12px; cursor: pointer; transition: 0.2s; outline:none;
- }
- .mood-emoji:hover, .mood-emoji.active { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(25,118,210,0.15); border-color: #1976d2; }
- .mood-emoji.active { background: #f0f7ff; }
- .mood-emoji span { font-size: 24px; }
- .mood-emoji small { font-size: 10px; color: #546e7a; font-weight: 600; }
- .call-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
- .support-chip { background: #d0e7ff; color: #1565c0; font-size: 10px; padding: 3px 8px; border-radius: 12px; font-weight: 700; text-align:center;}
- .call-btn {
- display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #90caf9;
- color: #1976d2; font-weight: 700; font-size: 14px; padding: 10px 18px; border-radius: 8px; cursor: pointer; text-decoration: none; box-shadow: 0 2px 6px rgba(25,118,210,0.1);
- }
- .call-btn:hover { background: #f0f7ff; }
-
- .activity-stats { display: flex; border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 18px; }
- .stat { flex: 1; padding: 16px 18px; border-right: 1px solid var(--line); background: var(--surface); position: relative; overflow: hidden; }
- .stat:last-child { border-right: none; }
- .stat:first-child:before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--accent); }
- .stat:last-child:before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--brand); }
- .stat .num { font-size: 24px; font-weight: 600; }
- .stat .label { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
- .activity-note {
- display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: linear-gradient(90deg, #f0f7f1, #f9fbfa);
- border: 1px solid var(--sage-line); border-left: 3px solid var(--brand); border-radius: var(--radius-sm); font-size: 13.5px; margin-bottom: 18px;
- }
- .bars { display: flex; align-items: flex-end; gap: 8px; height: 90px; padding: 14px 18px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
- .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
- .bar { width: 100%; background: var(--teal-light); border-radius: 3px 3px 0 0; }
- .bar-col .day { font-size: 11px; color: var(--muted); }
-
- /* AI Speedometer Gauge */
- .gauge-wrap { width: 220px; height: 110px; position: relative; margin: 0 auto; overflow: hidden; }
- .gauge-bg {
- position: absolute; width: 220px; height: 220px; border-radius: 50%;
- background: conic-gradient(from 270deg, var(--ok) 0 25%, var(--amber) 25% 40%, var(--danger) 40% 50%, transparent 50%);
- mask-image: radial-gradient(transparent 55%, black 56%);
- -webkit-mask-image: radial-gradient(transparent 55%, black 56%);
- }
- .gauge-needle {
- position: absolute; bottom: 0; left: 10px; width: 100px; height: 4px;
- background: var(--ink); transform-origin: right center; transform: rotate(0deg);
- border-radius: 4px 0 0 4px; transition: transform 2s cubic-bezier(0.34, 1.56, 0.64, 1);
- }
- .gauge-dot {
- position: absolute; bottom: -8px; left: 102px; width: 16px; height: 16px;
- background: var(--ink); border-radius: 50%; border: 3px solid var(--surface); z-index: 2;
- }
- .gauge-val { font-size: 32px; font-weight: 700; color: var(--ink); margin-top: 10px; }
-
- .calorie-meter { border: 1px dashed #BFD2C6; border-radius: var(--radius-md); padding: 18px; margin-top: 18px; background: var(--surface); text-align: center; }
- .calorie-label { font-size: 13.5px; font-weight: 500; color: var(--muted); margin-bottom: 10px; }
- .calorie-meter input[type=file]{ font-family: inherit; font-size: 13px; }
- .calorie-result { margin-top: 14px; align-items: center; gap: 14px; justify-content: center; }
- #foodSearchResults { width: 100%; box-sizing: border-box; }
-
- .nearby-panel { background: linear-gradient(135deg,#f6faf6,#eef6f0); border: 1px solid var(--sage-line); border-radius: var(--radius-md); padding: 16px 20px; position: relative; overflow: hidden; }
- .nearby-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--sage-line); position: relative; z-index: 1; }
- .nearby-item:last-child { border-bottom: none; }
- .nearby-item .n-name { font-weight: 600; font-size: 14.5px; }
- .nearby-item .n-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
- .nearby-actions { display: flex; gap: 8px; align-items:center; }
- .n-btn { font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: var(--radius-sm); border: 1px solid var(--teal); color: var(--teal); background: transparent; cursor: pointer; font-family: inherit; text-decoration: none; display:inline-flex; align-items:center; justify-content:center; }
- .n-btn.solid { background: var(--teal); color: #FFF; border: none; }
-
- /* Records & Visits */
- .history-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 10px; background: var(--surface); }
- .history-item .h-name { font-weight: 600; font-size: 14.5px; }
- .history-item .h-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
- .tag { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
- .tag.ongoing { background: var(--amber-soft); color: var(--amber); }
- .tag.resolved { background: #E3EFE7; color: var(--ok); }
- .tag.blue { background: #E8F0FE; color: var(--blue); }
-
- .visit-item { border: 1px solid var(--line); border-radius: var(--radius-md); margin-bottom: 10px; overflow: hidden; background: var(--surface); }
- .visit-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; cursor: pointer; background: linear-gradient(90deg,#fff,#fbfcfb); }
- .visit-head:hover { background: #f7faf8; }
- .visit-head .doc { font-weight: 600; font-size: 14.5px; }
- .visit-head .meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
- .visit-toggle { font-size: 13px; font-weight: 600; color: var(--teal); }
- .visit-body { display: none; padding: 0 16px 16px; }
- .visit-body.open { display: block; }
- .rx-thumb { width: 100%; max-width: 260px; height: 140px; border-radius: var(--radius-sm); background: repeating-linear-gradient(var(--surface), var(--surface) 14px, var(--line) 14px, var(--line) 16px), linear-gradient(180deg, #FFF, #F2F4F2); filter: blur(2.5px); border: 1px solid var(--line); }
- .rx-caption { font-size: 12px; color: var(--muted); margin-top: 8px; }
-
- /* Doctor & Clinical Breifs */
- .doctor-hero { display: flex; justify-content: space-between; gap: 20px; align-items: center; background: linear-gradient(135deg, #143831, #25594D); padding: 22px 24px; border-radius: var(--radius-md); }
- .ai-kicker { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: rgba(255,255,255,0.7); }
- .doc-badge { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-sm); padding: 12px 16px; font-weight: 600; text-align: center; white-space: nowrap; color: #FFF; }
- .doc-badge span { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 400; }
- .clinical-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
- .clinical-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
- .clinical-icon { font-size: 20px; }
- .clinical-card b { font-size: 13.5px; display: block; }
- .clinical-card p { margin: 3px 0 0; font-size: 13.5px; color: var(--muted); }
- .ai-summary { background: #EDF4EE; border: 1px solid var(--sage-line); border-radius: var(--radius-md); padding: 18px 20px; line-height: 1.65; font-size: 14px; }
- .ai-summary.blue-tint { background: #F0F4F8; border-color: #D1DEED; }
- .ai-summary p { margin: 6px 0 0; }
- .summary-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--teal); }
- .summary-label.blue { color: var(--blue); }
- .timeline { border-left: 2px solid var(--sage-line); margin-left: 60px; padding-left: 24px; }
- .timeline-item { position: relative; margin-bottom: 22px; }
- .timeline-year { font-size: 12px; font-weight: 700; color: var(--muted); text-align: right; transform: translateX(-96px); position: absolute; width: 68px; }
- .timeline-dot { width: 12px; height: 12px; background: var(--surface); border: 2px solid var(--sage-line); border-radius: 50%; margin-left: -31px; margin-top: 3px; position: absolute; }
- .timeline-dot.active-dot { background: var(--teal); border-color: var(--teal); }
- .timeline-item b { font-size: 14px; display: block; }
- .timeline-item p { font-size: 13px; color: var(--muted); margin: 3px 0 0; }
- .evidence { display: flex; justify-content: space-between; gap: 14px; padding: 13px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); margin-bottom: 8px; font-size: 13.5px; }
- .evidence span { font-size: 12px; color: var(--muted); }
-
- /* Prescription Scanner */
- .scan-hero { background: linear-gradient(135deg,#fff7ec,#f7fbf7); border: 1px solid #eadfd0; border-radius: 16px; padding: 26px; position: relative; overflow: hidden; }
- .scan-kicker { display: inline-flex; gap: 7px; align-items: center; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #8a5318; background: #fff0db; padding: 6px 11px; border-radius: 20px; margin-bottom: 8px; }
- .scan-upload { border: 2px dashed #cfd9d4; background: #fff; border-radius: 14px; padding: 26px; text-align: center; margin-top: 14px; }
- .workflow { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin: 20px 0; }
- .workflow-step { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px 10px; text-align: center; position: relative; font-size: 12px; font-weight: 600; }
- .workflow-step .step-no { width: 24px; height: 24px; border-radius: 50%; background: #edf4ef; color: var(--brand); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; margin: 0 auto 6px; }
- .scan-results { display: none; margin-top: 22px; }
- .scan-results.show { display: block; }
- .analysis-banner { display: flex; align-items: center; gap: 12px; padding: 13px 16px; background: #edf7ef; border: 1px solid #b9ddc0; border-radius: 10px; color: #29613b; font-size: 13.5px; font-weight: 600; }
- .scan-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 18px; margin-top: 16px; }
- .rx-preview { min-height: 360px; background: repeating-linear-gradient(#fff,#fff 27px,#edf0ed 28px); border: 1px solid var(--line); border-radius: 12px; padding: 22px; position: relative; overflow:hidden;}
- .rx-preview .scribble { margin-top: 18px; font-family: cursive; font-size: 19px; color: #536b61; line-height: 2.1; }
- .rx-stamp { position: absolute; bottom: 20px; right: 20px; border: 2px solid #c98a3e; color: #c98a3e; border-radius: 50%; padding: 10px; font-size: 9px; font-weight: 700; transform: rotate(-12deg); }
- .extract-card { border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
- .extract-head { padding: 15px 18px; background: linear-gradient(90deg,#f7faf8,#fff7ec); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
- .extract-head h4 { margin: 0; font-size: 14.5px; }
- .doctor-line { padding: 14px 18px; border-bottom: 1px solid var(--line); }
- .medicine-row { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: center; }
- .medicine-check { width: 22px; height: 22px; border-radius: 50%; background: #e6f2e8; color: #347047; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
- .rx-intelligence { padding: 16px 18px; display: grid; gap: 12px; }
- .intel-card { background: #fafcfb; border: 1px solid var(--line); border-radius: 10px; padding: 14px; font-size: 13px; }
- .intel-title { font-weight: 700; font-size: 13.5px; margin-bottom: 8px; }
- .alert-card { border-left: 4px solid var(--amber); background: var(--amber-soft); padding: 12px 14px; border-radius: 6px; font-size: 12.5px; line-height: 1.5; }
- .simple-explain { background: linear-gradient(135deg,#eef6f1,#fffaf2); border: 1px solid #d7e5da; border-radius: 10px; padding: 14px; position: relative; }
-
- /* Emergency Passport */
- .emergency-hero { background: linear-gradient(135deg, #FFF3F0 0%, #FFF9F7 100%); border: 1px solid #ECC5BD; border-left: 5px solid var(--danger); border-radius: var(--radius-md); padding: 24px 26px; display: flex; justify-content: space-between; align-items: center; gap: 28px; }
- .emergency-kicker { font-size: 10.5px; font-weight: 800; letter-spacing: 1.15px; color: var(--danger); margin-bottom: 7px; }
- .emergency-hero h3 { font-size: 25px; line-height: 1.15; margin: 0 0 7px; color: var(--danger); }
- .emergency-hero h3:before { display: none; }
- .emergency-hero .section-sub { max-width: 620px; margin: 0; line-height: 1.55; }
- .passport-status { min-width: 215px; background: #FFF; border: 1px solid #E8C1B9; border-radius: 12px; padding: 13px 16px; color: var(--danger); box-shadow: 0 3px 12px rgba(94,42,34,.05); }
- .passport-status .status-main { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800; line-height:1.2; }
- .passport-status .status-dot { width:9px; height:9px; flex:0 0 9px; border-radius:50%; background:#2F8F62; box-shadow:0 0 0 3px #E7F5ED; }
- .passport-status .status-sub { margin-top:8px; padding-top:8px; border-top:1px solid #F0DEDA; display:flex; align-items:center; gap:7px; color:#6A756F; font-size:11.5px; font-weight:600; }
- .passport-status .status-mark { width:7px; height:7px; flex:0 0 7px; border-radius:2px; background:var(--danger); }
- .passport-layout { display: grid; grid-template-columns: 1fr 260px; gap: 20px; align-items: start; }
- .emergency-card { border: 1px solid #ECC5BD; border-radius: var(--radius-md); background: var(--surface); overflow: hidden; }
- .emergency-card-head { background: var(--danger); color: #FFF; padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; }
- .emergency-row { display: flex; gap: 14px; padding: 13px 16px; border-bottom: 1px solid var(--line); align-items: flex-start; font-size: 13px; }
- .rx-physician-line { display:flex; align-items:center; gap:22px; padding:14px 18px; border-bottom:1px solid var(--line); }
- .rx-physician-line label { flex:0 0 auto; color:var(--ink); }
- .rx-physician-field { flex:1 1 auto; min-width:0; width:100%; border:1px solid var(--line); border-radius:7px; padding:8px 10px; font:inherit; color:var(--ink); background:#fff; }
- .rx-physician-field:focus { outline:2px solid rgba(45,111,79,.16); border-color:#8fbca2; }
- .emergency-row:last-child { border-bottom: none; }
- .qr-box { border: 1px solid var(--line); border-radius: var(--radius-md); padding: 18px; text-align: center; background: var(--surface); }
- .fake-qr { width: 160px; height: 160px; margin: 8px auto 14px; display:flex; justify-content:center; align-items:center; }
-  .emergency-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
-  .emergency-call { display:flex; align-items:center; justify-content:center; min-height:40px; padding:8px 10px; border-radius:8px; text-decoration:none; font-size:12px; font-weight:700; border:1px solid var(--danger); color:var(--danger); background:#fff; }
-  .emergency-call.primary { background:var(--danger); color:#fff; }
-  .qr-meta { font-size:10.5px; color:var(--muted); line-height:1.45; margin-top:8px; }
-  .emergency-contact-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:7px; }
- .emergency-action-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:12px; }
- .clinical-card .profile-input { width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface, #fff); color: var(--ink); font: inherit; font-size: 14px; }
- .clinical-card .profile-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,111,174,.15); }
- .emergency-action-grid .n-btn { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
- .emergency-action-links { display:flex; justify-content:center; gap:4px; margin-top:8px; flex-wrap:wrap; }
- .emergency-action-links button { background:none; border:0; padding:6px 10px; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; color:var(--blue); cursor:pointer; }
- .emergency-action-links button:hover { background:var(--sage); }
- .emergency-action-links button.danger { color:var(--danger); }
- body.dark-mode .emergency-action-links button { color:#9cc4ec; }
- body.dark-mode .emergency-action-links button.danger { color:#f0a092; }
- .emergency-action-grid .n-btn { width:100%; }
- .public-emergency-overlay { position:fixed; inset:0; z-index:100000; background:rgba(16,28,24,.72); backdrop-filter:blur(5px); display:none; overflow:auto; padding:24px; }
- .public-emergency-overlay.show { display:block; }
- .public-emergency-card { max-width:760px; margin:20px auto; background:#fff; border-radius:20px; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,.28); border:1px solid #e5c0ba; }
- .public-emergency-head { background:#8f2d24; color:#fff; padding:22px 24px; display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
- .public-emergency-head h2 { margin:0 0 5px; font-family:Newsreader,serif; font-size:30px; }
- .public-emergency-head p { margin:0; font-size:12px; opacity:.9; }
- .public-emergency-badge { border:1px solid rgba(255,255,255,.45); border-radius:999px; padding:7px 10px; font-size:11px; font-weight:700; white-space:nowrap; }
- .public-emergency-body { padding:22px 24px; }
- .public-emergency-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
- .public-emergency-item { border:1px solid #e1e8e4; border-radius:12px; padding:14px; background:#fbfdfc; }
- .public-emergency-item.full { grid-column:1 / -1; }
- .public-emergency-item label { display:block; text-transform:uppercase; letter-spacing:.7px; font-size:10px; font-weight:800; color:#718078; margin-bottom:5px; }
- .public-emergency-item div { font-size:14px; line-height:1.5; color:#18231f; word-break:break-word; }
- .public-emergency-actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:18px; }
- .public-emergency-actions a, .public-emergency-actions button { text-decoration:none; }
- .public-emergency-expired { margin:20px 24px; border:1px solid #e5c0ba; background:#fff5f3; color:#7b2922; border-radius:12px; padding:14px; font-size:13px; }
- .public-emergency-foot { padding:15px 24px; background:#f6f8f7; border-top:1px solid #e1e8e4; font-size:11px; color:#66736d; line-height:1.5; }
- @media(max-width:620px){ .public-emergency-overlay{padding:10px;} .public-emergency-card{margin:8px auto;} .public-emergency-head{padding:18px; flex-direction:column;} .public-emergency-head h2{font-size:26px;} .public-emergency-body{padding:16px;} .public-emergency-grid{grid-template-columns:1fr;} .public-emergency-item.full{grid-column:auto;} .public-emergency-foot{padding:14px 16px;} }
- .switch { width: 36px; height: 20px; border-radius: 20px; background: #CCD5D1; position: relative; cursor: pointer; transition: 0.2s ease; flex-shrink: 0; }
- .switch:after { content: ''; width: 14px; height: 14px; background: #FFF; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.2s ease; }
- .switch.on { background: var(--teal); }
- .switch.on:after { left: 19px; }
-
- /* Profile Vitals & Accordions */
- .profile-vitals { display: flex; border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 22px; }
- .accordion-head { display: flex; justify-content: space-between; align-items: center; padding: 15px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md) var(--radius-md) 0 0; cursor: pointer; }
- .accordion-body { display: none; border: 1px solid var(--line); border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 16px 18px; }
- .accordion-body.open { display: block; }
- .chevron { transition: transform 0.2s ease; color: var(--muted); }
- .chevron.rot { transform: rotate(180deg); }
-
- /* Medicine Search */
- .search-bar { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 30px; padding: 10px 18px; background: var(--surface); margin-bottom: 20px; }
- .search-bar input { border: none; outline: none; flex: 1; font-family: inherit; font-size: 14.5px; background: transparent; }
- .price-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); margin-bottom: 10px; }
- .price-row.best { border-color: var(--ok); background: #F3F9F5; }
- .platform-mark { width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--sage); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12.5px; color: var(--teal); }
-
- /* Register / Manage */
- .reg-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 24px; margin-bottom: 20px; }
- .reg-input { width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--ink); margin-top: 6px; }
-
- /* Footer */
- .gov-footer { padding: 18px 32px; background: #fff; border-top: 1px solid #dfe6e2; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #68767a; position: relative; margin-top: 40px; }
- .gov-footer:before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg,var(--brand),var(--accent)); }
-
- /* Account Success Modal */
- #authSuccessModal {
- position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px;
- background: rgba(20, 56, 49, 0.34); backdrop-filter: blur(4px); z-index: 500;
- }
- #authSuccessModal.show { display: flex; }
- .auth-success-card {
- width: min(560px, 100%); min-height: 330px; background: var(--surface); border: 1px solid var(--line);
- border-radius: 20px; box-shadow: 0 20px 60px rgba(20,56,49,0.22); padding: 42px 48px 38px; text-align: center;
- display: flex; flex-direction: column; justify-content: center;
- animation: authSuccessIn 0.25s ease-out;
- }
- .auth-success-check {
- width: 68px; height: 68px; margin: 0 auto 20px; border-radius: 50%;
- background: var(--sage); color: var(--teal); display: flex; align-items: center; justify-content: center;
- font-size: 28px; font-weight: 700;
- }
- .auth-success-card h3 { margin: 0 0 12px; font-family: Georgia, serif; font-size: 29px; color: var(--ink); }
- .auth-success-card p { margin: 0 auto 28px; max-width: 440px; color: var(--muted); line-height: 1.65; font-size: 15.5px; }
- .auth-success-card .auth-success-btn {
- width: 100%; border: none; border-radius: 11px; padding: 14px 18px; cursor: pointer;
- background: var(--teal); color: #fff; font: 600 15px inherit; transition: transform 0.15s ease, opacity 0.15s ease;
- }
- .auth-success-card .auth-success-btn:hover { transform: translateY(-1px); opacity: 0.94; }
- .auth-success-card .auth-success-note { display: none; }
- @keyframes authSuccessIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
- @media (max-width: 520px) {
-   #authSuccessModal { padding: 14px; }
-   .auth-success-card { min-height: 0; padding: 34px 24px 30px; }
-   .auth-success-card h3 { font-size: 25px; }
-   .auth-success-card p { font-size: 14.5px; }
- }
-
- /* Toast Notification */
- #medToast {
- position: fixed; top: 20px; right: 20px; max-width: 330px; background: var(--surface); border: 1px solid var(--line);
- border-left: 4px solid var(--amber); border-radius: var(--radius-md); box-shadow: 0 6px 22px rgba(20,56,49,0.14);
- padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; transform: translateX(130%);
- transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); z-index: 200;
- }
- #medToast.show { transform: translateX(0); }
- #medToast .toast-icon { width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--amber-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
-
- /* ---------- REAL CONTEXTUAL AI ASSISTANT WIDGET ---------- */
- #aiAssistantDock {
- display: none;
- position: fixed; bottom: 24px; right: 24px; z-index: 100; display: flex; flex-direction: column; align-items: flex-end;
- }
- #aiLauncherBtn {
- display: flex; align-items: center; gap: 9px; padding: 12px 18px; border-radius: 30px;
- background: linear-gradient(135deg, #143831, #1F4E79); color: #fff; font-weight: 600; font-size: 13.5px;
- border: none; cursor: pointer; box-shadow: 0 8px 24px rgba(20, 56, 49, 0.22); transition: 0.2s ease;
- }
- #aiLauncherBtn:hover { transform: translateY(-2px); }
- #aiChatWindow {
- width: 380px; height: 530px; max-width: calc(100vw - 32px); max-height: calc(100vh - 100px);
- background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.18);
- display: none; flex-direction: column; overflow: hidden; margin-bottom: 12px;
- }
- #aiChatWindow.open { display: flex; }
- .ai-chat-header {
- background: linear-gradient(135deg, #143831, #255494); color: #fff; padding: 14px 18px;
- display: flex; justify-content: space-between; align-items: center;
- }
- .ai-chat-header b { font-size: 14.5px; display: flex; align-items: center; gap: 7px; }
- .ai-chat-close { background: none; border: none; color: rgba(255,255,255,0.8); font-size: 18px; cursor: pointer; }
- .ai-chat-body {
- flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #F8FAF9;
- }
- .swasthai-unavailable { border-left: 4px solid var(--warn, #B7791F); background: #FFFDF7 !important; }
- .swasthai-ready { color: #D7F5E2 !important; }
- .ai-msg { max-width: 84%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
- .ai-msg.bot { background: #FFF; border: 1px solid var(--line); align-self: flex-start; color: var(--ink); border-bottom-left-radius: 2px; }
- .ai-msg.user { background: var(--teal); color: #FFF; align-self: flex-end; border-bottom-right-radius: 2px; }
- .ai-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px; background: #FFF; border-top: 1px solid var(--line); }
- .ai-chip {
- background: var(--sage); border: 1px solid var(--sage-line); border-radius: 14px; font-size: 11px;
- font-weight: 500; color: var(--teal); padding: 5px 9px; cursor: pointer; transition: 0.15s;
- }
- .ai-chip:hover { background: #dfeee2; }
- .ai-input-row {
- display: flex; gap: 8px; padding: 12px 14px; background: #FFF; border-top: 1px solid var(--line);
- }
- .ai-input-row input {
- flex: 1; border: 1px solid var(--line); border-radius: 20px; padding: 9px 14px; font-family: inherit; font-size: 13px; outline: none;
- }
- .ai-input-row button {
- background: var(--teal); color: #fff; border: none; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; font-size: 14px; flex-shrink: 0;
- }
-
- @media(max-width: 850px){
- .login-shell { grid-template-columns: 1fr; }
- .gov-brand-panel { min-height: 390px; border-right: none; padding: 32px 24px 90px; }
- .gov-login-panel { margin: 24px 16px 40px; padding: 32px 24px; max-width: none; }
- .login-bg-shape { display: none; }
- .passport-layout, .privacy-grid, .clinical-grid, .scan-grid { grid-template-columns: 1fr; }
- .emergency-hero, .doctor-hero { flex-direction: column; align-items: flex-start; }
- .timeline { margin-left: 42px; }
- .timeline-year { transform: translateX(-80px); width: 56px; font-size: 11px; }
- .workflow { grid-template-columns: 1fr; }
- .gov-portal-strip { padding: 0 16px; }
- .topbar { padding: 12px 16px; }
- .top-health-chip { display: none; }
- .mood-banner { flex-direction: column; align-items: flex-start; } 
- .mood-right { width: 100%; justify-content: space-between; }
- }
-
- /* =========================================================
- PREMIUM UI/UX POLISH PASS — additive, non-destructive
- (typography, tokens, cards, buttons, inputs, micro-animations)
- ========================================================= */
- :root {
- --radius-xl: 22px;
- --radius-pill: 999px;
- --shadow-lift: 0 10px 28px rgba(20, 56, 49, 0.10);
- --shadow-lift-hover: 0 16px 36px rgba(20, 56, 49, 0.16);
- --glass-bg: rgba(255, 255, 255, 0.6);
- --glass-border: rgba(255, 255, 255, 0.5);
- --ease-premium: cubic-bezier(.22, 1, .36, 1);
- }
-
- body, .n-btn, .med-action, .call-btn, .login-btn, .alt-login-btn, .reg-input,
- input, button, select { font-family: 'Inter', 'Work Sans', sans-serif; }
- .serif { letter-spacing: -0.2px; }
-
- /* ---- Navbar blur on scroll ---- */
- .topbar, .tabnav {
- transition: box-shadow .35s var(--ease-premium), background-color .35s var(--ease-premium), backdrop-filter .35s var(--ease-premium);
- }
- .topbar.scrolled, .tabnav.scrolled {
- backdrop-filter: saturate(180%) blur(14px);
- -webkit-backdrop-filter: saturate(180%) blur(14px);
- background-color: rgba(255, 255, 255, 0.82) !important;
- box-shadow: 0 4px 18px rgba(20, 56, 49, 0.08);
- }
-
- /* ---- Card polish: rounder corners, softer elevation, gentle lift on hover ---- */
- .med-item, .history-item, .visit-item, .price-row, .stat, .nearby-panel, .nearby-item,
- .profile-vitals, .accordion-head, .accordion-body, .clinical-card, .intel-card, .reg-card,
- .qr-box, .emergency-card, .extract-card, .doc-badge, .evidence, .platform-mark, .toast-icon,
- .scan-upload, .rx-preview, .ai-summary, .alert-card, .simple-explain {
- border-radius: var(--radius-lg);
- transition: transform .3s var(--ease-premium), box-shadow .3s var(--ease-premium);
- }
- .med-item, .history-item, .visit-item, .price-row, .nearby-item, .clinical-card,
- .intel-card, .reg-card, .qr-box, .emergency-card, .extract-card {
- box-shadow: var(--shadow-lift);
- }
- .med-item:hover, .history-item:hover, .visit-item:hover, .price-row:hover,
- .nearby-item:hover, .clinical-card:hover, .intel-card:hover, .reg-card:hover {
- transform: translateY(-3px);
- box-shadow: var(--shadow-lift-hover);
- }
- .stat { border-radius: 0; }
- .activity-stats, .bars, .accordion-head, .accordion-body { border-radius: var(--radius-lg); }
-
- /* ---- Buttons: hover lift + ripple + better disabled/loading ---- */
- .n-btn, .med-action, .call-btn, .login-btn, .alt-login-btn, .tab-btn, #aiLauncherBtn, #aiSendBtn {
- position: relative; overflow: hidden;
- transition: transform .22s var(--ease-premium), box-shadow .22s var(--ease-premium), background-color .22s var(--ease-premium), opacity .22s var(--ease-premium);
- }
- .n-btn:hover, .med-action:hover:not([disabled]), .call-btn:hover, .login-btn:hover, .alt-login-btn:hover {
- transform: translateY(-2px);
- box-shadow: 0 8px 18px rgba(20, 56, 49, 0.14);
- }
- .n-btn:active, .med-action:active, .call-btn:active, .login-btn:active { transform: translateY(0); }
- .n-btn[disabled], button[disabled] { opacity: .5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
- .btn-ripple {
- position: absolute; border-radius: 50%; background: rgba(20, 56, 49, 0.18);
- transform: scale(0); animation: rippleAnim .55s var(--ease-premium) forwards; pointer-events: none;
- }
- @keyframes rippleAnim { to { transform: scale(2.6); opacity: 0; } }
-
- /* ---- Inputs: modern focus ring ---- */
- input[type="text"], input[type="password"], input[type="file"], .reg-input, #aiUserInput, #medSearch {
- transition: border-color .2s ease, box-shadow .2s ease;
- }
- input[type="text"]:focus, input[type="password"]:focus, .reg-input:focus, #aiUserInput:focus, #medSearch:focus {
- outline: none;
- border-color: var(--teal-light) !important;
- box-shadow: 0 0 0 4px rgba(36, 90, 77, 0.14);
- }
- .field-error { display: none; }
-
- /* ---- Fade-in on load + scroll-reveal for sections ---- */
- @keyframes revealUp { to { opacity: 1; transform: translateY(0); } }
- .panel.active { animation: panelFadeIn .4s var(--ease-premium); }
- @keyframes panelFadeIn { from { opacity: 0; } to { opacity: 1; } }
-
- /* ---- Hero upgrades ---- */
- .hero-main { display: flex; flex-direction: column; gap: 8px; }
- .avatar { position: relative; }
- .heartbeat-dot {
- position: absolute; bottom: -2px; right: -2px; width: 14px; height: 14px; border-radius: 50%;
- background: #ff6b6b; border: 2px solid #fff; animation: heartbeat 1.6s ease-in-out infinite;
- }
- @keyframes heartbeat { 0%, 100% { transform: scale(1); } 25% { transform: scale(1.35); } 40% { transform: scale(1); } 60% { transform: scale(1.2); } }
- .hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
- .hero-chip {
- font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: var(--radius-pill);
- background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff;
- backdrop-filter: blur(6px);
- }
- .hero-chip b { color: #d7f7e6; }
-
- /* ---- KPI-style stat cards ---- */
- .stat:nth-child(1):after { content: ''; position: absolute; top: 12px; right: 14px; font-size: 15px; opacity: .5; }
- .stat:nth-child(2):after { content: ''; position: absolute; top: 12px; right: 14px; font-size: 15px; opacity: .5; }
- .stat:nth-child(3):after { content: ''; position: absolute; top: 12px; right: 14px; font-size: 15px; opacity: .5; }
- .stat:nth-child(4):after { content: ''; position: absolute; top: 12px; right: 14px; font-size: 15px; opacity: .5; }
-
- /* ---- Nearby hospital badges ---- */
- .n-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 3px; font-size: 12px; color: var(--muted); }
- .n-badge { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-pill); white-space: nowrap; }
- .n-badge.dist { background: var(--sage); color: var(--teal); }
- .n-badge.er { background: var(--danger-soft); color: var(--danger); }
- .n-badge.govt { background: #eef2ff; color: #3949ab; }
-
- /* ---- "You Are Not Alone" care strip: glass + shimmer + floating heart ---- */
- .care-strip {
- position: relative; overflow: hidden; border-radius: var(--radius-xl);
- background: linear-gradient(120deg, #e3f2fd, #d7f3ff 45%, #e8f8f2);
- border: 1px solid rgba(144, 202, 249, 0.6);
- }
- .care-shimmer {
- position: absolute; inset: 0; pointer-events: none;
- background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.55) 40%, transparent 60%);
- background-size: 250% 100%; animation: shimmerMove 8s ease-in-out infinite;
- }
- @keyframes shimmerMove { 0% { background-position: 150% 0; } 50% { background-position: -50% 0; } 100% { background-position: 150% 0; } }
- .care-heart { display: inline-block; animation: floatHeart 3.4s ease-in-out infinite; }
- @keyframes floatHeart { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
- .mood-response { min-height: 18px; margin-top: 10px; font-size: 12.5px; font-weight: 600; color: #1565c0; }
- .mood-emoji.mood-pop { animation: moodPop .35s var(--ease-premium); }
- @keyframes moodPop { 0% { transform: scale(1); } 45% { transform: scale(1.28) translateY(-4px); } 100% { transform: scale(1); } }
-
- .support-popup-overlay {
- display: none; position: fixed; inset: 0; background: rgba(15, 30, 40, 0.45); z-index: 999;
- align-items: center; justify-content: center; padding: 20px;
- }
- .support-popup-overlay.show { display: flex; }
- .support-popup-card {
- background: #fff; border-radius: var(--radius-lg); padding: 28px 26px; max-width: 340px; text-align: center;
- box-shadow: 0 20px 50px rgba(0,0,0,0.25); animation: revealUp .35s var(--ease-premium);
- }
- .support-popup-icon { font-size: 34px; margin-bottom: 10px; }
- .support-popup-card p { color: #33474f; font-size: 14px; line-height: 1.55; margin: 0 0 18px; }
-
- /* ---- Accessibility: visible focus outlines ---- */
- a:focus-visible, button:focus-visible, input:focus-visible, .tab-btn:focus-visible, .mood-emoji:focus-visible {
- outline: 3px solid #1565c0; outline-offset: 2px;
- }
-
- /* ---- Reduced motion ---- */
- @media (prefers-reduced-motion: reduce) {
- *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
- }
-
- @media (max-width: 720px) {
- .hero { padding: 22px 18px; flex-wrap: wrap; }
- .hero-badges { gap: 6px; }
- .hero-chip { font-size: 10px; padding: 4px 9px; }
- .care-strip.mood-banner { padding: 18px; }
- .topbar, .tabnav { position: sticky; top: 0; z-index: 50; }
- }
-
-
- /* =========================================================
- RESPONSIVE RELIABILITY PASS — all viewport sizes
- Keeps every existing panel usable without horizontal clipping,
- overlapping sticky navigation, or inaccessible controls.
- ========================================================= */
- html { scroll-behavior: smooth; scroll-padding-top: 112px; }
- body { min-width: 0; overflow-x: hidden; }
- #dashboard, #loginScreen, .panel, .content, section, .hero, .doctor-hero,
- .emergency-hero, .nearby-panel, .extract-card, .scan-hero { min-width: 0; }
- img, svg, video, canvas { max-width: 100%; }
- button, input, select, textarea { max-width: 100%; }
- button { touch-action: manipulation; }
- .content { width: 100%; }
- .hero-main, .doctor-hero > div:first-child, .emergency-hero > div:first-child,
- .nearby-item > div:first-child, .history-item > div:first-child,
- .visit-head > div:first-child, .price-row > div:first-child,
- .clinical-card > div, .emergency-row > div:last-child { min-width: 0; }
- .hero h2, .hero .sub-line, .section-sub, .n-name, .n-meta, .h-name, .h-meta,
- .visit-head .doc, .visit-head .meta, .price-row, .clinical-card p,
- .ai-summary, .evidence, .emergency-row, .reg-card, .simple-explain,
- .scan-upload, .extract-card, .doctor-hero, .emergency-hero { overflow-wrap: anywhere; }
-
- /* Sticky navigation is calculated from stable header heights. */
- .gov-portal-strip { min-height: 30px; }
- .topbar { min-height: 55px; }
- .tabnav {
- min-height: 49px;
- scrollbar-width: thin;
- overscroll-behavior-x: contain;
- -webkit-overflow-scrolling: touch;
- scroll-behavior: smooth;
- }
- .tab-btn { flex: 0 0 auto; min-height: 49px; }
-
- /* Components that otherwise overflow before the old 850px breakpoint. */
- .activity-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
- .profile-vitals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
- .clinical-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
- .passport-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; }
- .privacy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
- .scan-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
- .nearby-item, .price-row { min-width: 0; }
- .nearby-actions { flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; }
- .price-row > div:nth-child(2) { flex: 0 0 auto; }
- .price-row > button { flex: 0 0 auto; }
- .medicine-row > div:last-child { min-width: 0; }
- .medicine-row b, .medicine-row span { overflow-wrap: anywhere; }
-
- /* Never hide a whole panel's content behind the reveal observer. */
- #dashboard section { opacity: 1; transform: none; }
- #dashboard section.reveal { animation: revealUp .6s var(--ease-premium) forwards; }
-
- /* Medium desktop / tablet landscape. */
- @media (max-width: 1100px) {
- .content { max-width: 100%; padding-left: 20px; padding-right: 20px; }
- .topbar { padding-left: 20px; padding-right: 20px; }
- .tabnav { padding-left: 20px; padding-right: 20px; }
- .gov-portal-strip { padding-left: 20px; padding-right: 20px; }
- .hero { padding-left: 26px; padding-right: 26px; }
- #aiChatWindow { max-width: calc(100vw - 28px); }
- }
-
- /* Tablet portrait. */
- @media (max-width: 850px) {
- html { scroll-padding-top: 105px; }
- .content { padding: 24px 18px 56px; }
- .gov-footer { padding: 16px 18px; gap: 12px; flex-wrap: wrap; }
- .doctor-hero, .emergency-hero { padding: 20px; }
- .doctor-hero .doc-badge, .emergency-hero .passport-status { align-self: stretch; width:100%; }
- .passport-layout, .privacy-grid, .clinical-grid, .scan-grid { grid-template-columns: 1fr; }
- .profile-vitals { grid-template-columns: repeat(3, minmax(0, 1fr)); }
- .activity-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
- .activity-stats .stat:nth-child(2) { border-right: none; }
- .activity-stats .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
- .workflow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
- .workflow-step:last-child { grid-column: 1 / -1; }
- .nearby-item { align-items: flex-start; gap: 12px; }
- .nearby-actions { max-width: 42%; }
- .mood-banner { flex-direction: column; align-items: stretch; }
- .mood-right { width: 100%; justify-content: space-between; }
- .emoji-group { flex-wrap: wrap; }
- .timeline { margin-left: 34px; padding-left: 20px; }
- .timeline-year { transform: translateX(-72px); width: 52px; }
- .rx-preview { min-height: 260px; }
- }
-
- /* Phones. */
- @media (max-width: 600px) {
- html { scroll-padding-top: 104px; }
- .gov-portal-strip { display: none; }
- .topbar {
- min-height: 54px;
- padding: 9px 12px;
- gap: 10px;
- position: sticky;
- top: 0;
- z-index: 60;
- }
- .topbar-right { gap: 8px; min-width: 0; }
- .brand-name-gov { font-size: 15px; }
- .gov-mini-logo { width: 26px; height: 26px; }
- .topbar-right > #topHealthId { max-width: 112px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
- .lang-select { padding: 6px 5px; max-width: 82px; }
- .logout-link { font-size: 11px; white-space: nowrap; }
- .tabnav {
- top: 54px;
- min-height: 47px;
- padding: 0 8px;
- gap: 2px;
- z-index: 55;
- box-shadow: 0 3px 10px rgba(24,49,42,.08);
- }
- .tab-btn { min-height: 47px; padding: 12px 13px; font-size: 12px; }
- .tabnav { -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); scroll-padding: 0 40px; }
- .content { padding: 18px 12px 48px; }
- section { margin-bottom: 24px; }
- section h3 { font-size: 17px; line-height: 1.25; }
- section p.section-sub { font-size: 12.5px; line-height: 1.45; }
- .hero { padding: 18px 14px; gap: 12px; }
- .hero .avatar { width: 50px; height: 50px; font-size: 19px; }
- .hero h2 { font-size: 22px; }
- .hero .sub-line { font-size: 12px; }
- .hero-badges { margin-top: 7px; }
- .hero-chip { font-size: 9.5px; padding: 4px 8px; }
-
- .activity-stats, .profile-vitals { grid-template-columns: 1fr 1fr; }
- .profile-vitals .stat:nth-child(2), .activity-stats .stat:nth-child(2) { border-right: none; }
- .profile-vitals .stat:last-child { grid-column: 1 / -1; border-top: 1px solid var(--line); }
- .activity-stats .stat:nth-child(3), .activity-stats .stat:nth-child(4) { border-top: 1px solid var(--line); }
- .stat { padding: 14px 13px; }
- .stat .num { font-size: 20px; }
- .stat .label { font-size: 11px; }
- .bars { height: 82px; gap: 4px; padding: 10px 8px; }
- .bar-col .day { font-size: 9px; }
-
- .nearby-panel { padding: 12px 14px; }
- .nearby-item, .price-row { flex-direction: column; align-items: stretch; gap: 10px; }
- .nearby-actions { max-width: none; width: 100%; justify-content: flex-start; }
- .nearby-actions .n-btn { flex: 1 1 120px; min-height: 40px; }
- .n-btn { min-height: 40px; padding: 8px 11px; }
- .price-row { padding: 13px; }
- .price-row > div:nth-child(2) { text-align: left !important; margin-right: 0 !important; }
- .price-row > button { width: 100%; }
-
- .mood-right { flex-direction: column; align-items: stretch; gap: 12px; }
- .emoji-group { width: 100%; display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 5px; }
- .mood-emoji { padding: 7px 3px; min-width: 0; }
- .mood-emoji span { font-size: 21px; }
- .mood-emoji small { font-size: 8.5px; }
- .call-group { align-items: stretch; }
- .call-btn { justify-content: center; width: 100%; }
-
- .scan-upload { padding: 20px 14px; }
- .scan-upload > div:last-child { flex-direction: column; align-items: stretch; }
- .scan-upload .n-btn { width: 100%; }
- .workflow { grid-template-columns: 1fr; }
- .workflow-step:last-child { grid-column: auto; }
- .scan-grid { gap: 12px; }
- .rx-preview { min-height: 220px; padding: 16px; }
- .extract-head, .doctor-line, .medicine-row { padding-left: 13px; padding-right: 13px; }
- .medicine-row { align-items: flex-start; }
-
- .emergency-hero, .doctor-hero { gap: 14px; padding: 18px; }
- .doctor-hero h3, .emergency-hero h3 { font-size: 20px; }
- .doc-badge, .passport-status { width: 100%; white-space: normal; }
- .passport-layout { gap: 12px; }
- .emergency-card-head { flex-direction: column; align-items: flex-start; gap: 6px; }
- .emergency-row { gap: 10px; padding: 12px 13px; }
- .rx-physician-line { align-items:flex-start; flex-direction:column; gap:7px; padding:13px; }
- .rx-physician-field { width:100%; }
- .qr-box { padding: 14px; }
- .fake-qr { width: 150px; height: 150px; }
- .privacy-grid { gap: 10px; }
-
- .timeline { margin-left: 24px; padding-left: 16px; }
- .timeline-year { position: static; width: auto; transform: none; text-align: left; margin-bottom: 2px; }
- .timeline-dot { margin-left: -24px; }
-
- .search-bar { flex-wrap: wrap; border-radius: 14px; padding: 9px 12px; }
- .search-bar input { min-width: 0; flex: 1 1 150px; }
- .search-bar .n-btn { flex: 1 1 100%; width: 100%; }
-
- .reg-card { padding: 18px 15px; }
- .gov-footer { flex-direction: column; align-items: flex-start; font-size: 10px; }
-
- #aiAssistantDock { right: 14px; bottom: 14px; }
- #aiLauncherBtn { justify-content: center; width: 54px; height: 54px; padding: 0; border-radius: 50%; font-size: 18px; }
- #aiLauncherBtn .ai-launch-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
- #aiChatWindow { width: calc(100vw - 28px); max-width: none; height: min(530px, calc(100vh - 96px)); margin-bottom: 10px; }
- .content { padding-bottom: 96px !important; }
- .ai-suggestions { max-height: 82px; overflow-y: auto; }
- .ai-chip { font-size: 10px; }
- .ai-input-row input { min-width: 0; }
-
- #medToast { left: 12px; right: 12px; top: 66px; max-width: none; }
- }
-
- @media (max-width: 380px) {
- .topbar { padding-left: 8px; padding-right: 8px; }
- .brand { gap: 6px; }
- .brand-name-gov { font-size: 14px; }
- .topbar-right { gap: 5px; }
- .topbar-right > #topHealthId { display: none; }
- .lang-select { max-width: 74px; font-size: 11px; }
- .tab-btn { padding-left: 11px; padding-right: 11px; font-size: 11.5px; }
- .content { padding-left: 9px; padding-right: 9px; }
- .emoji-group { grid-template-columns: repeat(3, minmax(0,1fr)); }
- .mood-emoji small { font-size: 9px; }
- .hero-badges { display: grid; grid-template-columns: 1fr; }
- .hero-chip { width: fit-content; max-width: 100%; }
- .activity-stats, .profile-vitals { grid-template-columns: 1fr; }
- .activity-stats .stat, .profile-vitals .stat { border-right: none !important; border-bottom: 1px solid var(--line); border-top: none !important; }
- .activity-stats .stat:last-child, .profile-vitals .stat:last-child { border-bottom: none; grid-column: auto; }
- .fake-qr { width: 140px; height: 140px; }
- }
-
- /* Landscape phones: use the available width instead of forcing portrait stacks. */
- @media (max-width: 850px) and (orientation: landscape) {
- .content { padding-top: 18px; }
- .hero { align-items: center; }
- .doctor-hero, .emergency-hero { flex-direction: row; align-items: center; }
- .doctor-hero .doc-badge, .emergency-hero .passport-status { width: auto; }
- .scan-grid { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
- .passport-layout { grid-template-columns: minmax(0, 1fr) 220px; }
- #aiChatWindow { height: min(430px, calc(100vh - 78px)); }
- }
-
-.record-empty{padding:14px;color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:10px;background:#fbfcfc;}
-
- .auth-mode-row { display:flex; gap:10px; justify-content:center; align-items:center; margin-top:12px; font-size:12px; color:var(--muted); }
- .auth-mode-row button { border:none; background:none; color:#1D467E; font-weight:700; cursor:pointer; padding:4px 6px; }
- .auth-mode-row button:hover { text-decoration:underline; }
-
-
-/* ===== PERSONALIZED PROFILE / ONBOARDING ===== */
-@keyframes swasthListIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.offline-banner{display:none;position:sticky;top:0;z-index:9999;background:#fff0f0;color:#8b1e1e;border-bottom:1px solid #efb5b5;padding:8px 14px;text-align:center;font-size:12px;font-weight:700}.offline-banner.show{display:block}
-body.dark-mode{--bg:#0d1514;--surface:#14201d;--paper:#101b19;--ink:#eef7f3;--muted:#a8bbb4;--line:#29403a;--sage:#17352d;--danger-soft:#3a2020;--teal:#62d2b0}
-body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:#101b19;color:var(--ink);border-color:var(--line)}
-.profile-modal-overlay{position:fixed;inset:0;background:rgba(10,28,24,.58);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:22px;z-index:10000;}
-.profile-modal-overlay.show{display:flex;}
-.profile-modal{width:min(760px,100%);max-height:min(90vh,820px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,.22);padding:30px;}
-.profile-modal h2{margin:0 0 8px;font-size:30px;color:var(--ink);}
-.profile-modal .modal-sub{margin:0 0 22px;color:var(--muted);line-height:1.55;}
-.profile-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
-.profile-field{display:flex;flex-direction:column;gap:7px;}
-.profile-field.full{grid-column:1/-1;}
-.profile-field label{font-size:12px;font-weight:700;color:var(--ink);}
-.profile-field input,.profile-field select,.profile-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:12px 13px;background:var(--surface);color:var(--ink);font:inherit;outline:none;}
-.profile-field textarea{min-height:84px;resize:vertical;}
-.profile-name-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-.medicine-input-header{display:grid;grid-template-columns:1.25fr .75fr .95fr .7fr 38px;gap:10px;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--muted);}
-.medicine-input-row{display:grid;grid-template-columns:1.25fr .75fr .95fr .7fr 38px;gap:10px;margin-bottom:10px;align-items:start;}
-.medicine-input-row input{min-width:0;}
-.med-time-editor{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:8px 10px;background:var(--soft);border:1px solid var(--line);border-radius:8px;}
-.med-time-editor-label{font-size:11px;font-weight:700;color:var(--muted);width:100%;}
-.med-time-slot{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
-.med-time-slot input{padding:6px 7px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);}
-
-.care-journey-section{position:relative;}
-.care-journey-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
-.care-journey-status{font-size:11px;font-weight:700;color:var(--ok);background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.22);padding:6px 10px;border-radius:999px;white-space:nowrap;}
-.care-journey{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;background:var(--surface);box-shadow:var(--shadow-sm);}
-.care-step{position:relative;min-width:0;padding:15px 12px 13px;border-right:1px solid var(--line);cursor:pointer;transition:background .18s ease,transform .18s ease;}
-.care-step:last-child{border-right:0;}
-.care-step:hover{background:var(--surface-2);transform:translateY(-1px);}
-.care-step.is-current{background:rgba(20,115,76,.045);box-shadow:inset 0 -3px 0 var(--green,#17824f);}
-.care-step-number{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
-.care-step-title{font-size:13px;font-weight:750;color:var(--ink);margin-bottom:5px;overflow-wrap:anywhere;}
-.care-step-state{font-size:11px;line-height:1.4;color:var(--muted);min-height:31px;overflow-wrap:anywhere;}
-.care-step-action{display:inline-flex;margin-top:9px;font-size:10px;font-weight:750;color:var(--green,#17824f);}
-.care-step.done .care-step-number{color:var(--ok);}
-.care-step.done .care-step-action{color:var(--ok);}
-.care-journey-next{margin-top:10px;font-size:12px;color:var(--muted);padding:10px 12px;border-left:3px solid var(--green,#17824f);background:var(--surface-2);border-radius:0 var(--radius-sm) var(--radius-sm) 0;}
-.care-journey-next b{color:var(--ink);}
-@media(max-width:1000px){.care-journey{grid-template-columns:repeat(3,minmax(0,1fr));}.care-step:nth-child(3){border-right:0;}.care-step:nth-child(-n+3){border-bottom:1px solid var(--line);}}
-@media(max-width:620px){.care-journey{grid-template-columns:1fr 1fr;}.care-step{border-right:1px solid var(--line);border-bottom:1px solid var(--line)!important;}.care-step:nth-child(even){border-right:0;}.care-step:nth-last-child(-n+2){border-bottom:0!important;}.care-journey-head{align-items:flex-start;}}
-@media(max-width:420px){.care-journey{grid-template-columns:1fr;}.care-step,.care-step:nth-child(even){border-right:0;border-bottom:1px solid var(--line)!important;}.care-step:last-child{border-bottom:0!important;}}
-
-.today-med-item{display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:9px;box-shadow:0 2px 8px rgba(0,0,0,.03);}
-.today-med-time{font-weight:800;font-size:15px;color:var(--ink);}
-.today-med-time small{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-top:2px;}
-.today-med-name{font-weight:750;font-size:14px;overflow-wrap:anywhere;}
-.today-med-meta{font-size:11px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere;}
-.today-med-time-editor{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap;}
-.today-med-time-editor input{width:108px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--ink);}
-.today-med-item.taken{opacity:.7;}
-.today-med-item.taken .today-med-time{ text-decoration:line-through;}
-.adherence-panel{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);}
-.adherence-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
-.adherence-stat{font-size:24px;font-weight:800;color:var(--ink);}
-.adherence-sub{font-size:11px;color:var(--muted);}
-.adherence-chart{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;height:118px;}
-.adherence-day{display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end;}
-.adherence-bar-wrap{width:100%;height:82px;display:flex;align-items:flex-end;justify-content:center;background:var(--soft);border-radius:7px 7px 4px 4px;overflow:hidden;}
-.adherence-bar{width:72%;min-height:3px;border-radius:6px 6px 0 0;background:var(--accent,#1f7a6e);}
-.adherence-day-label{font-size:10px;color:var(--muted);font-weight:700;}
-.adherence-day-pct{font-size:10px;color:var(--ink);font-weight:800;}
-.med-alert{margin-top:10px;padding:12px 14px;border-radius:12px;border:1px solid rgba(185,28,28,.2);background:rgba(185,28,28,.055);}
-.med-alert-title{font-weight:800;color:var(--danger,#b91c1c);font-size:13px;}
-.med-alert-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(185,28,28,.12);font-size:12px;}
-.med-alert-item:last-child{border-bottom:0;}
-.refill-panel{margin-top:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--soft);}
-.refill-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px;}
-.refill-item:last-child{border-bottom:0;}
-.refill-warn{font-weight:800;color:var(--warn,#a16207);}
-.med-time-editor-label{width:100%;}
-@media(max-width:620px){.adherence-chart{gap:4px}.adherence-bar{width:80%}.refill-item,.med-alert-item{align-items:flex-start;flex-direction:column;}}
-
-.medicine-remove-btn{width:38px;height:42px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:18px;line-height:1;}
-.medicine-remove-btn:hover{border-color:var(--accent,#1b5148);color:var(--ink);}
-.medicine-add-btn{margin-top:2px;}
-.allergy-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
-.allergy-option{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:8px 11px;background:var(--surface-2);font-size:12px;color:var(--ink);cursor:pointer;}
-.allergy-option input{margin:0;accent-color:var(--accent,#1b5148);}
-.allergy-custom{margin-top:10px;}
-.contact-inline-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;}
-.normal-allergy-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
-.normal-allergy-option{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:8px 11px;background:var(--surface-2);font-size:12px;color:var(--ink);cursor:pointer;}
-.normal-allergy-option input{margin:0;accent-color:var(--accent,#1b5148);}
-@media(max-width:620px){.contact-inline-grid{grid-template-columns:1fr;gap:10px;}}
-
-@media(max-width:620px){.profile-name-grid{grid-template-columns:1fr}.medicine-input-header{display:none}.medicine-input-row{grid-template-columns:1fr 1fr 1fr 38px;gap:7px}.medicine-input-row .medicine-schedule-input{grid-column:1 / 3}.medicine-input-row .medicine-pack-input{grid-column:1 / 4}.medicine-input-row input{font-size:12px;padding:10px 9px}.medicine-remove-btn{width:38px}.today-med-item{grid-template-columns:1fr;gap:7px}.today-med-time{font-size:14px}.today-med-item .med-action{justify-self:start}}
-
-.profile-field input:focus,.profile-field select:focus,.profile-field textarea:focus{border-color:var(--accent,#1b5148);box-shadow:0 0 0 3px rgba(27,81,72,.08);}
-.profile-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;flex-wrap:wrap;}
-.personalization-note{font-size:11px;color:var(--muted);line-height:1.45;margin-top:6px;}
-@media(max-width:620px){.profile-modal{padding:22px;border-radius:18px}.profile-form-grid{grid-template-columns:1fr}.profile-field.full{grid-column:auto}.profile-modal h2{font-size:25px}}
-</style>
-
-<style id="swasth-v8-hardening-css">
-#darkModeToggle{right:18px!important;bottom:84px!important;z-index:10002!important}
-#aiAssistantDock{z-index:10001!important}
-.inline-editor-overlay{position:fixed;inset:0;z-index:11000;background:rgba(12,24,20,.45);display:flex;align-items:center;justify-content:center;padding:18px}
-.inline-editor-overlay[hidden]{display:none}
-.inline-editor-card{width:min(420px,100%);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.22)}
-.inline-editor-card input{width:100%;box-sizing:border-box;margin-top:8px;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
-.inline-editor-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
-.lab-scan-card{width:min(560px,100%);max-height:calc(100vh - 36px);overflow-y:auto}
-.lab-scan-meta{display:grid;grid-template-columns:1fr 170px;gap:12px;margin-top:4px}
-.lab-scan-meta label{font-size:12px;font-weight:600;color:var(--muted)}
-.lab-scan-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
-.lab-scan-table th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:0 6px 6px;border-bottom:1px solid var(--line)}
-.lab-scan-table td{padding:6px;border-bottom:1px solid var(--line);vertical-align:middle}
-.lab-scan-table td:nth-child(2){width:110px}
-.lab-scan-unit{color:var(--muted);font-size:12px;white-space:nowrap;width:1%}
-.lab-scan-check{display:flex;align-items:center;gap:9px;cursor:pointer;margin:0}
-.inline-editor-card .lab-scan-check input{width:17px;height:17px;margin:0;padding:0;flex:none;accent-color:var(--accent,#2f6956)}
-.inline-editor-card .lab-scan-value{margin-top:0;padding:7px 9px;text-align:right;font-variant-numeric:tabular-nums}
-.lab-scan-table tr:has(input[type=checkbox]:not(:checked)) td{opacity:.45}
-.lab-scan-table tr.lab-scan-note td{border-bottom:1px solid var(--line);padding:0 6px 8px 32px;font-size:11.5px;color:#9a5b00;margin-top:-4px}
-body.dark-mode .lab-scan-table tr.lab-scan-note td{color:#f0c27a}
-.lab-scan-table tr:has(+ tr.lab-scan-note) td{border-bottom:none}
-.lab-scan-add{width:100%;margin-top:12px;padding:9px 10px}
-.lab-scan-raw{margin-top:12px;font-size:12px;color:var(--muted)}
-.lab-scan-raw summary{cursor:pointer}
-.lab-scan-raw pre{white-space:pre-wrap;max-height:180px;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:8px;font-size:11px}
-.lab-values{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.lab-value-chip{font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-variant-numeric:tabular-nums}
-.lab-value-chip b{font-weight:600}
-.report-actions{display:flex;justify-content:flex-end;margin-top:10px}
-.report-delete{font-size:12px;color:#b3261e;background:none;border:none;cursor:pointer;padding:4px 2px}
-body.dark-mode .report-delete{color:#f2b8b5}
-@media(max-width:560px){.lab-scan-meta{grid-template-columns:1fr}.lab-scan-table td:nth-child(2){width:90px}}
-.profile-wizard-progress{display:flex;gap:6px;margin:14px 0 18px}
-.profile-wizard-progress span{height:5px;flex:1;border-radius:999px;background:var(--line);transition:.2s}
-.profile-wizard-progress span.active{background:var(--teal)}
-.profile-wizard-step-label{font-size:12px;color:var(--muted);margin-bottom:10px}
-.profile-wizard-nav{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
-.profile-wizard-hidden{display:none!important}
-body.dark-mode .card,body.dark-mode .panel section,body.dark-mode .profile-modal,body.dark-mode .inline-editor-card,body.dark-mode .nearby-panel,body.dark-mode .ai-msg.bot,body.dark-mode .ai-suggestions,body.dark-mode .ai-input-row,body.dark-mode #aiChatWindow,body.dark-mode .modal-content{background:var(--surface)!important;color:var(--ink)!important}
-body.dark-mode .ai-chat-body{background:var(--paper)!important}
-body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:var(--paper)!important;color:var(--ink)!important}
-body.dark-mode [style*="background:#fff"],body.dark-mode [style*="background: #fff"],body.dark-mode [style*="background:white"],body.dark-mode [style*="background: white"]{background:var(--surface)!important;color:var(--ink)!important}
-body.dark-mode [style*="linear-gradient"]{color:var(--ink)}
-@media(max-width:600px){#darkModeToggle{bottom:72px!important;right:12px!important}}
-</style>
-<style id="swasth-theme-redesign">
-#darkModeToggle{position:relative!important;right:auto!important;bottom:auto!important;z-index:auto!important}
-.theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:34px;padding:0 10px;border:1px solid #d7e1dc;border-radius:9px;background:#fff;color:#43554f;font:600 12px/1 'Inter','Work Sans',sans-serif;cursor:pointer;transition:background .2s,border-color .2s,color .2s,transform .15s}.theme-toggle:hover{background:#f3f7f5;border-color:#b9cbc3;transform:translateY(-1px)}.theme-toggle:focus-visible{outline:3px solid rgba(19,136,8,.18);outline-offset:2px}.theme-toggle-icon{font-size:16px;line-height:1;width:17px;text-align:center}.theme-toggle-label{min-width:30px}
-body.dark-mode{--bg:#0b1210;--surface:#121c19;--paper:#0f1715;--ink:#edf5f1;--muted:#9fb2aa;--line:#293b35;--sage:#173129;--sage-line:#31554a;--teal:#6ad5b4;--gov-blue:#86b8e9;--brand:#5fc477;--saffron:#ffad62;background:var(--bg);color:var(--ink)}
-body.dark-mode .theme-toggle{background:#18231f;border-color:#344941;color:#e8f2ee}body.dark-mode .theme-toggle:hover{background:#20302a;border-color:#466158}
-body.dark-mode .topbar,body.dark-mode .tabnav{background:rgba(15,24,21,.94)!important;border-color:var(--line)!important;color:var(--ink)}body.dark-mode .tabnav{box-shadow:0 4px 18px rgba(0,0,0,.22)}body.dark-mode .tab-btn{color:#a9bbb4}body.dark-mode .tab-btn.active{color:#9bc9ee;border-bottom-color:#65c87d;background:linear-gradient(180deg,rgba(95,196,119,.08),transparent)}body.dark-mode .brand-name-gov{color:#edf5f1}body.dark-mode .top-health-chip{background:#18231f;border-color:#30443c;color:#b5c7c0}body.dark-mode .lang-select{background:#18231f;color:#dce9e4;border-color:#344941}body.dark-mode .logout-link{color:#72d6b5}
-body.dark-mode .hero,body.dark-mode section,body.dark-mode .card,body.dark-mode .panel section,body.dark-mode .clinical-card,body.dark-mode .intel-card,body.dark-mode .reg-card,body.dark-mode .med-item,body.dark-mode .history-item,body.dark-mode .visit-item,body.dark-mode .price-row,body.dark-mode .stat,body.dark-mode .nearby-panel,body.dark-mode .nearby-item,body.dark-mode .profile-vitals,body.dark-mode .accordion-head,body.dark-mode .accordion-body,body.dark-mode .qr-box,body.dark-mode .emergency-card,body.dark-mode .extract-card,body.dark-mode .doctor-card,body.dark-mode .record-card,body.dark-mode .care-journey-section{background:var(--surface);color:var(--ink);border-color:var(--line)}body.dark-mode .content,body.dark-mode .panel{color:var(--ink)}body.dark-mode .section-sub,body.dark-mode .label,body.dark-mode .muted,body.dark-mode .sub-line,body.dark-mode .small,body.dark-mode .personalization-note{color:var(--muted)!important}
-body.dark-mode input,body.dark-mode select,body.dark-mode textarea,body.dark-mode .reg-input,body.dark-mode .profile-input{background:#0f1715!important;color:var(--ink)!important;border-color:#344941!important}body.dark-mode input::placeholder,body.dark-mode textarea::placeholder{color:#71847c}body.dark-mode .n-btn,body.dark-mode .med-action,body.dark-mode .call-btn{background:#18251f;color:#dcebe5;border-color:#3a5047}body.dark-mode .n-btn:hover,body.dark-mode .med-action:hover{background:#20322b}body.dark-mode .n-btn.solid{background:#2f7c61;color:#fff;border-color:#2f7c61}body.dark-mode .hero-chip,body.dark-mode .badge,body.dark-mode .ai-chip{background:#182b24;border-color:#345147;color:#bfe1d2}
-body.dark-mode .ai-chat-body{background:#0e1614!important}body.dark-mode .ai-msg.bot,body.dark-mode .ai-suggestions{background:#15211d!important;color:var(--ink);border-color:var(--line)}body.dark-mode .ai-input-row{background:#121c19!important;border-color:var(--line)}body.dark-mode .offline-banner{background:#302719;color:#f1d7a5;border-color:#66502c}body.dark-mode .inline-editor-overlay{background:rgba(0,0,0,.68)}body.dark-mode .inline-editor-card,body.dark-mode .modal-content,body.dark-mode .profile-modal{background:#121c19!important;color:var(--ink)!important;border-color:var(--line)!important}body.dark-mode .toast{background:#16231f!important;color:var(--ink)!important;border-color:#365047!important}body.dark-mode .topbar.scrolled,body.dark-mode .tabnav.scrolled{background:rgba(15,24,21,.86)!important}@media(max-width:760px){.theme-toggle-label{display:none}.theme-toggle{width:34px;padding:0}.topbar-right{gap:9px}.theme-toggle-icon{font-size:17px}}
-</style>
-<style id="swasth-darkmode-final-fix">
-
-/* Dark-mode scrollbars: keep browser and tab scrolling visually integrated with the theme. */
-html.dark-mode,
-body.dark-mode{
-  scrollbar-color:#1a4a3b #07100d;
-  scrollbar-width:thin;
-}
-
-html.dark-mode::-webkit-scrollbar{
-  width:10px;
-  height:10px;
-}
-html.dark-mode::-webkit-scrollbar-track{
-  background:#07100d;
-}
-html.dark-mode::-webkit-scrollbar-thumb{
-  background:#1a4a3b;
-  border:2px solid #07100d;
-  border-radius:999px;
-}
-html.dark-mode::-webkit-scrollbar-thumb:hover{
-  background:#24634f;
-}
-html.dark-mode::-webkit-scrollbar-corner{
-  background:#07100d;
-}
-
-/* Horizontal tab strip: deliberately slimmer and quieter than the page scrollbar. */
-body.dark-mode .tabnav{
-  scrollbar-color:#1a4a3b transparent;
-  scrollbar-width:thin;
-}
-body.dark-mode .tabnav::-webkit-scrollbar{
-  width:0;
-  height:6px;
-}
-body.dark-mode .tabnav::-webkit-scrollbar-track{
-  background:transparent;
-}
-body.dark-mode .tabnav::-webkit-scrollbar-thumb{
-  background:#1a4a3b;
-  border:0;
-  border-radius:999px;
-}
-body.dark-mode .tabnav::-webkit-scrollbar-thumb:hover{
-  background:#24634f;
-}
-
-/* Other intentionally scrollable dark-mode panels. */
-body.dark-mode .ai-suggestions,
-body.dark-mode .ai-chat-body,
-body.dark-mode .modal-content,
-body.dark-mode .inline-editor-card{
-  scrollbar-color:#1a4a3b #0b1712;
-  scrollbar-width:thin;
-}
-body.dark-mode .ai-suggestions::-webkit-scrollbar,
-body.dark-mode .ai-chat-body::-webkit-scrollbar,
-body.dark-mode .modal-content::-webkit-scrollbar,
-body.dark-mode .inline-editor-card::-webkit-scrollbar{
-  width:7px;
-  height:7px;
-}
-body.dark-mode .ai-suggestions::-webkit-scrollbar-track,
-body.dark-mode .ai-chat-body::-webkit-scrollbar-track,
-body.dark-mode .modal-content::-webkit-scrollbar-track,
-body.dark-mode .inline-editor-card::-webkit-scrollbar-track{
-  background:#0b1712;
-}
-body.dark-mode .ai-suggestions::-webkit-scrollbar-thumb,
-body.dark-mode .ai-chat-body::-webkit-scrollbar-thumb,
-body.dark-mode .modal-content::-webkit-scrollbar-thumb,
-body.dark-mode .inline-editor-card::-webkit-scrollbar-thumb{
-  background:#1a4a3b;
-  border-radius:999px;
-}
-body.dark-mode .ai-suggestions::-webkit-scrollbar-thumb:hover,
-body.dark-mode .ai-chat-body::-webkit-scrollbar-thumb:hover,
-body.dark-mode .modal-content::-webkit-scrollbar-thumb:hover,
-body.dark-mode .inline-editor-card::-webkit-scrollbar-thumb:hover{
-  background:#24634f;
-}
-
-/* Final dark-mode pass: normalize surfaces, contrast, borders and the green accent. */
-body.dark-mode{
-  --bg:#07100d;
-  --surface:#0d1915;
-  --surface-2:#102019;
-  --paper:#09130f;
-  --ink:#dceae4;
-  --muted:#96ada3;
-  --line:#263d34;
-  --sage:#10251c;
-  --sage-line:#2a493d;
-  --teal:#1c5a45;
-  --teal-light:#246b51;
-  --brand:#4fae70;
-  --ok:#4f9b70;
-  --gov-blue:#9bbbdc;
-  --blue:#9bbbdc;
-  --danger:#d36b58;
-  --danger-soft:#321a17;
-  --amber:#d29a52;
-  --amber-soft:#302516;
-  background:var(--bg)!important;
-  color:var(--ink)!important;
-}
-
-/* Government strip / navigation */
-body.dark-mode .gov-portal-strip,
-body.dark-mode .topbar,
-body.dark-mode .tabnav,
-body.dark-mode .topbar.scrolled,
-body.dark-mode .tabnav.scrolled{
-  background:#09130f!important;
-  color:var(--muted)!important;
-  border-color:var(--line)!important;
-  box-shadow:none!important;
-}
-body.dark-mode .gov-portal-title,
-body.dark-mode .gov-portal-title span,
-body.dark-mode .gov-tagline,
-body.dark-mode .topbar-right,
-body.dark-mode .tab-btn{color:var(--muted)!important}
-body.dark-mode .gov-portal-title{color:#b8cec5!important}
-body.dark-mode .gov-tagline{color:#9db7ad!important}
-body.dark-mode .brand-name-gov{color:#dceae4!important}
-body.dark-mode .brand-name-gov span{color:#4fae70!important}
-body.dark-mode .top-health-chip{background:#112019!important;border-color:#29463b!important;color:#b7cbc2!important}
-body.dark-mode .lang-select{background:#101d18!important;color:#d5e4de!important;border-color:#30483e!important}
-body.dark-mode .logout-link{color:#5aa77a!important}
-body.dark-mode .tab-btn.active{color:#a8c8df!important;border-bottom-color:#3f8f63!important;background:rgba(63,143,99,.08)!important}
-body.dark-mode .tab-btn.active:before{background:#b36c35!important}
-body.dark-mode .topbar:after{background:linear-gradient(90deg,#9a572b,#285e45)!important}
-
-/* Main surfaces: eliminate accidental white/light cards. */
-body.dark-mode section,
-body.dark-mode .card,
-body.dark-mode .panel section,
-body.dark-mode .clinical-card,
-body.dark-mode .intel-card,
-body.dark-mode .reg-card,
-body.dark-mode .med-item,
-body.dark-mode .history-item,
-body.dark-mode .visit-item,
-body.dark-mode .price-row,
-body.dark-mode .stat,
-body.dark-mode .nearby-panel,
-body.dark-mode .nearby-item,
-body.dark-mode .profile-vitals,
-body.dark-mode .accordion-head,
-body.dark-mode .accordion-body,
-body.dark-mode .qr-box,
-body.dark-mode .emergency-card,
-body.dark-mode .extract-card,
-body.dark-mode .doctor-card,
-body.dark-mode .record-card,
-body.dark-mode .care-journey-section,
-body.dark-mode .privacy-card,
-body.dark-mode .visibility-item,
-body.dark-mode .workflow-step,
-body.dark-mode .scan-upload,
-body.dark-mode .rx-card-results,
-body.dark-mode .rx-order-card,
-body.dark-mode .refill-panel,
-body.dark-mode .adherence-panel,
-body.dark-mode .empty-state,
-body.dark-mode .record-empty,
-body.dark-mode .ai-summary,
-body.dark-mode .ai-summary.blue-tint,
-body.dark-mode .simple-explain,
-body.dark-mode .alert-card{
-  background:var(--surface)!important;
-  color:var(--ink)!important;
-  border-color:var(--line)!important;
-}
-
-/* Inline light backgrounds are a major source of the white cards seen in dark mode. */
-body.dark-mode [style*="background:#fff" i],
-body.dark-mode [style*="background: #fff" i],
-body.dark-mode [style*="background:#ffffff" i],
-body.dark-mode [style*="background: #ffffff" i],
-body.dark-mode [style*="background:white" i],
-body.dark-mode [style*="background: white" i],
-body.dark-mode [style*="background:#F3F9F5" i],
-body.dark-mode [style*="background:#F8FAF9" i],
-body.dark-mode [style*="background:#FFFDFD" i],
-body.dark-mode [style*="background:#fbfdfc" i],
-body.dark-mode [style*="background:#edf4ef" i],
-body.dark-mode [style*="background:#edf7ef" i]{
-  background:var(--surface)!important;
-  color:var(--ink)!important;
-}
-body.dark-mode [style*="background:var(--paper" i]{background:var(--paper)!important}
-body.dark-mode [style*="background:var(--surface" i]{background:var(--surface)!important}
-body.dark-mode [style*="background: linear-gradient(135deg, #f0f7f1" i]{
-  background:#102019!important;
-}
-
-/* Headings and copy need to stay readable instead of inheriting the old navy theme. */
-body.dark-mode section h3,
-body.dark-mode section h4,
-body.dark-mode .section-head-row h3,
-body.dark-mode .reg-card h4,
-body.dark-mode .privacy-card h4,
-body.dark-mode .scan-upload h4,
-body.dark-mode .workflow-step,
-body.dark-mode .history-item .h-name,
-body.dark-mode .visit-head,
-body.dark-mode .clinical-card b,
-body.dark-mode .medicine-input-header,
-body.dark-mode .medicine-name-input,
-body.dark-mode .today-med-name,
-body.dark-mode .status-main,
-body.dark-mode .status-sub,
-body.dark-mode .visibility-item,
-body.dark-mode .care-journey-head,
-body.dark-mode .care-journey-next,
-body.dark-mode .care-journey-status{
-  color:#cfe2da!important;
-}
-body.dark-mode section p,
-body.dark-mode section .section-sub,
-body.dark-mode .h-meta,
-body.dark-mode .visit-body,
-body.dark-mode .clinical-card p,
-body.dark-mode .small,
-body.dark-mode .muted,
-body.dark-mode .qr-meta,
-body.dark-mode .rx-caption,
-body.dark-mode .record-empty,
-body.dark-mode .empty-state,
-body.dark-mode .privacy-card p,
-body.dark-mode .personalization-note,
-body.dark-mode .today-med-meta,
-body.dark-mode .med-item .dose,
-body.dark-mode .history-item .h-meta,
-body.dark-mode .visit-head .meta,
-body.dark-mode .nearby-item .n-meta,
-body.dark-mode .lab-trend-summary{
-  color:var(--muted)!important;
-}
-body.dark-mode section h3,
-body.dark-mode .scan-upload h4,
-body.dark-mode .reg-card h4,
-body.dark-mode .privacy-card h4{
-  text-shadow:none!important;
-}
-
-/* The old inline navy heading on the prescription scanner. */
-body.dark-mode .scan-hero h3,
-body.dark-mode h3[style*="color:#28425d" i],
-body.dark-mode h3[style*="color: #28425d" i]{
-  color:#cfe2da!important;
-}
-
-/* Keep the specialty sections intentional rather than generic. */
-body.dark-mode .doctor-hero{background:linear-gradient(115deg,#123b30,#18513f)!important;color:#eef7f2!important;border-color:#2c5a48!important}
-body.dark-mode .doctor-hero h3{color:#eef7f2!important}
-body.dark-mode .doctor-hero .section-sub{color:#b8cdc4!important}
-body.dark-mode .emergency-hero{background:#291714!important;border-color:#55312b!important}
-body.dark-mode .emergency-hero h3,
-body.dark-mode .emergency-kicker{color:#e28a78!important}
-body.dark-mode .emergency-hero .section-sub{color:#bba7a1!important}
-body.dark-mode .passport-status{background:#1a120f!important;border-color:#694038!important;color:#e28a78!important}
-body.dark-mode .passport-status .status-sub{color:#b9aaa5!important;border-top-color:#49312c!important}
-body.dark-mode .emergency-card-head{background:#6e2d25!important}
-body.dark-mode .emergency-call{background:#111b17!important;color:#e28a78!important;border-color:#8c463b!important}
-body.dark-mode .emergency-call.primary{background:#7a3028!important;color:#fff!important}
-
-/* Dark, restrained green accent. */
-body.dark-mode .n-btn,
-body.dark-mode .med-action,
-body.dark-mode .call-btn{
-  background:#101f19!important;
-  color:#cfe2da!important;
-  border-color:#315447!important;
-}
-body.dark-mode .n-btn:hover,
-body.dark-mode .med-action:hover,
-body.dark-mode .call-btn:hover{background:#152a21!important;border-color:#3d6856!important}
-body.dark-mode .n-btn.solid,
-body.dark-mode .login-btn,
-body.dark-mode .water-add-btn.solid{
-  background:#1c5a45!important;
-  color:#f1faf6!important;
-  border-color:#1c5a45!important;
-}
-body.dark-mode .n-btn.solid:hover,
-body.dark-mode .login-btn:hover{background:#246b51!important}
-body.dark-mode .summary-label,
-body.dark-mode .visit-toggle,
-body.dark-mode .logout-link,
-body.dark-mode .n-badge.dist{color:#5aa77a!important}
-body.dark-mode .n-badge.dist{background:#102a20!important}
-body.dark-mode .tag.resolved{background:#123024!important;color:#69b789!important}
-body.dark-mode .tag.blue{background:#15283a!important;color:#9bbbdc!important}
-body.dark-mode .tag.ongoing{background:#302516!important;color:#d29a52!important}
-
-/* Form controls */
-body.dark-mode input,
-body.dark-mode select,
-body.dark-mode textarea,
-body.dark-mode .reg-input,
-body.dark-mode .profile-input,
-body.dark-mode .rx-physician-field{
-  background:#09140f!important;
-  color:#dceae4!important;
-  border-color:#30493e!important;
-}
-body.dark-mode input::placeholder,
-body.dark-mode textarea::placeholder{color:#6f877d!important}
-body.dark-mode label{color:#b9cec5!important}
-body.dark-mode .input-icon,
-body.dark-mode .eye-icon{color:#91a89f!important}
-body.dark-mode .privacy-card .switch{filter:brightness(.82) saturate(.82)}
-
-/* AI / summaries / document scan */
-body.dark-mode .ai-summary{background:#102019!important;border-color:#2a493d!important}
-body.dark-mode .ai-summary.blue-tint{background:#111d29!important;border-color:#2a4055!important}
-body.dark-mode .summary-label{color:#5aa77a!important}
-body.dark-mode .scan-upload{background:#0f1c17!important;border-color:#3a5b4d!important}
-body.dark-mode .scan-kicker{background:#302516!important;color:#d7a25c!important}
-body.dark-mode .analysis-banner{background:#10291f!important;border-color:#2d6348!important;color:#9bc9ad!important}
-body.dark-mode .workflow-step .step-no{background:#173026!important;color:#69b789!important}
-body.dark-mode .extract-head{border-color:var(--line)!important}
-body.dark-mode .rx-preview{background:#12110f!important;border-color:#4c3b2d!important}
-body.dark-mode .rx-preview .scribble{color:#a9bdb4!important}
-
-/* Timeline / empty states */
-body.dark-mode .timeline{border-left-color:#2a493d!important}
-body.dark-mode .timeline-dot{background:var(--surface)!important;border-color:#315447!important}
-body.dark-mode .timeline-dot.active-dot{background:#1c5a45!important;border-color:#1c5a45!important}
-
-/* Registry / records / visibility cards */
-body.dark-mode .reg-card,
-body.dark-mode .privacy-card,
-body.dark-mode .record-card{box-shadow:0 8px 24px rgba(0,0,0,.18)!important}
-body.dark-mode .reg-card .history-item{background:#101f19!important}
-body.dark-mode .active-doctor-share-panel,
-body.dark-mode #activeDoctorSharePanel{background:#101f19!important;border-color:#2c493d!important}
-body.dark-mode #labTrendPanel{background:#0f1c17!important}
-body.dark-mode .profile-vitals .stat{background:#101f19!important}
-
-/* Prevent old fixed dark text from becoming navy on the dark surface. */
-body.dark-mode .gov-portal-title,
-body.dark-mode .gov-portal-title span,
-body.dark-mode .gov-tagline,
-body.dark-mode .brand-wordmark,
-body.dark-mode .brand-tagline,
-body.dark-mode .brand-subline,
-body.dark-mode .mission-strip strong,
-body.dark-mode .mission-strip small,
-body.dark-mode .gov-login-panel h1,
-body.dark-mode .security-note,
-body.dark-mode .gov-footer,
-body.dark-mode .footer-hindi{
-  color:var(--ink)!important;
-}
-body.dark-mode .gov-portal-title span,
-body.dark-mode .mission-strip small,
-body.dark-mode .brand-subline,
-body.dark-mode .security-note{color:var(--muted)!important}
-
-/* Footer */
-body.dark-mode .gov-footer{background:#08110e!important;border-color:var(--line)!important;color:#9db2a9!important}
-body.dark-mode .footer-hindi{color:#a9beb5!important}
-
-/* Keep the floating assistant and overlays coherent with the same palette. */
-body.dark-mode #aiChatWindow,
-body.dark-mode .ai-input-row,
-body.dark-mode .ai-msg.bot,
-body.dark-mode .ai-suggestions,
-body.dark-mode .inline-editor-card,
-body.dark-mode .modal-content,
-body.dark-mode .profile-modal,
-body.dark-mode .support-popup-card,
-body.dark-mode .toast{
-  background:#0d1915!important;
-  color:var(--ink)!important;
-  border-color:var(--line)!important;
-}
-body.dark-mode .ai-chat-body{background:#09130f!important}
-body.dark-mode .ai-msg.user{background:#173a2d!important;color:#dceae4!important}
-body.dark-mode .ai-chip{background:#102a20!important;border-color:#2c5a48!important;color:#a8ceb9!important}
-
-/* Do not let old light shadows/borders visually read as white blocks. */
-body.dark-mode .med-item,
-body.dark-mode .history-item,
-body.dark-mode .visit-item,
-body.dark-mode .price-row,
-body.dark-mode .clinical-card,
-body.dark-mode .intel-card,
-body.dark-mode .reg-card,
-body.dark-mode .qr-box,
-body.dark-mode .emergency-card,
-body.dark-mode .extract-card{box-shadow:0 7px 22px rgba(0,0,0,.18)!important}
-</style>
-
-<style id="swasth-darkmode-component-fix">
-/* Comprehensive dark-mode component normalization. */
-html.dark-mode,
-body.dark-mode{
-  background:#07100d!important;
-  color:#dceae4!important;
-}
-
-/* Mental-health / mood banner */
-body.dark-mode .mood-banner{
-  background:linear-gradient(135deg,#102d27 0%,#12352d 55%,#142f2a 100%)!important;
-  border-color:#285446!important;
-  box-shadow:0 8px 24px rgba(0,0,0,.18)!important;
-}
-body.dark-mode .mood-left .kicker{color:#65b99f!important}
-body.dark-mode .mood-left h3{color:#dcebe5!important}
-body.dark-mode .mood-left p{color:#9eb8ae!important}
-body.dark-mode .mood-emoji{
-  background:#13251f!important;
-  border-color:#36584d!important;
-  color:#dceae4!important;
-}
-body.dark-mode .mood-emoji:hover,
-body.dark-mode .mood-emoji.active{
-  border-color:#4a9278!important;
-  background:#18352c!important;
-  box-shadow:0 5px 14px rgba(0,0,0,.22)!important;
-}
-body.dark-mode .mood-emoji.active{background:#1a3b31!important}
-body.dark-mode .mood-emoji small{color:#9eb8ae!important}
-body.dark-mode .support-chip{
-  background:#1c493c!important;
-  color:#9bd4bf!important;
-}
-body.dark-mode .call-btn{
-  background:#164536!important;
-  border-color:#3d7864!important;
-  color:#dff0e9!important;
-  box-shadow:0 3px 9px rgba(0,0,0,.22)!important;
-}
-body.dark-mode .call-btn:hover{background:#1d5745!important}
-
-/* Activity summary */
-body.dark-mode .activity-note{
-  background:linear-gradient(90deg,#102b23,#12271f)!important;
-  color:#a9c0b7!important;
-  border-color:#2c5446!important;
-  border-left-color:#4a9a76!important;
-}
-body.dark-mode .activity-empty{
-  background:#102019!important;
-  color:#9eb8ae!important;
-  border-color:#315047!important;
-}
-body.dark-mode .activity-stats{
-  background:#0d1a16!important;
-  border-color:#294139!important;
-}
-body.dark-mode .activity-stats .stat{
-  background:#0d1a16!important;
-  color:#dceae4!important;
-  border-color:#294139!important;
-}
-body.dark-mode .activity-stats .stat .num{color:#dceae4!important}
-body.dark-mode .activity-stats .stat .label{color:#91aaa0!important}
-
-/* Generic empty states and dashed cards that still carried light-theme backgrounds. */
-body.dark-mode .today-med-empty,
-body.dark-mode .activity-empty,
-body.dark-mode .calorie-meter,
-body.dark-mode .bars{
-  background:#102019!important;
-  border-color:#315047!important;
-  color:#9eb8ae!important;
-}
-
-/* Login screen: eliminate the light-theme shell around the dark login card. */
-body.dark-mode #loginScreen{
-  background:linear-gradient(135deg,#06100d 0%,#091712 52%,#0d211b 100%)!important;
-  color:#dceae4!important;
-}
-body.dark-mode .gov-brand-panel{
-  background:linear-gradient(165deg,#081511 0%,#0b1b16 100%)!important;
-  border-right-color:#223b32!important;
-}
-body.dark-mode .gov-india-text{color:#d5e5df!important}
-body.dark-mode .gov-india-en{color:#8fa89f!important}
-body.dark-mode .gov-login-panel{
-  background:#0b1a15!important;
-  border-color:#29463b!important;
-  box-shadow:0 12px 36px rgba(0,0,0,.28)!important;
-}
-body.dark-mode .secure-chip{
-  background:#17372c!important;
-  border-color:#356454!important;
-  color:#a9d5c2!important;
-}
-body.dark-mode .gov-login-panel h1{color:#dceae4!important}
-body.dark-mode .gov-login-panel .sub{color:#98b0a7!important}
-body.dark-mode .gov-login-panel label{color:#b8cbc4!important}
-body.dark-mode .forgot-link{color:#83b9e9!important}
-body.dark-mode .gov-input-wrap{
-  background:#0c1814!important;
-  border-color:#39554b!important;
-}
-body.dark-mode .gov-input-wrap:focus-within{
-  border-color:#4c9278!important;
-  box-shadow:0 0 0 3px rgba(76,146,120,.15)!important;
-}
-body.dark-mode .gov-input-wrap input{
-  background:transparent!important;
-  color:#dceae4!important;
-}
-body.dark-mode .gov-input-wrap input::placeholder{color:#708a80!important}
-body.dark-mode .input-icon,
-body.dark-mode .eye-icon{color:#8da79e!important}
-body.dark-mode .login-btn{
-  background:#1d634d!important;
-  color:#eff8f4!important;
-  box-shadow:0 5px 14px rgba(0,0,0,.22)!important;
-}
-body.dark-mode .login-btn:hover{background:#247259!important}
-body.dark-mode .login-divider{color:#789189!important}
-body.dark-mode .alt-login-btn{
-  background:#10231d!important;
-  border-color:#365349!important;
-  color:#d3e2dc!important;
-}
-body.dark-mode .alt-login-btn:hover{
-  background:#163028!important;
-  border-color:#4a6e61!important;
-}
-body.dark-mode .security-note{
-  color:#829b92!important;
-  border-top-color:#29443a!important;
-}
-body.dark-mode .mission-strip{
-  background:rgba(7,16,13,.82)!important;
-  border-top-color:#294139!important;
-}
-body.dark-mode .mission-strip strong{color:#b8ccc5!important}
-body.dark-mode .mission-strip small{color:#7f9990!important}
-body.dark-mode .m-white{background:#274037!important}
-
-/* Login background ornaments are intentionally much quieter in dark mode. */
-body.dark-mode .login-saffron{opacity:.18!important}
-body.dark-mode .login-green{opacity:.20!important}
-
-/* Portal shell pieces that can otherwise remain light before dashboard sections load. */
-body.dark-mode .gov-portal-strip{
-  background:#0b1814!important;
-  border-bottom-color:#263f36!important;
-  color:#91aaa1!important;
-}
-body.dark-mode .gov-portal-title{color:#9fb9b0!important}
-body.dark-mode .gov-portal-title span{color:#718980!important}
-body.dark-mode .gov-tagline{color:#91aaa1!important}
-
-/* Strong fallback for inline light backgrounds used by legacy components. */
-body.dark-mode [style*="background:#fff"],
-body.dark-mode [style*="background:#FFF"],
-body.dark-mode [style*="background: #fff"],
-body.dark-mode [style*="background: #FFF"],
-body.dark-mode [style*="background:white"],
-body.dark-mode [style*="background: white"]{
-  background:#102019!important;
-  color:#dceae4!important;
-}
-</style>
-<style id="profile-editor-polish">
-/* Profile editor: each wizard step spans the dialog and lays out its own fields. */
-.profile-form-grid > .profile-wizard-step{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:18px 16px;align-items:start}
-.profile-wizard-step > .profile-field.full{grid-column:1/-1}
-.profile-field{gap:6px}
-.profile-field > label{margin:0}
-.profile-wizard-step-label{font-weight:600;color:var(--ink);font-size:13px;margin-bottom:14px}
-.profile-field .personalization-note{margin-top:2px;font-size:11.5px;color:var(--muted);line-height:1.45}
-/* One row of actions: Back on the left, Cancel + Next/Save on the right. */
-#profileForm .profile-modal-actions{display:none}
-.profile-wizard-nav{align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
-.profile-wizard-nav-right{display:flex;gap:10px;margin-left:auto}
-.profile-wizard-nav .n-btn{min-width:92px;justify-content:center}
-.profile-wizard-nav #profileWizardBack:disabled{visibility:hidden}
-/* Allergy choices as chips: the checkbox stays for keyboard and screen readers. */
-.allergy-options,.normal-allergy-options{gap:8px;margin-top:4px}
-.allergy-option,.normal-allergy-option{position:relative;display:inline-flex!important;align-items:center;gap:7px;width:auto;margin:0;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:13px;font-weight:500;line-height:1.2;white-space:nowrap;text-align:left;cursor:pointer;user-select:none;transition:background .15s,border-color .15s,color .15s}
-.allergy-option input,.normal-allergy-option input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
-.allergy-option:before,.normal-allergy-option:before{content:'';width:14px;height:14px;flex:0 0 14px;border:1.5px solid #9fb1a9;border-radius:4px;box-sizing:border-box;background:var(--surface) center/10px no-repeat}
-.allergy-option:hover,.normal-allergy-option:hover{border-color:#b8c9c1;background:var(--surface-2)}
-.allergy-option:has(input:checked),.normal-allergy-option:has(input:checked){border-color:var(--brand);background:rgba(46,125,91,.1);color:#1d5a40;font-weight:600}
-.allergy-option:has(input:checked):before,.normal-allergy-option:has(input:checked):before{border-color:var(--brand);background-color:var(--brand);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
-.allergy-option:has(input:focus-visible),.normal-allergy-option:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
-.allergy-custom{margin-top:10px}
-body.dark-mode .allergy-option:has(input:checked),body.dark-mode .normal-allergy-option:has(input:checked){background:rgba(95,196,140,.14);color:#bfe8d2;border-color:#5fc48c}
-body.dark-mode .allergy-option:before,body.dark-mode .normal-allergy-option:before{border-color:#5d7a6f}
-@media(max-width:620px){
- .profile-form-grid > .profile-wizard-step{grid-template-columns:1fr;gap:16px}
- .profile-wizard-step > .profile-field.full{grid-column:auto}
- .profile-wizard-nav .n-btn{min-width:0;padding-left:14px;padding-right:14px}
- .allergy-option,.normal-allergy-option{white-space:normal}
-}
-</style>
-<style id="records-polish">
-/* Records: day-grouped logs and timeline */
-.record-day{border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:12px;overflow:hidden}
-.record-day-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:10px 16px;background:var(--surface-2,#f7faf8);border-bottom:1px solid var(--line);font-size:12.5px}
-.record-day-head span:first-child{font-weight:700;color:var(--ink)}
-.record-day-head span:last-child{color:var(--muted)}
-.record-row{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;padding:11px 16px;border-top:1px solid var(--line)}
-.record-day-head + .record-row{border-top:0}
-.record-row-time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.record-row-main{display:flex;flex-direction:column;gap:2px;min-width:0}
-.record-row-main b{font-size:14px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
-.record-row-main span{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
-.record-row-value{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
-.record-row-check{font-size:12px;font-weight:600;color:var(--brand);white-space:nowrap}
-.record-empty-cta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.record-more-btn{display:block;margin:4px auto 0;background:none;border:0;padding:8px 14px;border-radius:8px;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer}
-.record-more-btn:hover{background:var(--sage)}
-.record-timeline-day{position:relative;padding-left:22px;margin-bottom:6px}
-.record-timeline-day:before{content:'';position:absolute;left:6px;top:4px;bottom:-6px;width:2px;background:var(--line)}
-.record-timeline-date{font-size:12.5px;font-weight:700;color:var(--ink);margin:0 0 8px -22px;padding-left:22px}
-.record-timeline-item{position:relative;display:flex;gap:10px;padding:10px 14px;margin-bottom:8px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
-.record-timeline-dot{position:absolute;left:-21px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:3px solid var(--muted)}
-.record-type{font-size:10.5px!important;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
-.type-visit .record-timeline-dot{border-color:var(--accent)} .type-visit .record-type{color:var(--accent)!important}
-.type-lab .record-timeline-dot{border-color:#8a5cc2} .type-lab .record-type{color:#7a4fb3!important}
-.type-rx .record-timeline-dot{border-color:var(--brand)} .type-rx .record-type{color:var(--brand)!important}
-.type-log .record-timeline-dot{border-color:#b9c7c1} .type-log{background:var(--surface-2,#f7faf8)}
-body.dark-mode .record-day-head,body.dark-mode .type-log{background:#15211d}
-body.dark-mode .type-lab .record-type{color:#c4a6ec!important}
-@media(max-width:620px){.record-row{grid-template-columns:58px 1fr;row-gap:4px}.record-row-value,.record-row-check{grid-column:2}}
-</style>
-<style id="places-polish">
-/* Nearby healthcare */
-.places-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px}
-.places-head .section-sub{margin-bottom:0}
-.places-panel{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
-.places-empty{padding:22px 18px;text-align:center;font-size:13px;color:var(--muted)}
-.places-source{padding:10px 16px;border-top:1px solid var(--line);background:var(--surface-2,#f7faf8);font-size:11px;color:var(--muted)}
-.places-filters{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
-.places-filter{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
-.places-filter span{color:var(--muted);font-weight:500;margin-left:2px}
-.places-filter:hover{background:var(--sage)}
-.places-filter.active{background:var(--teal,#143831);border-color:var(--teal,#143831);color:#fff}
-.places-filter.active span{color:rgba(255,255,255,.75)}
-.place-row{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;border-top:1px solid var(--line)}
-.places-list .place-row:first-child{border-top:0}
-.place-dist{font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
-.place-dist small{font-size:11px;font-weight:600;color:var(--muted);margin-left:2px}
-.place-name{font-size:14.5px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
-.place-meta{font-size:12.5px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
-.place-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.place-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#e8eff7;color:#2a5585}
-.place-tag.er{background:#fdecea;color:#a23b2e}
-.place-tag.generic{background:#e6f3ec;color:#1f6445}
-.place-actions{display:grid;grid-template-columns:repeat(2,96px);gap:8px}
-.place-actions .n-btn{justify-content:center;text-align:center;min-height:36px;padding:8px 10px}
-.places-panel .record-more-btn{margin:0 auto;padding:12px;width:100%;border-radius:0;border-top:1px solid var(--line)}
-body.dark-mode .places-source{background:#15211d}
-body.dark-mode .place-tag{background:#1b2c3d;color:#9cc4ec}
-body.dark-mode .place-tag.er{background:#3a1d19;color:#f0a092}
-body.dark-mode .place-tag.generic{background:#16362a;color:#8fd6b0}
-body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
-@media(max-width:620px){
- .place-row{grid-template-columns:52px minmax(0,1fr);row-gap:10px}
- .place-actions{grid-column:1/-1;grid-template-columns:1fr 1fr}
- .place-action-gap{display:none}
- .place-actions .n-btn.solid:only-of-type{grid-column:1/-1}
- .places-head .n-btn{width:100%}
-}
-</style>
 </head>
-<body><div id="offlineBanner" class="offline-banner" role="status">You are offline. Saved information remains available, but live services may be unavailable until your connection returns.</div><!-- ============ LOGIN SCREEN ============ -->
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+ <symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+ <symbol id="i-records" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></symbol>
+ <symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></symbol>
+ <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M9 12h6"/><path d="M12 9v6"/></symbol>
+ <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+ <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+ <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+ <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+ <symbol id="i-logout" viewBox="0 0 24 24"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></symbol>
+ <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+ <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+ <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+ <symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+ <symbol id="i-logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1D6B53" stroke="none"/><path d="M16 9v14M9 16h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/></symbol>
+</svg>
+<div id="offlineBanner" class="offline-banner" role="status">You are offline. Saved information remains available, but live services may be unavailable until your connection returns.</div><!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
  <div class="login-bg-shape login-saffron"></div>
  <div class="login-bg-shape login-green"></div>
@@ -1984,126 +206,130 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
 
 <!-- ============ DASHBOARD ============ -->
 <div id="dashboard">
- <div class="topbar">
- <div class="brand"><span class="gov-mini-logo"><b>+</b></span><span class="brand-name-gov">Swasth<span>ID</span></span></div>
+<header class="topbar">
+ <a class="brand" href="#" data-go="home" aria-label="SwasthID home"><svg class="brand-mark" aria-hidden="true"><use href="#i-logo"/></svg><span>SwasthID</span></a>
+ <nav class="primary-nav" aria-label="Main">
+  <button type="button" data-group="home"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Home</button>
+  <button type="button" data-group="records"><svg class="icon" aria-hidden="true"><use href="#i-records"/></svg>Records</button>
+  <button type="button" data-group="medicines"><svg class="icon" aria-hidden="true"><use href="#i-pill"/></svg>Medicines</button>
+  <button type="button" data-group="health"><svg class="icon" aria-hidden="true"><use href="#i-activity"/></svg>Health</button>
+  <button type="button" data-group="care"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>Care</button>
+ </nav>
  <div class="topbar-right">
- <button id="darkModeToggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Dark</span></button>
- <span id="topHealthId">Signed in</span>
- <span class="logout-link" id="logoutBtn">Log out</span>
+  <button id="darkModeToggle" class="btn btn-ghost btn-icon theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg></button>
+  <div class="account">
+   <button type="button" class="account-btn" id="accountBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="accountMenu"><span class="initials" id="accountInitials">SI</span><svg class="icon icon-sm" aria-hidden="true"><use href="#i-chevron-down"/></svg><span class="visually-hidden">Account</span></button>
+   <div class="menu" id="accountMenu" role="menu">
+    <div class="menu-header"><b id="accountName">SwasthID</b><span id="topHealthId">Signed in</span></div>
+    <button type="button" role="menuitem" data-go="profile"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg>Profile</button>
+    <button type="button" role="menuitem" data-go="register"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>Family</button>
+    <hr>
+    <button type="button" role="menuitem" id="logoutBtn"><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>Log out</button>
+   </div>
+  </div>
  </div>
- </div>
+</header>
 
- <div class="tabnav" role="tablist" aria-label="Sections">
- <button class="tab-btn active" data-tab="home">Home</button>
- <button class="tab-btn" data-tab="records">Records</button>
- <button class="tab-btn" data-tab="vitals">Vitals</button>
- <button class="tab-btn" data-tab="scan">Scan Prescription</button>
- <button class="tab-btn" data-tab="order">Medicines</button>
- <button class="tab-btn" data-tab="nutrition">Nutrition</button>
- <button class="tab-btn predict-tab" data-tab="predict">Heart Risk</button>
- <button class="tab-btn emergency-tab" data-tab="emergency">Emergency</button>
- <button class="tab-btn" data-tab="doctor">Doctor Summary</button>
- <button class="tab-btn" data-tab="register">Family</button>
- <button class="tab-btn" data-tab="profile">Profile</button>
- </div>
+<div class="page-head" id="pageHead" hidden>
+ <h1 id="pageTitle"></h1>
+ <div class="segmented" id="subnav" role="tablist"></div>
+</div>
 
  <!-- ===== HOME PANEL ===== -->
  <div class="panel active" id="panel-home">
- <div class="hero">
- <div class="avatar serif" id="heroAvatar">SI</div>
- <div class="hero-main">
- <h2 class="serif"><span id="heroGreeting">Hi</span>, <span id="dashboardGreetingName">there</span></h2>
- <div class="sub-line" id="heroTime"></div>
- </div>
- </div>
-
  <div class="content">
- <section class="care-journey-section">
- <div class="care-journey-head">
-  <div>
-   <h3>My care journey</h3>
-   <p class="section-sub">Your next steps, based on what you have already done in SwasthID.</p>
+  <div class="home-head">
+   <span class="initials" id="heroAvatar" aria-hidden="true">SI</span>
+   <div>
+    <h1><span id="heroGreeting">Hello</span>, <span id="dashboardGreetingName">there</span></h1>
+    <p id="heroTime"></p>
+   </div>
   </div>
-  <span class="care-journey-status" id="careJourneyStatus">Getting started</span>
- </div>
- <div class="care-journey" id="careJourney" aria-live="polite"></div>
- <div class="care-journey-next" id="careJourneyNext"></div>
- </section>
 
- <section>
- <h3>Today's medication</h3>
- <p class="section-sub">Doses from your profile and your latest saved prescription. Mark each one as you take it.</p>
- 
- <div id="todayMedList"></div>
- <div class="reminder-bar" id="doseReminderBar"></div>
- <div class="adherence-panel" id="medAdherencePanel" aria-live="polite"></div>
- <div class="med-alert" id="medMissedDosePanel" style="display:none;" aria-live="assertive"></div>
- <div class="refill-panel" id="medRefillPanel" aria-live="polite"></div>
- </section>
+  <div class="home-grid">
+   <div class="home-main">
+    <section class="card" aria-labelledby="todayMedsTitle">
+     <div class="card-head">
+      <div>
+       <h2 class="card-title" id="todayMedsTitle">Today's medicines</h2>
+       <p class="card-sub">Mark each dose as you take it.</p>
+      </div>
+      <div class="dose-summary" id="doseSummary" hidden><div class="progress" aria-hidden="true"><span id="doseProgress"></span></div><span class="t-meta" id="doseSummaryText"></span></div>
+     </div>
+     <div id="todayMedList"></div>
+     <div class="reminder-bar" id="doseReminderBar"></div>
+    </section>
 
- <section>
- <h3>Today</h3>
- <div class="activity-stats today-stats">
- <div class="stat"><div class="num serif" id="homeDosesStat">--</div><div class="label">Medicine doses taken</div></div>
- <div class="stat"><div class="num serif" id="homeKcalStat">0 kcal</div><div class="label">Calories logged</div></div>
- <div class="stat"><div class="num serif" id="homeWaterStat">0 ml</div><div class="label">Water</div></div>
- </div>
- </section>
+    <section class="card" aria-label="Medication adherence">
+     <div class="adherence-panel" id="medAdherencePanel" aria-live="polite"></div>
+    </section>
 
- <section>
- <div class="places-head">
- <div>
- <h3>Nearby healthcare</h3>
- <p class="section-sub" id="nearbySubtitle">Find hospitals, clinics, doctors and pharmacies near you.</p>
- </div>
- <button class="n-btn solid" id="findNearbyBtn" type="button">Find near me</button>
- </div>
- <div class="places-panel">
- <div id="nearbyLoadingState" style="display:none; text-align:center; padding:18px; color:var(--muted);">
- <div style="font-size:20px; margin-bottom:6px;"></div>
- <b style="color:var(--ink);">Finding your location…</b>
- <div style="font-size:12px; margin-top:4px;">Then we'll search for nearby healthcare centers.</div>
- </div>
- <div id="nearbyFallback" style="display:none; text-align:center; padding:18px; color:var(--muted);">
- <div style="font-size:20px; margin-bottom:6px;"></div>
- <b style="color:var(--ink);">Location access is unavailable.</b>
- <div id="nearbyFallbackMessage" style="font-size:12px; margin:5px 0 12px;">Enable location permission in your browser and try again.</div>
- <button class="n-btn" id="retryLocationBtn" type="button">Try again</button>
- </div>
- <div id="nearbyItemsList">
- <div class="places-empty">Use <b>Find near me</b> to list hospitals, clinics and pharmacies, including generic-medicine stores, around your current location.</div>
- </div>
- <div class="places-source">Data © OpenStreetMap contributors. Details can be out of date, so call ahead when you can.</div>
- </div>
- </section>
+    <section class="card" aria-labelledby="nearbyTitle">
+     <div class="places-head">
+      <div>
+       <h2 class="card-title" id="nearbyTitle">Nearby care</h2>
+       <p class="card-sub" id="nearbySubtitle">Hospitals, clinics, doctors and pharmacies around you, including generic-medicine stores.</p>
+      </div>
+      <button class="btn btn-primary" id="findNearbyBtn" type="button"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-pin"/></svg>Find near me</button>
+     </div>
+     <div class="places-panel">
+      <div id="nearbyLoadingState" style="display:none;" aria-live="polite">
+       <span class="visually-hidden">Finding places near you</span>
+       <div class="place-skeleton"><span class="skeleton tall"></span><span class="skeleton-lines"><span class="skeleton w-60"></span><span class="skeleton w-40"></span></span><span class="skeleton tall"></span></div>
+       <div class="place-skeleton"><span class="skeleton tall"></span><span class="skeleton-lines"><span class="skeleton w-70"></span><span class="skeleton w-30"></span></span><span class="skeleton tall"></span></div>
+       <div class="place-skeleton"><span class="skeleton tall"></span><span class="skeleton-lines"><span class="skeleton w-50"></span><span class="skeleton w-40"></span></span><span class="skeleton tall"></span></div>
+      </div>
+      <div id="nearbyFallback" class="places-state" style="display:none;">
+       <b>Location unavailable</b>
+       <div id="nearbyFallbackMessage">Allow location access in your browser and try again.</div>
+       <button class="btn" id="retryLocationBtn" type="button">Try again</button>
+      </div>
+      <div id="nearbyItemsList">
+       <div class="places-empty">Select <b>Find near me</b> to see places sorted by distance.</div>
+      </div>
+      <div class="places-source">Map data © OpenStreetMap contributors. Details can be out of date, so call ahead when you can.</div>
+     </div>
+    </section>
+   </div>
 
- <!-- YOU ARE NOT ALONE — mental health support strip -->
- <section>
- <div class="mood-banner care-strip">
- <div class="care-shimmer"></div>
- <div class="mood-left">
- <div class="kicker"><span class="care-heart" aria-hidden="true">💙</span> YOU ARE NOT ALONE</div>
- <h3>How are you feeling today? <span aria-hidden="true">😊</span></h3>
- <p>Small conversations can make a big difference. Tele-MANAS is a free mental-health helpline, open 24×7.</p>
- </div>
- <div class="mood-right">
- <div>
- <div class="emoji-group">
- <button class="mood-emoji" data-mood="Stressed" data-msg="Take a deep breath. Help is available."><span aria-hidden="true">😭</span><small>Stressed</small></button>
- <button class="mood-emoji" data-mood="Low" data-msg="It's okay to have difficult days. You're not alone."><span aria-hidden="true">😔</span><small>Low</small></button>
- <button class="mood-emoji" data-mood="Okay" data-msg="Every day doesn't have to be perfect."><span aria-hidden="true">😐</span><small>Okay</small></button>
- <button class="mood-emoji" data-mood="Good" data-msg="Take care of yourself and stay hydrated."><span aria-hidden="true">🙂</span><small>Good</small></button>
- <button class="mood-emoji" data-mood="Happy" data-msg="Keep spreading positivity today."><span aria-hidden="true">😁</span><small>Happy</small></button>
- </div>
- <div class="mood-response" id="moodResponseText" aria-live="polite"></div>
- </div>
- <div class="call-group">
- <span class="support-chip">Free · 24×7</span>
- <button type="button" class="call-btn" id="callSupportBtn">Call Tele-MANAS</button>
- </div>
- </div>
- </div>
- </section>
+   <aside class="home-side">
+    <section class="card" aria-labelledby="todayStatsTitle">
+     <h2 class="card-title card-title-spaced" id="todayStatsTitle">Today</h2>
+     <dl class="stat-list">
+      <div class="stat-row"><dt>Doses taken</dt><dd id="homeDosesStat">None today</dd></div>
+      <div class="stat-row"><dt>Calories</dt><dd id="homeKcalStat">0 kcal</dd></div>
+      <div class="stat-row"><dt>Water</dt><dd id="homeWaterStat">0 ml</dd></div>
+     </dl>
+    </section>
+
+    <section class="card care-journey-section" aria-labelledby="setupTitle">
+     <div class="card-head">
+      <h2 class="card-title" id="setupTitle">Set up SwasthID</h2>
+      <span class="care-journey-status" id="careJourneyStatus"></span>
+     </div>
+     <div class="care-journey" id="careJourney" aria-live="polite"></div>
+     <div class="care-journey-next" id="careJourneyNext"></div>
+    </section>
+
+    <section class="card" aria-label="Refill reminders">
+     <div class="refill-panel" id="medRefillPanel" aria-live="polite"></div>
+    </section>
+
+    <section class="card support-card" aria-labelledby="supportTitle">
+     <h2 class="card-title" id="supportTitle">How are you feeling today?</h2>
+     <p class="card-sub">If things feel heavy, Tele-MANAS is a free mental-health helpline, open 24 hours.</p>
+     <div class="mood-row" role="group" aria-label="Your mood today">
+      <button type="button" class="mood-emoji" data-mood="Stressed" data-msg="Take a slow breath. Talking to someone can help, and Tele-MANAS is free.">Stressed</button>
+      <button type="button" class="mood-emoji" data-mood="Low" data-msg="Difficult days happen. You don't have to handle them alone.">Low</button>
+      <button type="button" class="mood-emoji" data-mood="Okay" data-msg="Thanks for checking in.">Okay</button>
+      <button type="button" class="mood-emoji" data-mood="Good" data-msg="Good to hear. Remember water and your doses today.">Good</button>
+      <button type="button" class="mood-emoji" data-mood="Happy" data-msg="Glad you're having a good day.">Happy</button>
+     </div>
+     <div class="mood-response" id="moodResponseText" aria-live="polite"></div>
+     <button type="button" class="btn call-btn" id="callSupportBtn"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-phone"/></svg>Call Tele-MANAS (14416)</button>
+    </section>
+   </aside>
+  </div>
  </div>
  </div>
 
@@ -2683,10 +909,18 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  </div>
 
  <!-- ===== FOOTER ===== -->
- <div class="gov-footer">
- <div>SwasthID</div>
- <div>For information only. Not a substitute for advice from a qualified clinician.</div>
- </div>
+ <footer class="app-footer">
+  <div>© <span id="footerYear">2026</span> SwasthID · <a href="https://github.com/Auritras/SwasthID" target="_blank" rel="noopener">Source on GitHub</a></div>
+  <div>SwasthID gives information, not medical advice. Always check with a qualified clinician.</div>
+ </footer>
+
+ <nav class="bottom-nav" aria-label="Main">
+  <button type="button" data-group="home"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Home</button>
+  <button type="button" data-group="records"><svg class="icon" aria-hidden="true"><use href="#i-records"/></svg>Records</button>
+  <button type="button" data-group="medicines"><svg class="icon" aria-hidden="true"><use href="#i-pill"/></svg>Medicines</button>
+  <button type="button" data-group="health"><svg class="icon" aria-hidden="true"><use href="#i-activity"/></svg>Health</button>
+  <button type="button" data-group="care"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>Care</button>
+ </nav>
 </div>
 
 <!-- ===== ACCOUNT CREATED MODAL ===== -->
@@ -2805,8 +1039,8 @@ body.dark-mode .places-filter.active{background:#2e7d5b;border-color:#2e7d5b}
  <button id="aiSendBtn"></button>
  </div>
  </div>
-  <button id="aiLauncherBtn" type="button" aria-label="Ask SwasthAI">
- <span aria-hidden="true">➤</span><span class="ai-launch-label">Ask SwasthAI</span>
+  <button id="aiLauncherBtn" type="button" aria-label="Ask SwasthAI" title="Ask SwasthAI">
+ <svg class="icon" aria-hidden="true"><use href="#i-message"/></svg><span class="ai-launch-label">Ask SwasthAI</span>
  </button>
 </div>
 
@@ -3560,11 +1794,9 @@ let profileOnboardingRequired = false;
    const greeting = document.getElementById('dashboardGreetingName');
    if (greeting) greeting.textContent = displayName.split(/\s+/)[0] || displayName;
    const initials = displayName.split(/\s+/).filter(Boolean).slice(0,2).map(x => x[0].toUpperCase()).join('') || 'SI';
-   document.querySelectorAll('.hero .avatar').forEach(el => {
-     const dot = el.querySelector('.heartbeat-dot');
-     el.textContent = initials;
-     if (dot) el.appendChild(dot);
-   });
+   document.querySelectorAll('#heroAvatar, #accountInitials').forEach(el => { el.textContent = initials; });
+   const accountName = document.getElementById('accountName');
+   if (accountName) accountName.textContent = displayName;
 
    loginScreen.style.display = 'none';
    dashboard.style.display = 'block';
@@ -3657,10 +1889,7 @@ let profileOnboardingRequired = false;
   if(btn){
    btn.setAttribute('aria-pressed',String(on));
    btn.setAttribute('aria-label',on?'Switch to light mode':'Switch to dark mode');
-   const icon=btn.querySelector('.theme-toggle-icon');
-   const label=btn.querySelector('.theme-toggle-label');
-   if(icon)icon.textContent=on?'☀':'☾';
-   if(label)label.textContent=on?'Light':'Dark';
+   btn.querySelector('use')?.setAttribute('href',on?'#i-sun':'#i-moon');
   }
  };
  applyTheme(saved);
@@ -3816,30 +2045,95 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
  });
 
  /* =========================================================
- 2. NAVIGATION TABS
+ 2. NAVIGATION
+ Five sections in the header (bottom bar on phones); a section with more
+ than one screen shows a segmented control under its title. Everything
+ navigates through showTab(panelName).
  ========================================================= */
- document.querySelectorAll('.tab-btn').forEach(btn => {
- btn.addEventListener('click', function(){
- this.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
- document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
- document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
- this.classList.add('active');
- const target = document.getElementById('panel-' + this.dataset.tab);
- if(target) target.classList.add('active');
+ const NAV_GROUPS = {
+   home:      { title: 'Home',      tabs: [['home', 'Home']] },
+   records:   { title: 'Records',   tabs: [['records', 'Records']] },
+   medicines: { title: 'Medicines', tabs: [['scan', 'Scan prescription'], ['order', 'Find medicines']] },
+   health:    { title: 'Health',    tabs: [['vitals', 'Vitals'], ['nutrition', 'Nutrition'], ['predict', 'Heart risk']] },
+   care:      { title: 'Care',      tabs: [['emergency', 'Emergency card'], ['doctor', 'Doctor summary']] },
+   account:   { title: 'Account',   tabs: [['profile', 'Profile'], ['register', 'Family']] }
+ };
+ const TAB_GROUP = {};
+ Object.entries(NAV_GROUPS).forEach(([group, def]) => def.tabs.forEach(([tab]) => { TAB_GROUP[tab] = group; }));
+ const lastTabInGroup = {};
 
- if(this.dataset.tab === 'predict') {
- animateRiskMeter();
+ function onTabShown(tab) {
+   if (tab === 'predict') { animateRiskMeter(); window.prefillRiskFromVitals?.(); }
+   if (tab === 'nutrition') window.renderNutritionUpgrades?.();
+   if (tab === 'vitals') window.renderVitals?.();
+   if (tab === 'emergency') {
+     if (typeof wakeSwasthServer === 'function') wakeSwasthServer();
+     if (!qrGenerated) { generateEmergencyQR(); qrGenerated = true; }
+   }
  }
- if(this.dataset.tab === 'nutrition') window.renderNutritionUpgrades?.();
- if(this.dataset.tab === 'vitals') window.renderVitals?.();
- if(this.dataset.tab === 'predict') window.prefillRiskFromVitals?.();
- if(this.dataset.tab === 'emergency' && typeof wakeSwasthServer === 'function') wakeSwasthServer();
- if(this.dataset.tab === 'emergency' && !qrGenerated) {
- generateEmergencyQR();
- qrGenerated = true;
+
+ function showTab(tab, options = {}) {
+   if (!document.getElementById('panel-' + tab)) tab = 'home';
+   const group = TAB_GROUP[tab] || 'home';
+   const def = NAV_GROUPS[group];
+   lastTabInGroup[group] = tab;
+   document.querySelectorAll('.panel').forEach(panel => panel.classList.toggle('active', panel.id === 'panel-' + tab));
+   document.querySelectorAll('[data-group]').forEach(btn => {
+     if (btn.dataset.group === group) btn.setAttribute('aria-current', 'page'); else btn.removeAttribute('aria-current');
+   });
+   const head = document.getElementById('pageHead');
+   const sub = document.getElementById('subnav');
+   if (head) head.hidden = group === 'home';
+   const title = document.getElementById('pageTitle');
+   if (title) title.textContent = def.title;
+   if (sub) {
+     sub.hidden = def.tabs.length < 2;
+     sub.setAttribute('aria-label', `${def.title} sections`);
+     sub.innerHTML = def.tabs.map(([t, label]) =>
+       `<button type="button" role="tab" data-tab="${t}" aria-selected="${t === tab}" tabindex="${t === tab ? 0 : -1}">${label}</button>`).join('');
+   }
+   const label = def.tabs.find(([t]) => t === tab)?.[1] || def.title;
+   document.title = group === 'home' ? 'SwasthID — Your health record, medicines and emergency card' : `${label} · SwasthID`;
+   if (!options.keepScroll) window.scrollTo({ top: 0 });
+   onTabShown(tab);
  }
+ window.showTab = showTab;
+
+ function setAccountMenu(open) {
+   const btn = document.getElementById('accountBtn'), menu = document.getElementById('accountMenu');
+   if (!btn || !menu) return;
+   btn.setAttribute('aria-expanded', String(open));
+   menu.classList.toggle('open', open);
+   if (open) menu.querySelector('[role="menuitem"]')?.focus();
+ }
+ document.getElementById('accountBtn')?.addEventListener('click', e => {
+   e.stopPropagation();
+   setAccountMenu(document.getElementById('accountBtn').getAttribute('aria-expanded') !== 'true');
  });
+ document.addEventListener('click', e => {
+   if (!e.target.closest('#accountMenu')) setAccountMenu(false);
+   const groupBtn = e.target.closest('[data-group]');
+   if (groupBtn) { showTab(lastTabInGroup[groupBtn.dataset.group] || NAV_GROUPS[groupBtn.dataset.group].tabs[0][0]); return; }
+   const subBtn = e.target.closest('#subnav [data-tab]');
+   if (subBtn) { showTab(subBtn.dataset.tab, { keepScroll: true }); return; }
+   const go = e.target.closest('[data-go]');
+   if (go) { e.preventDefault(); setAccountMenu(false); showTab(go.dataset.go); }
  });
+ document.addEventListener('keydown', e => {
+   if (e.key === 'Escape' && document.getElementById('accountBtn')?.getAttribute('aria-expanded') === 'true') {
+     setAccountMenu(false); document.getElementById('accountBtn').focus(); return;
+   }
+   const tab = e.target.closest?.('#subnav [role="tab"]');
+   if (tab && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+     const tabs = [...document.querySelectorAll('#subnav [role="tab"]')];
+     const next = tabs[(tabs.indexOf(tab) + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+     showTab(next.dataset.tab, { keepScroll: true });
+     document.querySelector(`#subnav [data-tab="${next.dataset.tab}"]`)?.focus();
+   }
+ });
+ showTab('home', { keepScroll: true });
+ const footerYear = document.getElementById('footerYear');
+ if (footerYear) footerYear.textContent = String(new Date().getFullYear());
 
  /* =========================================================
  3. TIME-OF-DAY ENGINE & METRICS (WITH CALORIE PERSISTENCE)
@@ -4119,13 +2413,10 @@ function showToast(icon, title, body) {
  const mood = this.dataset.mood;
  document.querySelectorAll('.mood-emoji').forEach(b => b.classList.remove('active'));
  this.classList.add('active');
- this.classList.add('mood-pop');
- setTimeout(() => this.classList.remove('mood-pop'), 350);
  if(moodMsgEl) moodMsgEl.textContent = this.dataset.msg || '';
 
  localStorage.setItem('swasth_dailyMood', JSON.stringify({ mood: mood, date: new Date().toDateString() }));
  syncCloudState('swasth_dailyMood');
- showToast('', 'Mood Logged', `You are feeling ${mood} today. Data safely recorded.`);
  });
  });
 
@@ -4133,7 +2424,7 @@ function showToast(icon, title, body) {
 if (supportBtn && !supportBtn.dataset.bound) {
  supportBtn.dataset.bound = 'true';
  supportBtn.addEventListener('click', () => {
- window.location.href = 'tel:18008914416';
+ window.location.href = 'tel:14416';
  });
 }
  }
@@ -4319,21 +2610,34 @@ function getCurrentMedicationList() {
      const storedStatus = status[id] || status[legacyMedicationScheduleKey(i, unit)];
      // Only today's flag counts; another device may have synced yesterday's.
      const savedStatus = storedStatus?.taken && storedStatus?.date && new Date(storedStatus.date).toDateString() === new Date().toDateString() ? storedStatus : null;
-     const label = count > 1 ? `Dose ${unit + 1} of ${count}` : 'Scheduled dose';
+     const label = count > 1 ? `Dose ${unit + 1} of ${count}` : '';
+     const due = /^(\d{1,2}):(\d{2})$/.exec(time || '');
+     const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+     const overdue = !savedStatus?.taken && due && nowMin - (Number(due[1]) * 60 + Number(due[2])) >= 60;
+     const overdueBadge = overdue ? `<span class="badge badge-warning">${medicationIsCritical(m) ? 'Overdue · critical' : 'Overdue'}</span>` : '';
      html += `<div class="today-med-item ${savedStatus?.taken ? 'taken' : ''}" id="${id}">
-       <div class="today-med-time">${time ? formatMedicationTime(time) : 'Set time'}<small>${label}</small></div>
+       <div class="today-med-time">${time ? formatMedicationTime(time) : 'No time'}${label ? `<small>${label}</small>` : ''}</div>
        <div>
          <div class="today-med-name">${escapeHtml(m.medicine)}${m.dose ? ' · ' + escapeHtml(m.dose) : ''}</div>
-         <div class="today-med-meta">${escapeHtml(m.frequency || 'Review schedule')}${m.instructions ? ' · ' + escapeHtml(m.instructions) : ''}</div>
-         <div class="today-med-time-editor">
+         <div class="today-med-meta">${escapeHtml(m.frequency || 'Review schedule')}${m.instructions ? ' · ' + escapeHtml(m.instructions) : ''}${overdueBadge}</div>
+         ${time ? `<button type="button" class="link-btn" data-edit-med-time aria-expanded="false">Change time</button>` : ''}
+         <div class="today-med-time-editor"${time ? ' hidden' : ''}>
            <input type="time" value="${escapeHtml(time)}" data-med-time-index="${i}" data-med-time-unit="${unit}" aria-label="Time for ${escapeHtml(m.medicine)} dose ${unit + 1}">
-           <button type="button" class="n-btn" data-save-med-time="1" data-med-time-index="${i}" data-med-time-unit="${unit}" style="padding:5px 8px;font-size:11px;">Save time</button>
+           <button type="button" class="btn btn-sm" data-save-med-time="1" data-med-time-index="${i}" data-med-time-unit="${unit}">Save time</button>
          </div>
        </div>
-       <button class="med-action" type="button" data-mark-med="${id}" data-med-name="${escapeHtml(m.medicine)}">${savedStatus?.taken ? `Taken at ${escapeHtml(savedStatus.time || '')}` : 'Mark Taken'}</button>
+       <button class="med-action" type="button" data-mark-med="${id}" data-med-name="${escapeHtml(m.medicine)}">${savedStatus?.taken ? `Taken ${escapeHtml(savedStatus.time || '')}` : 'Mark taken'}</button>
      </div>`;
    });
  list.innerHTML = html;
+ list.querySelectorAll('[data-edit-med-time]').forEach(btn => btn.addEventListener('click', () => {
+   const editor = btn.nextElementSibling;
+   const open = editor.hidden;
+   editor.hidden = !open;
+   btn.setAttribute('aria-expanded', String(open));
+   btn.textContent = open ? 'Cancel' : 'Change time';
+   if (open) editor.querySelector('input')?.focus();
+ }));
  list.querySelectorAll('[data-save-med-time]').forEach(btn => btn.addEventListener('click', () => {
    const i = Number(btn.dataset.medTimeIndex), unit = Number(btn.dataset.medTimeUnit);
    const inputs = [...list.querySelectorAll(`[data-med-time-index="${i}"]`)];
@@ -4459,7 +2763,7 @@ function getCurrentMedicationList() {
      const q=btn.dataset.refillMed||'';
      localStorage.setItem('swasth_pendingMedicineSearch',q);
      syncCloudState('swasth_pendingMedicineSearch');
-     document.querySelector('[data-tab="order"]')?.click();
+     showTab('order');
    }));
  }
  function renderMedicationMissedDoses() {
@@ -4495,7 +2799,7 @@ function getCurrentMedicationList() {
 
    panel.style.display = 'block';
    panel.innerHTML = `<div class="med-alert-title">Missed dose${missed.length === 1 ? '' : 's'}</div>` +
-     missed.map(x => `<div class="med-alert-item"><div><b>${escapeHtml(x.medicine)}</b>${x.dose ? ' · ' + escapeHtml(x.dose) : ''} — was due at ${formatMedicationTime(x.time)}${x.critical ? ' <span style="color:var(--danger,#b91c1c);font-weight:700;">(critical)</span>' : ''}</div><button type="button" class="med-action" id="${escapeHtml(x.id)}" data-mark-med="${escapeHtml(x.id)}" data-med-name="${escapeHtml(x.medicine)}">Mark Taken</button></div>`).join('');
+     missed.map(x => `<div class="med-alert-item"><div><b>${escapeHtml(x.medicine)}</b>${x.dose ? ' · ' + escapeHtml(x.dose) : ''} — was due at ${formatMedicationTime(x.time)}${x.critical ? ' <span style="color:var(--danger,#b91c1c);font-weight:700;">(critical)</span>' : ''}</div><button type="button" class="med-action" id="${escapeHtml(x.id)}" data-mark-med="${escapeHtml(x.id)}" data-med-name="${escapeHtml(x.medicine)}">Mark taken</button></div>`).join('');
 
    panel.querySelectorAll('[data-mark-med]').forEach(btn =>
      btn.addEventListener('click', () => window.markMedTaken(btn.dataset.markMed, btn.dataset.medName))
@@ -4532,7 +2836,7 @@ function getCurrentMedicationList() {
  syncCloudState('swasth_medStatus');
  el.classList.add('taken');
  const btn = el.querySelector('.med-action');
- if (btn) btn.innerHTML = `Taken at ${escapeHtml(nowStr)}`;
+ if (btn) btn.innerHTML = `Taken ${escapeHtml(nowStr)}`;
  renderRecordMedicationActivity(); renderRecordTimeline(); renderMedicationInsights(); renderCareJourney(); renderTodayStats();
  showToast('', 'Medication Tracked', `${name} logged successfully.`);
  };
@@ -5544,8 +3848,7 @@ function renderEditablePrescription(parsed) {
   return;
  }
  connectPrescriptionToMedicineSearch(verified.medicines);
- const orderTab = document.querySelector('.tab-btn[data-tab="order"]');
- if (orderTab) orderTab.click();
+ showTab('order');
  setTimeout(() => renderPrescriptionOrderCards(verified.medicines), 0);
  showToast('', 'Prescription Connected', `${verified.medicines.length} verified medicine(s) are being searched separately.`);
  });
@@ -5592,8 +3895,7 @@ function renderEditablePrescription(parsed) {
   if (!record || !record.medicines?.length) return;
   connectPrescriptionToMedicineSearch(record.medicines);
   const first = record.medicines[0];
-  const orderTab = document.querySelector('.tab-btn[data-tab="order"]');
-  if (orderTab) orderTab.click();
+  showTab('order');
   setTimeout(() => searchPrescriptionMedicine(first), 0);
   showToast('', 'Prescription Connected', `${record.medicines.length} saved medicine(s) are ready in Medicine Search.`);
  };
@@ -5680,14 +3982,14 @@ function renderCareJourney() {
   const journey=getCareJourneyState();
   if (!journey.steps.length) { wrap.innerHTML=''; return; }
   const nextIndex=journey.steps.findIndex(step=>!step.done); const currentIndex=nextIndex>=0?nextIndex:journey.steps.length-1; const completed=journey.steps.filter(step=>step.done).length;
-  wrap.innerHTML=journey.steps.map((step,index)=>`<div class="care-step ${step.done?'done':''} ${index===currentIndex?'is-current':''}" data-care-tab="${escapeHtml(step.tab)}" data-care-key="${escapeHtml(step.key)}" role="button" tabindex="0"><div class="care-step-number">Step ${index+1}${step.done?' · Complete':''}</div><div class="care-step-title">${escapeHtml(step.title)}</div><div class="care-step-state">${escapeHtml(step.state)}</div><span class="care-step-action">${escapeHtml(step.action)} →</span>${step.key==='medication'&&!step.done?'<button type="button" class="care-step-skip" data-care-skip="medication">Not applicable</button>':''}</div>`).join('');
-  if(statusEl) statusEl.textContent=completed===journey.steps.length?'Care journey complete':`${completed} of ${journey.steps.length} relevant steps ready`;
+  wrap.innerHTML=journey.steps.map((step,index)=>`<div class="care-step ${step.done?'done':''} ${index===currentIndex?'is-current':''}" data-care-tab="${escapeHtml(step.tab)}" data-care-key="${escapeHtml(step.key)}" role="button" tabindex="0"><div class="care-step-number">Step ${index+1}${step.done?' · Complete':''}</div><div class="care-step-title">${escapeHtml(step.title)}</div><div class="care-step-state">${escapeHtml(step.state)}</div><span class="care-step-action">${escapeHtml(step.action)}</span>${step.key==='medication'&&!step.done?'<button type="button" class="care-step-skip" data-care-skip="medication">Not applicable</button>':''}</div>`).join('');
+  if(statusEl) statusEl.textContent=completed===journey.steps.length?'All done':`${completed} of ${journey.steps.length} done`;
   if(nextEl){
     if(nextIndex>=0){const next=journey.steps[nextIndex]; nextEl.innerHTML=`<b>Next:</b> ${escapeHtml(next.action)} to ${escapeHtml(next.title.toLowerCase())}.` + (next.key==='medication' ? ' If you do not take medication, you can mark this as not applicable.' : '');}
     else nextEl.innerHTML='<b>Journey ready:</b> Your relevant SwasthID workflow is up to date.';
   }
 }
-function openCareJourneyStep(tab){ const btn=document.querySelector(`.tab-btn[data-tab="${tab}"]`); if(btn) btn.click(); if(tab==='home') document.getElementById('todayMedList')?.scrollIntoView({behavior:'smooth',block:'center'}); }
+function openCareJourneyStep(tab){ showTab(tab); if(tab==='home') document.getElementById('todayMedList')?.scrollIntoView({behavior:'smooth',block:'center'}); }
 document.addEventListener('click',e=>{ const skip=e.target.closest('[data-care-skip]'); if(skip){ e.preventDefault(); e.stopPropagation(); const prefs=getCareJourneyPrefs(); prefs.medicationNotApplicable=true; saveCareJourneyPrefs(prefs); renderCareJourney(); return; } const step=e.target.closest('[data-care-tab]'); if(step) openCareJourneyStep(step.dataset.careTab); });
 document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return; if(e.target.closest('[data-care-skip]')) return; const step=e.target.closest('[data-care-tab]'); if(!step)return; e.preventDefault(); openCareJourneyStep(step.dataset.careTab);});
 
@@ -5697,6 +3999,14 @@ function renderTodayStats() {
   const expected = meds.reduce((sum, m) => sum + (medicationExpectedOnDate(m, today) ? medicationSlotCount(m) : 0), 0);
   const taken = getMedicationHistory().filter(e => e?.taken && localDayKey(e.date) === localDayKey(today)).length;
   setText('homeDosesStat', expected ? `${Math.min(taken, expected)} of ${expected}` : '', 'None today');
+  const summary = document.getElementById('doseSummary');
+  if (summary) {
+    summary.hidden = !expected;
+    const done = Math.min(taken, expected);
+    setText('doseSummaryText', expected ? `${done} of ${expected} taken` : '', '');
+    const bar = document.getElementById('doseProgress');
+    if (bar) bar.style.width = expected ? `${Math.round(done / expected * 100)}%` : '0%';
+  }
   const water = typeof getWaterState === 'function' ? getWaterState() : null;
   setText('homeWaterStat', water ? `${Number(water.ml || 0).toLocaleString()} ml` : '', '0 ml');
 }
@@ -5708,7 +4018,8 @@ function renderPersonalizedUI() {
   setText('topHealthId', email, 'Signed in');
   setText('dashboardGreetingName', name.split(' ')[0] || name, 'there');
   const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(x => x[0].toUpperCase()).join('') || 'SI';
-  document.querySelectorAll('.hero .avatar').forEach(el => { const dot = el.querySelector('.heartbeat-dot'); el.textContent = initials; if (dot) el.appendChild(dot); });
+  document.querySelectorAll('#heroAvatar, #accountInitials').forEach(el => { el.textContent = initials; });
+  setText('accountName', name === 'there' ? '' : name, 'SwasthID');
   setText('profileEmail', email, 'Not provided');
   setText('profileDob', patientData.dob ? formatRecordDate(patientData.dob) : '', 'Not provided');
   setText('ageValue', calculateAge(patientData.dob) ?? '', 'Not provided');
@@ -6344,7 +4655,7 @@ function renderEmergencyQRIfReady(){
    return totalDays > recordDaysShown[kind] ? `<button type="button" class="record-more-btn" data-record-more="${kind}">Show earlier days</button>` : '';
  }
  function bindRecordListActions(el){
-   el.querySelectorAll('[data-open-tab]').forEach(btn=>btn.addEventListener('click',()=>document.querySelector(`.tab-btn[data-tab="${btn.dataset.openTab}"]`)?.click()));
+   el.querySelectorAll('[data-open-tab]').forEach(btn=>btn.addEventListener('click',()=>showTab(btn.dataset.openTab)));
    el.querySelectorAll('[data-record-more]').forEach(btn=>btn.addEventListener('click',()=>{
      const kind=btn.dataset.recordMore; recordDaysShown[kind]+=7;
      ({food:renderRecordFoodLogs, meds:renderRecordMedicationActivity, timeline:renderRecordTimeline})[kind]();
@@ -7053,7 +5364,7 @@ async function shareHealthRecordWithDoctor(){
  async function searchPrescriptionMedicine(med) {
   const input=document.getElementById('medSearch'); if(!input) return;
   input.value=[med.medicine,med.dose].filter(Boolean).join(' ');
-  document.querySelector('.tab-btn[data-tab="order"]')?.click();
+  showTab('order');
   await renderPrescriptionOrderCards(window.__pendingPrescriptionMedicines || [med]);
  }
  window.searchPrescriptionMedicine=searchPrescriptionMedicine;
@@ -8104,7 +6415,7 @@ Rules:
  document.querySelectorAll('.med-item').forEach(el => {
  el.classList.remove('taken');
  const btn = el.querySelector('.med-action');
- if (btn) btn.innerHTML = "Mark Taken";
+ if (btn) btn.innerHTML = "Mark taken";
  });
 
  document.querySelectorAll('.mood-emoji').forEach(b => b.classList.remove('active'));
@@ -8127,59 +6438,12 @@ Rules:
  const greetEl = document.getElementById('heroGreeting');
  if (greetEl) {
  const h = new Date().getHours();
- greetEl.textContent = h >= 5 && h < 12 ? 'Good Morning' : (h >= 12 && h < 17 ? 'Good Afternoon' : 'Good Evening');
+ greetEl.textContent = h >= 5 && h < 12 ? 'Good morning' : (h >= 12 && h < 17 ? 'Good afternoon' : 'Good evening');
  }
 
- // Navbar blur while scrolling
- if (!window.__swasthScrollBound) {
- window.__swasthScrollBound = true;
- const topbarEl = document.querySelector('.topbar');
- const tabnavEl = document.querySelector('.tabnav');
- window.addEventListener('scroll', () => {
- const scrolled = window.scrollY > 8;
- if (topbarEl) topbarEl.classList.toggle('scrolled', scrolled);
- if (tabnavEl) tabnavEl.classList.toggle('scrolled', scrolled);
- }, { passive: true });
- }
-
- // Subtle ripple effect on primary buttons
- if (!window.__swasthRippleBound) {
- window.__swasthRippleBound = true;
- document.addEventListener('click', (e) => {
- const btn = e.target.closest('.n-btn, .med-action, .call-btn, .login-btn, .alt-login-btn');
- if (!btn) return;
- const rect = btn.getBoundingClientRect();
- const ripple = document.createElement('span');
- const size = Math.max(rect.width, rect.height);
- ripple.className = 'btn-ripple';
- ripple.style.width = ripple.style.height = size + 'px';
- ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
- ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
- btn.appendChild(ripple);
- setTimeout(() => ripple.remove(), 600);
- });
- }
  }
 
 
- /* Responsive navigation reliability: keep the active tab visible and reset
- the panel scroll position when switching sections. */
- document.querySelectorAll('.tab-btn').forEach(btn => {
- btn.addEventListener('click', function() {
- const nav = document.querySelector('.tabnav');
- if (nav) {
- requestAnimationFrame(() => this.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }));
- }
- window.scrollTo({ top: 0, behavior: 'smooth' });
- });
- });
-
- window.addEventListener('resize', () => {
- const active = document.querySelector('.tab-btn.active');
- if (active && window.innerWidth <= 600) {
- requestAnimationFrame(() => active.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' }));
- }
- }, { passive: true });
 
 </script>
 
@@ -8825,11 +7089,11 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
     bar.style.display = '';
     const on = enabled();
     const blocked = supported() && Notification.permission === 'denied';
-    const status = on ? 'On: you will be notified at each dose time while SwasthID is open.'
+    const status = on ? 'On. You\'ll get a notification at each dose time while SwasthID is open.'
       : blocked ? 'Notifications are blocked for this site in your browser settings.'
-      : !supported() ? 'This browser cannot show notifications here.'
-      : 'Get notified at each dose time while SwasthID is open.';
-    bar.innerHTML = `<div class="reminder-bar-text"><b>Dose reminders</b><span>${escapeHtml(status)} To be reminded when the app is closed, add them to your calendar; your calendar will show the medicine names.</span></div>
+      : !supported() ? 'This browser can\'t show notifications here.'
+      : 'Get a notification at each dose time while SwasthID is open.';
+    bar.innerHTML = `<div class="reminder-bar-text"><b>Dose reminders</b><span>${escapeHtml(status)} To be reminded when it's closed, add your doses to your calendar.</span></div>
       <div class="reminder-bar-actions">${supported() && !blocked ? `<button type="button" class="n-btn${on ? '' : ' solid'}" data-reminder-toggle>${on ? 'Turn off' : 'Turn on'}</button>` : ''}<button type="button" class="n-btn" data-reminder-calendar>Add to calendar</button></div>`;
     bar.querySelector('[data-reminder-toggle]')?.addEventListener('click', () => on ? turnOff() : turnOn());
     bar.querySelector('[data-reminder-calendar]')?.addEventListener('click', downloadCalendar);
@@ -8840,15 +7104,6 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
   if (localStorage.getItem(PREF_KEY) === 'on' && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 })();
 </script>
-<style id="reminders-polish">
-.reminder-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:4px 0 12px;padding:12px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2,#f7faf8)}
-.reminder-bar-text{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 320px}
-.reminder-bar-text b{font-size:14px;color:var(--ink)}
-.reminder-bar-text span{font-size:12.5px;color:var(--muted);line-height:1.45}
-.reminder-bar-actions{display:flex;gap:8px;flex-wrap:wrap}
-body.dark-mode .reminder-bar{background:#15211d}
-@media(max-width:620px){.reminder-bar-actions{width:100%}.reminder-bar-actions .n-btn{flex:1}}
-</style>
 <script id="vitals-log">
 /* Vitals log: blood pressure, blood sugar, weight and SpO2, with reference
    ranges, small-multiple trend charts and Heart Risk pre-fill. */
@@ -9141,75 +7396,5 @@ body.dark-mode .reminder-bar{background:#15211d}
   let resizeTimer; window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (document.getElementById('panel-vitals')?.classList.contains('active')) renderCharts(); }, 200); });
 })();
 </script>
-<style id="vitals-polish">
-:root{--viz-1:#2a78d6;--viz-2:#eb6834}
-body.dark-mode{--viz-1:#3987e5;--viz-2:#d95926}
-.vitals-latest{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.vital-tile{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
-.vital-tile-label{font-size:12.5px;color:var(--muted);font-weight:600}
-.vital-tile-value{font-size:24px;font-weight:600;color:var(--ink);line-height:1.2}
-.vital-tile-value small{font-size:12px;font-weight:500;color:var(--muted)}
-.vital-tile.empty .vital-tile-value{color:var(--muted)}
-.vital-tile-meta{font-size:12px;color:var(--muted)}
-.vital-status{align-self:flex-start;display:inline-flex;gap:5px;align-items:center;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;margin-top:4px}
-.vital-status.good{background:#e6f3ec;color:#1f6a45}
-.vital-status.warning{background:#fbf1dc;color:#8a5a00}
-.vital-status.serious{background:#fde8e4;color:#a2382a}
-.vital-status.critical{background:#a2382a;color:#fff}
-.vital-status.none{background:var(--sage);color:var(--ink);font-weight:600}
-.vital-advice{font-size:12px;color:#a2382a;line-height:1.4;margin-top:4px}
-.vitals-form{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:16px}
-.vitals-types{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.vitals-types label{position:relative;display:inline-flex;margin:0;cursor:pointer}
-.vitals-types input{position:absolute;opacity:0;width:1px;height:1px}
-.vitals-types span{padding:8px 14px;border:1px solid var(--line);border-radius:999px;font-size:13px;font-weight:600;color:var(--ink);background:var(--surface)}
-.vitals-types input:checked + span{background:var(--teal,#143831);border-color:var(--teal,#143831);color:#fff}
-.vitals-types input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
-.vitals-fields{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 16px}
-.vf{display:flex;flex-direction:column;gap:6px;min-width:0}
-.vf[hidden]{display:none}
-.vf-wide{grid-column:span 2}
-.vf label{font-size:12px;font-weight:700;color:var(--ink);margin:0}
-.vf input,.vf select{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px}
-.vf-check{justify-content:flex-end}
-.vf-check label{display:flex;align-items:center;gap:8px;font-weight:500;font-size:13px}
-.vf-check input{width:auto}
-.vitals-form-actions{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:16px}
-#vitalsFormError{color:var(--danger);font-size:12.5px;margin-right:auto}
-.vitals-charts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.vital-chart{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:14px 16px;min-width:0}
-.vital-chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
-.vital-chart-head h4{margin:0;font-size:14px;color:var(--ink)}
-.vital-legend{display:flex;gap:12px;font-size:12px;color:var(--muted)}
-.vital-legend span{display:inline-flex;align-items:center;gap:6px}
-.vital-legend i,.vital-tip-row i{display:inline-block;width:14px;height:2px;border-radius:2px}
-.vital-chart-plot{position:relative}
-.vital-chart svg{display:block;max-width:100%;height:auto;overflow:visible}
-.vital-chart svg:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
-.vc-grid{stroke:var(--line);stroke-width:1}
-.vc-tick{font-size:10.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
-.vc-line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
-.vc-dot{stroke:var(--surface,#fff);stroke-width:2}
-.vc-end{font-size:11.5px;font-weight:700;fill:var(--ink)}
-.vc-cross{stroke:var(--muted);stroke-width:1}
-.vital-tip{position:absolute;top:0;min-width:140px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:0 6px 18px rgba(0,0,0,.12);font-size:12px;pointer-events:none;z-index:2}
-.vital-tip-row{display:flex;align-items:center;gap:6px;color:var(--muted)}
-.vital-tip-row b{color:var(--ink);font-size:13px}
-.vital-tip-meta{margin-top:4px;color:var(--muted);font-size:11.5px}
-.vital-row{grid-template-columns:72px minmax(0,1fr) auto}
-.vital-row-end{display:flex;align-items:center;gap:10px}
-.vital-row-end .vital-status{margin:0}
-.vital-delete{background:none;border:0;padding:4px 6px;border-radius:6px;font:inherit;font-size:12px;color:var(--muted);cursor:pointer}
-.vital-delete:hover{color:var(--danger);background:var(--danger-soft)}
-.vital-prefill-note{font-size:11.5px;color:var(--muted);margin-top:5px}
-body.dark-mode .vital-status.good{background:#173a2a;color:#9fe0bf}
-body.dark-mode .vital-status.warning{background:#3a2e12;color:#f1cf85}
-body.dark-mode .vital-status.serious{background:#3a1d19;color:#f0a092}
-body.dark-mode .vital-status.critical{background:#c4574a;color:#fff}
-body.dark-mode .vital-advice{color:#f0a092}
-body.dark-mode .vitals-types input:checked + span{background:#2e7d5b;border-color:#2e7d5b}
-@media(max-width:820px){.vitals-latest{grid-template-columns:1fr 1fr}.vitals-charts{grid-template-columns:1fr}}
-@media(max-width:620px){.vitals-fields{grid-template-columns:1fr 1fr}.vf-wide{grid-column:1/-1}.vital-row{grid-template-columns:58px minmax(0,1fr)}.vital-row-end{grid-column:2}}
-</style>
 </body>
 </html>
