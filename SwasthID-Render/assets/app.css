@@ -302,10 +302,19 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
   font: 500 var(--text-sm)/var(--leading-sm) var(--font);
 }
 .account-btn:hover, .account-btn[aria-expanded="true"] { background: var(--c-surface-2); }
-.initials {
-  width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-  background: var(--c-brand-soft); color: var(--c-brand-text); font-size: var(--text-xs); line-height: var(--leading-xs); font-weight: 600; flex: none;
+/* Avatar: the person's photo, or a plain head-and-shoulders silhouette. */
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: flex-end; justify-content: center;
+  background: var(--c-brand-soft); color: var(--c-brand-text); flex: none; overflow: hidden;
 }
+.avatar svg { width: 100%; height: 100%; fill: currentColor; opacity: .5; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-lg { width: 48px; height: 48px; }
+.avatar-xl { width: 72px; height: 72px; }
+.profile-photo-card { display: flex; align-items: center; gap: var(--space-5); margin-bottom: var(--space-4); }
+.profile-photo-main { min-width: 0; }
+.profile-photo-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.profile-photo-card .field-error:not(:empty) { display: block; margin-top: var(--space-2); }
 .menu {
   position: absolute; right: 0; top: calc(100% + var(--space-2)); min-width: 240px; z-index: 60;
   background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-surface);
@@ -347,7 +356,6 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
 
 /* ---------- Home ---------- */
 .home-head { display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-8); }
-.home-head .initials { width: 48px; height: 48px; font-size: var(--text-md); line-height: var(--leading-md); }
 .home-head h1 { font-size: var(--text-2xl); line-height: var(--leading-2xl); letter-spacing: -0.02em; }
 .home-head p { color: var(--c-text-3); margin-top: var(--space-1); }
 .home-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
