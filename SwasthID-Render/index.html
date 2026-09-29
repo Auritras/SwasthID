@@ -124,83 +124,58 @@
  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+ <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+ <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+ <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></symbol>
+ <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></symbol>
+ <symbol id="i-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
  <symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
  <symbol id="i-logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1D6B53" stroke="none"/><path d="M16 9v14M9 16h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/></symbol>
 </svg>
 <div id="offlineBanner" class="offline-banner" role="status">You are offline. Saved information remains available, but live services may be unavailable until your connection returns.</div><!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
- <div class="login-bg-shape login-saffron"></div>
- <div class="login-bg-shape login-green"></div>
  <div class="login-shell">
- <section class="gov-brand-panel">
-<div class="login-brand-logo">
- <div class="tricolor-health-logo" aria-hidden="true">
- <div class="logo-orbit orbit-left"></div>
- <div class="logo-orbit orbit-right"></div>
- <div class="logo-person"></div>
- <div class="logo-cross">+</div>
- </div>
- <div class="brand-wordmark"><span>Swasth</span><b>ID</b></div>
- </div>
- <div class="brand-tagline">Your health record, in your hands.</div>
- <p class="brand-subline">Keep prescriptions, medicines, lab results and emergency details in one private place, and share them only when you choose.</p>
- <ul class="login-feature-list">
-  <li><b>Scan prescriptions</b><span>Read medicines from a photo or PDF, then check them before saving.</span></li>
-  <li><b>Emergency QR</b><span>Show responders your blood group, allergies and medicines. Revoke it any time.</span></li>
-  <li><b>Share with your doctor</b><span>Create a read-only link that expires within 24 hours.</span></li>
- </ul>
- </section>
+  <section class="login-brand" aria-label="About SwasthID">
+   <div class="brand"><svg class="brand-mark" aria-hidden="true"><use href="#i-logo"/></svg><span>SwasthID</span></div>
+   <h2 class="login-headline">Your health record, medicines and emergency card in one private place.</h2>
+   <ul class="login-features">
+    <li><svg class="icon" aria-hidden="true"><use href="#i-records"/></svg><div><b>Scan prescriptions and lab reports</b><span>Read medicines and test values from a photo or PDF, then check them before saving.</span></div></li>
+    <li><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><div><b>Emergency QR card</b><span>Show responders your blood group, allergies and medicines. Revoke it any time.</span></div></li>
+    <li><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg><div><b>Share with your doctor</b><span>Create a read-only link that expires within 24 hours.</span></div></li>
+   </ul>
+  </section>
 
- <section class="gov-login-panel">
- <div class="secure-chip">Private health record</div>
- <h1>Welcome back</h1>
- <p class="sub">Sign in to see your health record, prescriptions and medicines.</p>
+  <section class="login-panel" aria-labelledby="loginTitle">
+   <h1 id="loginTitle">Welcome back</h1>
+   <p class="sub">Log in to see your health record, prescriptions and medicines.</p>
 
- <form id="loginForm">
- <div class="field">
- <label for="healthId">Email</label>
- <div class="gov-input-wrap">
- <span class="input-icon"></span>
- <input type="email" id="healthId" autocomplete="email" placeholder="Enter your email address">
- </div>
- <div class="field-error" id="idError">Please enter your email address.</div>
- </div>
- <div class="field">
- <div class="label-row">
- <label for="password">Password</label>
- <span class="forgot-link">Forgot Password?</span>
- </div>
- <div class="gov-input-wrap">
- <span class="input-icon"></span>
- <input type="password" id="password" placeholder="Enter your password">
- <span class="eye-icon" id="togglePwBtn" title="Toggle visibility">
- <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
- <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
- <circle cx="12" cy="12" r="3"></circle>
- </svg>
- </span>
- </div>
- <div class="field-error" id="pwError">Please enter your password.</div>
- </div>
- <div class="field" id="confirmPasswordField" style="display:none;">
- <label for="confirmPassword">Confirm password</label>
- <div class="gov-input-wrap">
- <span class="input-icon"></span>
- <input type="password" id="confirmPassword" placeholder="Re-enter your password" autocomplete="new-password">
- </div>
- <div class="field-error" id="confirmPwError">Passwords do not match.</div>
- </div>
- <button type="submit" class="login-btn">Log in</button>
- </form>
+   <form id="loginForm" novalidate>
+    <div class="form-field">
+     <label for="healthId">Email</label>
+     <input type="email" id="healthId" autocomplete="email" placeholder="you@example.com">
+     <div class="field-error" id="idError" role="alert">Please enter your email address.</div>
+    </div>
+    <div class="form-field form-field-spaced">
+     <div class="label-row"><label for="password">Password</label><button type="button" class="link-btn forgot-link">Forgot password?</button></div>
+     <div class="input-with-action">
+      <input type="password" id="password" autocomplete="current-password" placeholder="Your password">
+      <button type="button" class="btn btn-ghost btn-icon btn-sm" id="togglePwBtn" aria-label="Show password" aria-pressed="false"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-eye"/></svg></button>
+     </div>
+     <div class="field-error" id="pwError" role="alert">Please enter your password.</div>
+    </div>
+    <div class="form-field form-field-spaced" id="confirmPasswordField" style="display:none;">
+     <label for="confirmPassword">Confirm password</label>
+     <input type="password" id="confirmPassword" placeholder="Type your password again" autocomplete="new-password">
+     <div class="field-error" id="confirmPwError" role="alert">Passwords don't match.</div>
+    </div>
+    <button type="submit" class="btn btn-primary btn-block login-btn">Log in</button>
+   </form>
 
- <div class="login-divider"><span>OR</span></div>
- <button class="alt-login-btn" type="button" id="googleSignInBtn"><span class="alt-icon" aria-hidden="true">G</span> Continue with Google</button>
+   <div class="login-divider"><span>or</span></div>
+   <button class="btn btn-block" type="button" id="googleSignInBtn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="stroke:none"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A10.97 10.97 0 0 0 12 1 11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>Continue with Google</button>
 
- <div class="security-note">
- <span></span>
- <div>Only you can read your health record.<br><small>Sign-in uses Firebase Authentication, and database rules limit each record to its owner. Nothing is shared unless you create a doctor link or emergency QR.</small></div>
- </div>
- </section>
+   <p class="security-note"><small>Only you can read your record. Each account's data is locked to its owner, and nothing is shared unless you create a doctor link or an emergency QR.</small></p>
+  </section>
  </div>
 </div>
 
@@ -336,434 +311,372 @@
  <!-- ===== HEART RISK PANEL ===== -->
  <div class="panel" id="panel-predict">
  <div class="content">
- <section class="doctor-hero" style="background: linear-gradient(135deg, #183C76, #255494);">
- <div>
- <div class="ai-kicker">HEART HEALTH</div>
- <h3 class="serif">10-year heart risk</h3>
- <p class="section-sub">An estimate from the American Heart Association's PREVENT equations, using the clinical values you enter. It is a reference, not a diagnosis.</p>
- </div>
- </section>
+  <div class="section-head">
+   <div>
+    <h2 class="section-title">10-year heart risk</h2>
+    <p class="section-sub">An estimate from the American Heart Association's PREVENT equations, using the values you enter. It is a reference, not a diagnosis.</p>
+   </div>
+   <span class="badge">For ages 30–79</span>
+  </div>
 
- <section>
- <h3>Risk factors in your profile</h3>
- <div class="clinical-grid">
- <div class="clinical-card"><span class="clinical-icon"></span><div><b>Body composition</b><p id="riskFactorBmi">Add height and weight to personalize this factor.</p></div></div>
- <div class="clinical-card"><span class="clinical-icon"></span><div><b>Medical history</b><p id="riskFactorConditions">No conditions recorded.</p></div></div>
- <div class="clinical-card"><span class="clinical-icon"></span><div><b>Lifestyle</b><p id="riskFactorLifestyle">Add lifestyle information to personalize this factor.</p></div></div>
- <div class="clinical-card"><span class="clinical-icon"></span><div><b>Activity data</b><p id="riskFactorActivity">No activity feed connected yet.</p></div></div>
- </div>
- </section>
+  <div class="risk-grid">
+   <section class="card" aria-labelledby="riskFormTitle">
+    <h2 class="card-title card-title-spaced" id="riskFormTitle">Your values</h2>
+    <div class="form-grid">
+     <div class="form-field"><label for="riskSexInput">Sex</label><select id="riskSexInput"><option value="">Select</option><option value="M">Male</option><option value="F">Female</option></select></div>
+     <div class="form-field"><label for="riskSbpInput">Systolic blood pressure <span class="unit">mmHg</span></label><input id="riskSbpInput" type="number" inputmode="numeric" min="90" max="200" placeholder="120"></div>
+     <div class="form-field"><label for="riskTotalCholInput">Total cholesterol <span class="unit">mg/dL</span></label><input id="riskTotalCholInput" type="number" inputmode="numeric" min="130" max="320" placeholder="180"></div>
+     <div class="form-field"><label for="riskHdlInput">HDL cholesterol <span class="unit">mg/dL</span></label><input id="riskHdlInput" type="number" inputmode="numeric" min="20" max="100" placeholder="50"></div>
+     <div class="form-field"><label for="riskEgfrInput">eGFR <span class="unit">mL/min/1.73m²</span></label><input id="riskEgfrInput" type="number" inputmode="numeric" min="15" max="140" placeholder="90"></div>
+     <div class="form-field"><label for="riskDiabetesInput">Diabetes</label><select id="riskDiabetesInput"><option value="0">No</option><option value="1">Yes</option></select></div>
+     <div class="form-field"><label for="riskSmokingInput">Current smoker</label><select id="riskSmokingInput"><option value="0">No</option><option value="1">Yes</option></select></div>
+     <div class="form-field"><label for="riskBpMedsInput">Taking blood pressure medicine</label><select id="riskBpMedsInput"><option value="0">No</option><option value="1">Yes</option></select></div>
+     <div class="form-field"><label for="riskStatinInput">Taking a statin or other lipid medicine</label><select id="riskStatinInput"><option value="0">No</option><option value="1">Yes</option></select></div>
+    </div>
+    <div class="form-footer">
+     <p class="t-meta" id="clinicalRiskStatus" aria-live="polite">Complete the fields to calculate.</p>
+     <button class="btn btn-primary" id="calculateClinicalRiskBtn" type="button">Calculate risk</button>
+    </div>
+    <div id="clinicalRiskResult" class="risk-result" style="display:none;" aria-live="polite"></div>
+   </section>
 
- <section>
- <div class="section-head-row" style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;">
-   <div><h3 style="margin-bottom:6px;">Clinical Risk Assessment</h3><p class="section-sub" style="margin:0;">Reference assessment using the AHA PREVENT equations. A new calculation requires the risk service; if it is unavailable, SwasthID shows only the last saved result rather than inventing a new score.</p></div>
-   <span class="support-chip">Reference model · 30–79 years</span>
- </div>
- <div class="clinical-grid" style="margin-top:16px;">
-   <div class="clinical-card"><div style="width:100%;">
-     <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;">Sex</label>
-     <select id="riskSexInput" class="profile-input"><option value="">Select</option><option value="M">Male</option><option value="F">Female</option></select>
-   </div></div>
-   <div class="clinical-card"><div style="width:100%;">
-     <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;">Systolic BP (mmHg)</label>
-     <input id="riskSbpInput" class="profile-input" type="number" min="90" max="200" placeholder="e.g. 120">
-   </div></div>
-   <div class="clinical-card"><div style="width:100%;">
-     <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;">Total cholesterol (mg/dL)</label>
-     <input id="riskTotalCholInput" class="profile-input" type="number" min="130" max="320" placeholder="e.g. 180">
-   </div></div>
-   <div class="clinical-card"><div style="width:100%;">
-     <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;">HDL cholesterol (mg/dL)</label>
-     <input id="riskHdlInput" class="profile-input" type="number" min="20" max="100" placeholder="e.g. 50">
-   </div></div>
-   <div class="clinical-card"><div style="width:100%;">
-     <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;">eGFR (mL/min/1.73m²)</label>
-     <input id="riskEgfrInput" class="profile-input" type="number" min="15" max="140" placeholder="e.g. 90">
-   </div></div>
-   <div class="clinical-card"><div style="width:100%;">
-     <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;">Diabetes</label>
-     <select id="riskDiabetesInput" class="profile-input"><option value="0">No</option><option value="1">Yes</option></select>
-   </div></div>
-   <div class="clinical-card"><div style="width:100%;">
-     <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;">Current smoker</label>
-     <select id="riskSmokingInput" class="profile-input"><option value="0">No</option><option value="1">Yes</option></select>
-   </div></div>
-   <div class="clinical-card"><div style="width:100%;">
-     <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;">BP medication</label>
-     <select id="riskBpMedsInput" class="profile-input"><option value="0">No</option><option value="1">Yes</option></select>
-   </div></div>
-   <div class="clinical-card"><div style="width:100%;">
-     <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;">Statin / lipid medication</label>
-     <select id="riskStatinInput" class="profile-input"><option value="0">No</option><option value="1">Yes</option></select>
-   </div></div>
-   <div class="clinical-card" style="grid-column:1/-1;"><div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-     <div><b>Reference risk calculation</b><p id="clinicalRiskStatus" style="margin:5px 0 0;color:var(--muted);">Complete the required fields to calculate.</p></div>
-     <button class="n-btn solid" id="calculateClinicalRiskBtn" type="button">Calculate reference risk</button>
-   </div></div>
- </div>
- <div id="clinicalRiskResult" class="ai-summary blue-tint" style="display:none;margin-top:16px;"></div>
- <p style="font-size:11px;color:var(--muted);margin-top:10px;">PREVENT was developed from U.S. data and is intended for adults 30–79 without known cardiovascular disease. AHA advises caution outside the U.S.; this SwasthID integration is an informational reference, not a diagnosis or treatment recommendation.</p>
- </section>
-
+   <section class="card" aria-labelledby="riskFactorsTitle">
+    <h2 class="card-title card-title-spaced" id="riskFactorsTitle">From your profile</h2>
+    <dl class="info-list info-list-stacked">
+     <div><dt>Body composition</dt><dd id="riskFactorBmi">Add height and weight to personalize this factor.</dd></div>
+     <div><dt>Medical history</dt><dd id="riskFactorConditions">No conditions recorded.</dd></div>
+     <div><dt>Lifestyle</dt><dd id="riskFactorLifestyle">Add lifestyle information to personalize this factor.</dd></div>
+     <div><dt>Activity</dt><dd id="riskFactorActivity">No activity data connected.</dd></div>
+    </dl>
+   </section>
+  </div>
+  <p class="t-meta fine-print">PREVENT was developed from U.S. data for adults 30–79 without known cardiovascular disease, and the AHA advises caution outside the U.S. SwasthID shows it for information only; it is not a diagnosis or treatment recommendation.</p>
  </div>
  </div>
 
  <!-- ===== NUTRITION & MEAL TRACKER PANEL ===== -->
  <div class="panel" id="panel-nutrition">
  <div class="content">
- <section class="doctor-hero" style="background: linear-gradient(135deg, #C68636, #B4553F);">
- <div>
- <div class="ai-kicker">NUTRITION</div>
- <h3 class="serif">Meals &amp; water</h3>
- <p class="section-sub">Log meals using Indian (IFCT) and USDA food data, track calories and water, and see food notes for your medicines.</p>
- </div>
- </section>
+  <div class="nutri-summary">
+   <section class="card" aria-labelledby="kcalTitle">
+    <div class="card-head">
+     <h2 class="card-title" id="kcalTitle">Calories today</h2>
+     <span class="badge" id="nutritionCalorieStatus">No intake</span>
+    </div>
+    <p class="big-figure"><span id="nutriKcal">0 kcal</span> <small>of <span id="nutriCalorieTarget">2,200 kcal</span></small></p>
+    <div class="progress" aria-hidden="true"><span id="kcalProgress"></span></div>
+    <button type="button" id="editCalorieTargetBtn" class="link-btn target-link">Change target</button>
+   </section>
+   <section class="card" aria-labelledby="waterTitle">
+    <div class="card-head">
+     <h2 class="card-title" id="waterTitle">Water today</h2>
+     <span class="badge" id="waterProgressValue">0%</span>
+    </div>
+    <p class="big-figure"><span id="waterTodayValue">0 ml</span> <small>of <span id="waterTargetValue">2,000 ml</span></small></p>
+    <div class="progress" aria-hidden="true"><span id="waterProgressBar"></span></div>
+    <div class="water-actions">
+     <button type="button" class="btn btn-sm water-add-btn" data-ml="250">+250 ml</button>
+     <button type="button" class="btn btn-sm water-add-btn" data-ml="500">+500 ml</button>
+     <button type="button" class="btn btn-sm water-add-btn" data-ml="750">+750 ml</button>
+     <span class="water-links"><button type="button" class="link-btn" id="editWaterTargetBtn">Change target</button><button type="button" class="link-btn" id="waterResetBtn">Reset</button></span>
+    </div>
+   </section>
+  </div>
 
- <section>
- <h3>Daily Caloric Summary</h3>
- <p class="section-sub" style="margin-top:-2px;margin-bottom:12px;">Your daily target is stored as a profile setting and can be adjusted as your benchmark changes.</p>
- <div class="activity-stats">
- <div class="stat"><div class="num serif" id="nutriKcal">0 kcal</div><div class="label">Intake so far</div></div>
- <div class="stat">
-  <div class="num serif" id="nutriCalorieTarget">2,200 kcal</div>
-  <div class="label">Daily Target</div>
-  <button type="button" id="editCalorieTargetBtn" class="n-btn" style="margin-top:8px;font-size:11px;padding:5px 9px;">Adjust target</button>
-</div>
- <div class="stat"><div class="num serif" id="nutritionCalorieStatus" style="color:var(--ok);">On track</div><div class="label">Status</div></div>
- </div>
- </section>
+  <section class="card" aria-labelledby="logMealTitle">
+   <h2 class="card-title" id="logMealTitle">Log a meal</h2>
+   <p class="card-sub">Search Indian (IFCT 2017) and USDA food data, pick a portion and save it to today.</p>
+   <form class="search-field" role="search" onsubmit="event.preventDefault()">
+    <input type="search" id="foodSearchInput" placeholder="e.g. dal, roti, dosa, banana" autocomplete="off" aria-label="Search foods">
+    <button class="btn btn-primary" id="foodSearchBtn" type="button">Search</button>
+   </form>
+   <p class="t-meta food-status" id="foodSearchStatus" aria-live="polite"></p>
+   <div id="recentFoodQuickAdd"></div>
+   <div id="foodSearchResults"></div>
+   <div class="barcode-block">
+    <div class="barcode-row">
+     <span class="t-meta">Packaged food?</span>
+     <button type="button" class="btn btn-sm" id="startBarcodeScanBtn">Scan barcode</button>
+     <button type="button" class="btn btn-sm" id="stopBarcodeScanBtn" style="display:none;">Stop camera</button>
+     <input id="barcodeManualInput" inputmode="numeric" pattern="[0-9]*" maxlength="18" placeholder="or type the barcode" aria-label="Barcode number">
+     <button type="button" class="btn btn-sm" id="lookupBarcodeBtn">Look up</button>
+    </div>
+    <video id="barcodeVideo" class="barcode-video" playsinline muted style="display:none;"></video>
+    <p class="t-meta" id="barcodeStatus" aria-live="polite"></p>
+    <div id="barcodeResult"></div>
+   </div>
+  </section>
 
- <section>
- <h3>Search Food &amp; Log a Meal</h3>
- <p class="section-sub">Search a real food database, choose a food, set the portion, and save it to today's log.</p>
- <div class="search-bar" style="margin-bottom:14px;">
- <input type="text" id="foodSearchInput" placeholder="Search foods e.g. rice, banana, dal, dosa..." autocomplete="off">
- <button class="n-btn solid" id="foodSearchBtn">Search</button>
- </div>
- <div id="foodSearchStatus" style="font-size:12px;color:var(--muted);margin-bottom:10px;"></div>
- <div id="recentFoodQuickAdd" style="margin-bottom:12px;"></div>
- <div id="foodSearchResults"></div>
- <p class="section-sub" style="padding-left:0;margin:14px 0 0;font-size:12.5px;">Packaged food? Scan its barcode further down this page to log the label's nutrition values.</p>
- </section>
+  <section class="card" aria-labelledby="mealsTitle">
+   <h2 class="card-title card-title-spaced" id="mealsTitle">Today's meals</h2>
+   <div id="recentMealsList"></div>
+   <div id="nutritionEmptyState" class="empty">No meals logged today.</div>
+  </section>
 
- <section>
- <h3>Today's Meals</h3>
- <div id="recentMealsList"></div>
- <div id="nutritionEmptyState" style="padding:18px 0;color:var(--muted);font-size:13px;">No meals logged today.</div>
- </section>
+  <section class="card" aria-labelledby="weekTitle">
+   <h2 class="card-title card-title-spaced" id="weekTitle">Last 7 days</h2>
+   <dl class="stat-strip">
+    <div><dt>Average calories</dt><dd id="weeklyAvgKcal">0 kcal</dd></div>
+    <div><dt>Protein</dt><dd id="weeklyProtein">0 g</dd></div>
+    <div><dt>Carbs</dt><dd id="weeklyCarbs">0 g</dd></div>
+    <div><dt>Fat</dt><dd id="weeklyFat">0 g</dd></div>
+    <div><dt>Days logged</dt><dd id="weeklyAdherenceFood">0/7</dd></div>
+   </dl>
+   <div id="weeklyNutritionChart" class="week-chart"></div>
+  </section>
 
- <section>
- <h3>Water Intake</h3>
- <p class="section-sub">Track today's water intake alongside your meals. This is a simple hydration log, not a medical hydration prescription.</p>
- <div class="activity-stats" style="margin-bottom:12px;">
-  <div class="stat"><div class="num serif" id="waterTodayValue">0 ml</div><div class="label">Today</div></div>
-  <div class="stat"><div class="num serif" id="waterTargetValue">2,000 ml</div><div class="label">Daily reference target</div></div>
-  <div class="stat"><div class="num serif" id="waterProgressValue">0%</div><div class="label">Progress</div></div>
- </div>
- <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-  <button type="button" class="n-btn solid water-add-btn" data-ml="250">+250 ml</button>
-  <button type="button" class="n-btn water-add-btn" data-ml="500">+500 ml</button>
-  <button type="button" class="n-btn water-add-btn" data-ml="750">+750 ml</button>
-  <button type="button" class="n-btn" id="editWaterTargetBtn">Adjust target</button>
-  <button type="button" class="n-btn" id="waterResetBtn">Reset today</button>
- </div>
- </section>
+  <section class="card" aria-labelledby="foodMedTitle">
+   <h2 class="card-title" id="foodMedTitle">Food and medicine notes</h2>
+   <p class="card-sub">Your current medicines checked against a small set of known food and medicine timing rules. Always confirm with your pharmacist or doctor.</p>
+   <div id="nutritionMedicationInteractions" class="interaction-list"></div>
+  </section>
 
- <section>
- <h3>Weekly Nutrition Trends</h3>
- <p class="section-sub">Your last 7 days of logged meals, aggregated from the food log. Days with no entries remain visible so trends are easy to spot.</p>
- <div class="activity-stats" style="margin-bottom:14px;">
-   <div class="stat"><div class="num serif" id="weeklyAvgKcal">0 kcal</div><div class="label">7-day avg calories</div></div>
-   <div class="stat"><div class="num serif" id="weeklyProtein">0 g</div><div class="label">Avg protein / day</div></div>
-   <div class="stat"><div class="num serif" id="weeklyCarbs">0 g</div><div class="label">Avg carbs / day</div></div>
-   <div class="stat"><div class="num serif" id="weeklyFat">0 g</div><div class="label">Avg fat / day</div></div>
-   <div class="stat"><div class="num serif" id="weeklyAdherenceFood">0/7</div><div class="label">Days logged</div></div>
- </div>
- <div id="weeklyNutritionChart" style="width:100%;min-height:230px;border:1px solid var(--line);border-radius:10px;padding:12px;box-sizing:border-box;background:var(--paper,#fff);overflow:hidden;"></div>
- </section>
-
- <section>
- <h3>Medication–Food Interaction Flags</h3>
- <p class="section-sub">SwasthID checks your current medication list against a small set of common food or supplement timing rules. These are informational flags, not a substitute for your prescriber or pharmacist.</p>
- <div id="nutritionMedicationInteractions"></div>
- </section>
-
- <section>
- <h3>Packaged Food Barcode Scanner</h3>
- <p class="section-sub">Scan a packaged-food barcode to look up product nutrition data. If your browser does not support camera barcode scanning, you can enter the barcode manually.</p>
- <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
-   <button type="button" class="n-btn solid" id="startBarcodeScanBtn">Scan barcode</button>
-   <button type="button" class="n-btn" id="stopBarcodeScanBtn" style="display:none;">Stop scanner</button>
-   <input id="barcodeManualInput" inputmode="numeric" pattern="[0-9]*" maxlength="18" placeholder="Enter barcode (e.g. 890...)" style="flex:1;min-width:180px;padding:10px;border:1px solid var(--line);border-radius:7px;box-sizing:border-box;">
-   <button type="button" class="n-btn" id="lookupBarcodeBtn">Look up</button>
- </div>
- <video id="barcodeVideo" playsinline muted style="display:none;width:100%;max-width:520px;border-radius:10px;border:1px solid var(--line);background:#111;max-height:300px;object-fit:cover;"></video>
- <div id="barcodeStatus" style="font-size:12px;color:var(--muted);margin-top:8px;"></div>
- <div id="barcodeResult" style="margin-top:12px;"></div>
- </section>
-
- <section>
- <h3>Food Data Source</h3>
- <p class="section-sub">Indian foods are searched against a curated IFCT 2017 reference subset first; other foods can fall back to USDA FoodData Central. Packaged-food barcode results use Open Food Facts. Values are reference estimates and can vary by preparation, brand, portion, and product formulation.</p>
- </section>
+  <p class="t-meta fine-print">Indian foods come from a curated subset of IFCT 2017, other foods from USDA FoodData Central, and barcodes from Open Food Facts. Values are estimates and vary with recipe, brand and portion.</p>
  </div>
  </div>
 
  <!-- ===== SMART PRESCRIPTION SCANNER PANEL ===== -->
  <div class="panel" id="panel-scan">
  <div class="content">
- <section class="scan-hero">
- <div class="scan-kicker">PRESCRIPTION SCANNER</div>
- <h3 style="color:#28425d;">Smart Prescription Scanner</h3>
- <p class="section-sub" style="padding-left:0;">Upload a photo or PDF of a prescription. SwasthID reads the text in your browser and suggests the medicines, doses and doctor. Check every field before saving.</p>
- <p class="section-sub" style="padding-left:0;margin-top:-8px;font-size:12.5px;">Works best with printed prescriptions photographed flat and in good light. Handwritten prescriptions usually cannot be read; add those medicines in your profile instead.</p>
- <div class="scan-upload">
- <div style="font-size:32px; margin-bottom:8px;"></div>
- <h4 style="margin:0 0 6px;">Select or drop a prescription file</h4>
- <small style="color:var(--muted);">Supports high-resolution camera photos or PDFs</small>
- <div style="display:flex; justify-content:center; gap:10px; margin-top:16px;">
- <button class="n-btn solid" id="chooseRxBtn"> Choose Prescription</button>
- <button class="n-btn" id="demoRxBtn">Try Demo Scan</button>
- <input type="file" id="rxFileInput" accept="image/*,.pdf" hidden>
- </div>
- </div>
- </section>
+  <h2 class="section-title">Scan a prescription</h2>
+  <p class="section-sub">SwasthID reads the text in your browser and suggests the medicines, doses and doctor. You check every field before anything is saved.</p>
 
- <section>
- <h3>Digitization Workflow</h3>
- <div class="workflow">
- <div class="workflow-step"><div class="step-no">1</div>Upload</div>
- <div class="workflow-step"><div class="step-no">2</div>OCR Extract</div>
- <div class="workflow-step"><div class="step-no">3</div>Review &amp; Edit</div>
- <div class="workflow-step"><div class="step-no">4</div>Verify Schedule</div>
- <div class="workflow-step"><div class="step-no">5</div>Save to Records</div>
- </div>
- </section>
+  <div class="dropzone" id="rxDropzone">
+   <svg class="icon dropzone-icon" aria-hidden="true"><use href="#i-records"/></svg>
+   <b>Choose a photo or PDF, or drop it here</b>
+   <span>Printed prescriptions photographed flat in good light work best. Handwriting usually can't be read; add those medicines in your profile instead.</span>
+   <div class="dropzone-actions">
+    <button class="btn btn-primary" id="chooseRxBtn" type="button">Choose file</button>
+    <button class="btn" id="demoRxBtn" type="button">Try a sample</button>
+   </div>
+   <input type="file" id="rxFileInput" accept="image/*,.pdf" hidden>
+  </div>
 
- <section class="scan-results" id="scanResults">
- <div class="analysis-banner">Text read from your prescription. Please check the details below.</div>
- <div class="scan-grid">
- <div class="rx-preview">
- <div class="scribble" id="rawOcrText">
- Dr. Rohan Iyer<br><br>Rx<br>Thyroxine 12.5 mcg — OD<br>Vitamin D3 — Weekly
- </div>
- <div class="rx-stamp">SCANNED<br>RECORD</div>
- </div>
- <div class="extract-card">
- <div class="extract-head"><h4>Extracted Information</h4><span class="tag resolved" id="ocrConfBadge">Review</span></div>
- <div id="rxReviewNote" style="font-size:12px;color:var(--muted);padding:8px 0 4px;line-height:1.4;">Fields marked &quot;Needs review&quot; were not confidently detected. You can edit any extracted field before saving.</div>
- <div class="doctor-line rx-physician-line">
- <label for="detectedDocName"><b>Detected Physician</b></label>
- <input id="detectedDocName" class="rx-physician-field" type="text" value="Dr. Rohan Iyer" placeholder="Enter physician name" aria-label="Detected physician">
- </div>
- 
- <div id="dynamicMedsList">
- <div class="medicine-row"><div class="medicine-check"></div><div><b>Thyroxine 12.5 mcg</b><span>Once daily</span></div></div>
- <div class="medicine-row"><div class="medicine-check"></div><div><b>Vitamin D3</b><span>Once weekly</span></div></div>
- </div>
-
- <div class="rx-intelligence">
- <div class="intel-card">
- <div class="intel-title">Before you save</div>
- <div class="alert-card">Review the extracted items above. Correct anything that was misread before saving it to your records.</div>
- </div>
- <div class="simple-explain">
- <button class="n-btn" id="confirmRxBtn" style="width:100%; margin-top:8px;"> Confirm &amp; Add to Records</button>
- <button class="n-btn solid" id="shopRxBtn" style="width:100%; margin-top:8px; display:none;"> Find Medicines in Order Medicine</button>
- <div id="shopRxHint" style="display:none;margin-top:7px;font-size:11.5px;color:var(--muted);line-height:1.4;">Your verified medicines will be copied into Medicine Search. You can review each match before continuing to a pharmacy.</div>
- </div>
- </div>
- </div>
- </div>
- </section>
+  <section class="scan-results" id="scanResults" aria-live="polite">
+   <div class="scan-layout">
+    <div class="card">
+     <div class="card-head">
+      <div><h2 class="card-title">Check the medicines</h2><p class="card-sub" id="rxReviewNote">Correct anything that was misread before saving.</p></div>
+      <span class="badge badge-info" id="ocrConfBadge">Review</span>
+     </div>
+     <div class="form-field rx-doctor"><label for="detectedDocName">Doctor</label><input id="detectedDocName" type="text" placeholder="Doctor's name"></div>
+     <div id="dynamicMedsList"></div>
+     <div class="form-footer">
+      <p class="t-meta" id="shopRxHint" style="display:none;">Your confirmed medicines are copied into medicine search, where you can check each match before going to a pharmacy.</p>
+      <div class="section-actions">
+       <button class="btn" id="shopRxBtn" type="button" style="display:none;">Find these medicines</button>
+       <button class="btn btn-primary" id="confirmRxBtn" type="button">Save to records</button>
+      </div>
+     </div>
+    </div>
+    <div class="card">
+     <h2 class="card-title card-title-spaced">Text read from the image</h2>
+     <pre class="ocr-text" id="rawOcrText"></pre>
+    </div>
+   </div>
+  </section>
  </div>
  </div>
 
  <!-- ===== DOCTOR VIEW PANEL ===== -->
  <div class="panel" id="panel-doctor">
  <div class="content">
- <section class="doctor-hero">
- <div>
- <div class="ai-kicker">DOCTOR SUMMARY</div>
- <h3 class="serif">Your health summary</h3>
- <p class="section-sub">Built from the information you have entered in SwasthID. Show it at an appointment, or share it from Records.</p>
- </div>
- <div class="doc-badge">From your records<br><span id="doctorRecordsCount">0 records</span></div>
- </section>
-
- <section>
- <h3>At a Glance</h3>
- <div class="clinical-grid">
- <div class="clinical-card"><span class="clinical-icon"></span><div><b>Chronic conditions</b><p id="doctorConditions">No conditions recorded.</p></div></div>
- <div class="clinical-card"><span class="clinical-icon"></span><div><b>Active regimens</b><p id="doctorMedications">No active medicines recorded.</p></div></div>
- <div class="clinical-card"><span class="clinical-icon"></span><div><b>Drug allergies</b><p id="doctorAllergies">No allergies recorded.</p></div></div>
- <div class="clinical-card"><span class="clinical-icon"></span><div><b>Other allergies</b><p id="doctorNormalAllergies">No common/environmental allergies recorded.</p></div></div>
- <div class="clinical-card"><span class="clinical-icon"></span><div><b>Latest recorded visit</b><p id="doctorLatestVisit">No visits recorded.</p></div></div>
- </div>
- </section>
-
- <section>
- <h3>Summary</h3>
- <div class="ai-summary">
- <div class="summary-label">FROM YOUR RECORDS</div>
- <p id="doctorSummaryText">Add health information in your profile, prescriptions, and records to generate a personalized clinical brief.</p>
- </div>
- </section>
-
- <section>
- <h3>Health timeline</h3>
- <div class="timeline" id="doctorTimeline"><div class="empty-state">No health timeline entries yet.</div></div>
- </section>
+  <div class="section-head">
+   <div>
+    <h2 class="section-title">Your health summary</h2>
+    <p class="section-sub">Built from what you've entered in SwasthID. Show it at an appointment, or send a secure link from Records.</p>
+   </div>
+   <button type="button" class="btn" data-go="records">Share with a doctor</button>
+  </div>
+  <div class="doctor-grid">
+   <section class="card" aria-labelledby="doctorSummaryTitle">
+    <div class="card-head">
+     <h2 class="card-title" id="doctorSummaryTitle">Summary</h2>
+     <span class="badge" id="doctorRecordsCount">0 records</span>
+    </div>
+    <p class="doctor-summary" id="doctorSummaryText">Add health information in your profile, prescriptions, and records to generate a summary.</p>
+   </section>
+   <section class="card" aria-labelledby="doctorGlanceTitle">
+    <h2 class="card-title card-title-spaced" id="doctorGlanceTitle">At a glance</h2>
+    <dl class="info-list">
+     <div><dt>Conditions</dt><dd id="doctorConditions">No conditions recorded.</dd></div>
+     <div><dt>Medicines</dt><dd id="doctorMedications">No active medicines recorded.</dd></div>
+     <div><dt>Drug allergies</dt><dd id="doctorAllergies">No allergies recorded.</dd></div>
+     <div><dt>Other allergies</dt><dd id="doctorNormalAllergies">No common or environmental allergies recorded.</dd></div>
+     <div><dt>Latest visit</dt><dd id="doctorLatestVisit">No visits recorded.</dd></div>
+    </dl>
+   </section>
+  </div>
  </div>
  </div>
 
  <!-- ===== EMERGENCY PASSPORT PANEL ===== -->
  <div class="panel" id="panel-emergency">
  <div class="content">
- <section class="emergency-hero">
- <div>
- <div class="emergency-kicker"> PATIENT-CONTROLLED EMERGENCY ACCESS</div>
- <h3 class="serif">Emergency Health Passport</h3>
- <p class="section-sub" style="padding-left:0; color:#40524C;">Instant access to critical emergency information for responders — no OTP or password required.</p>
- </div>
- <div class="passport-status" id="emergencyProfileStatus">
- <div class="status-main"><span class="status-dot"></span><span id="emergencyStatusMain">Emergency profile</span></div>
- <div class="status-sub"><span class="status-mark"></span><span id="emergencyStatusSub">Add details in your profile</span></div>
-</div>
- </section>
+  <div class="status-banner" id="emergencyProfileStatus" data-state="incomplete">
+   <div>
+    <b id="emergencyStatusMain">Emergency card incomplete</b>
+    <span id="emergencyStatusSub">Add your blood group and an emergency contact.</span>
+   </div>
+   <button type="button" class="btn btn-sm" data-go="profile">Edit profile</button>
+  </div>
 
- <section>
- <h3>Emergency Broadcast Layer</h3>
- <div class="passport-layout">
- <div class="emergency-card">
- <div class="emergency-card-head">
- <b> EMERGENCY MEDICAL IDENTIFIER</b>
- <span id="emergencyPatientName">--</span>
- </div>
- <div class="emergency-row"><div class="e-icon"></div><div><b>Blood group</b><p id="emergencyBloodGroup">--</p></div></div>
- <div class="emergency-row"><div class="e-icon"></div><div><b>Drug allergies</b><p id="emergencyAllergies">--</p></div></div>
- <div class="emergency-row"><div class="e-icon"></div><div><b>Other allergies</b><p id="emergencyNormalAllergies">--</p></div></div>
- <div class="emergency-row"><div class="e-icon"></div><div><b>Chronic conditions</b><p id="emergencyConditions">No conditions recorded</p></div></div>
- <div class="emergency-row"><div class="e-icon"></div><div><b>Critical daily medicines</b><p id="emergencyMedicines">No medicines recorded</p></div></div>
- <div class="emergency-row"><div class="e-icon"></div><div><b>Emergency contact</b><p id="emergencyContactDisplay"></p><div class="emergency-contact-actions"><a class="emergency-call primary" id="emergencyContactCall" href="#" style="display:none">Call contact</a><a class="emergency-call" href="tel:112">Call 112</a></div></div></div>
- <div class="emergency-row">
- <div class="e-icon"></div>
- <div>
- <b>Health Insurance</b>
- <p id="emergencyInsurance">No insurance details recorded.</p>
- </div>
- </div>
- </div>
- <div class="qr-box">
- <div class="fake-qr" id="realQrContainer">
- <span style="font-size:11px; color:var(--muted);">Loading QR...</span>
- </div>
- <b>Emergency QR Badge</b>
- <p class="section-sub" style="margin:6px 0 12px; padding-left:0;">Scannable by paramedics using any standard camera.</p>
- <div class="emergency-action-grid"><button class="n-btn solid" id="downloadEmergencyPdfBtn" type="button">Download PDF</button><button class="n-btn" id="simulateScanBtn" type="button">Preview</button></div><div class="emergency-action-links"><button type="button" id="refreshEmergencyQrBtn">Refresh</button><button type="button" id="emergencyAccessLogBtn">Access log</button><button type="button" id="revokeEmergencyQrBtn" class="danger">Revoke</button></div><div id="emergencyAccessLog" style="display:none;margin-top:10px;font-size:11px;color:var(--muted);"></div><div class="qr-meta" id="qrPayloadStatus">The QR opens a read-only emergency view. It remains valid until revoked or its long-term expiry date.</div>
- </div>
- </div>
- </section>
+  <div class="emergency-grid">
+   <section class="card" aria-labelledby="emergencyInfoTitle">
+    <div class="card-head">
+     <div>
+      <h2 class="card-title" id="emergencyInfoTitle">What responders see</h2>
+      <p class="card-sub">Shown to anyone who scans your emergency QR, without a password.</p>
+     </div>
+     <a class="btn btn-danger btn-sm" href="tel:112"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-phone"/></svg>Call 112</a>
+    </div>
+    <dl class="info-list">
+     <div><dt>Name</dt><dd id="emergencyPatientName">--</dd></div>
+     <div><dt>Blood group</dt><dd id="emergencyBloodGroup">--</dd></div>
+     <div><dt>Drug allergies</dt><dd id="emergencyAllergies">--</dd></div>
+     <div><dt>Other allergies</dt><dd id="emergencyNormalAllergies">--</dd></div>
+     <div><dt>Conditions</dt><dd id="emergencyConditions">No conditions recorded</dd></div>
+     <div><dt>Daily medicines</dt><dd id="emergencyMedicines">No medicines recorded</dd></div>
+     <div><dt>Emergency contact</dt><dd><span id="emergencyContactDisplay"></span><a class="btn btn-sm" id="emergencyContactCall" href="#" style="display:none"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-phone"/></svg>Call</a></dd></div>
+     <div><dt>Health insurance</dt><dd id="emergencyInsurance">No insurance details recorded.</dd></div>
+    </dl>
+   </section>
 
- <section>
- <h3>Data Visibility Settings</h3>
- <div class="privacy-grid">
- <div class="privacy-card" style="background:#F8FAF9; border:1px solid var(--line); border-radius:12px; padding:18px;">
- <h4>Your private record</h4>
- <p style="font-size:13px; color:var(--muted);">Visible only when you are signed in. Never included in the emergency QR.</p>
- <div class="visibility-item" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px;"><span>Lab reports &amp; visits</span><b>Only you</b></div>
- <div class="visibility-item" style="display:flex; justify-content:space-between; padding:8px 0; font-size:13px;"><span>Saved prescriptions</span><b>Only you</b></div>
- </div>
- <div class="privacy-card" style="background:#FFFDFD; border:1px solid #ECC5BD; border-radius:12px; padding:18px;">
- <h4> Emergency Badge Visibility</h4>
- <p style="font-size:13px; color:var(--muted);">What anyone who scans your emergency QR can see.</p>
- <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0;"><span>Blood group &amp; allergies</span><button type="button" class="switch on" data-emergency-visibility="core" aria-pressed="true"></button></div>
- <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0;"><span>Active medications</span><button type="button" class="switch on" data-emergency-visibility="meds" aria-pressed="true"></button></div>
- <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0;"><span>Health Insurance Details</span><button type="button" class="switch on" data-emergency-visibility="insurance" aria-pressed="true"></button></div>
- <div class="personalization-note">Changes apply to the QR generated next. Revoke the old QR if it was already shared.</div>
- </div>
- </div>
- </section>
+   <section class="card qr-card" aria-labelledby="qrTitle">
+    <h2 class="card-title" id="qrTitle">Emergency QR</h2>
+    <p class="card-sub">Paramedics can scan it with any phone camera.</p>
+    <div class="qr-frame" id="realQrContainer"><div class="skeleton qr-skeleton" aria-label="Loading QR code"></div></div>
+    <div class="qr-actions">
+     <button class="btn btn-primary" id="downloadEmergencyPdfBtn" type="button">Download PDF</button>
+     <button class="btn" id="simulateScanBtn" type="button">Preview</button>
+    </div>
+    <div class="qr-links">
+     <button type="button" class="btn btn-ghost btn-sm" id="refreshEmergencyQrBtn">Refresh</button>
+     <button type="button" class="btn btn-ghost btn-sm" id="emergencyAccessLogBtn">Access log</button>
+     <button type="button" class="btn btn-ghost btn-sm btn-danger" id="revokeEmergencyQrBtn">Revoke</button>
+    </div>
+    <div id="emergencyAccessLog" class="qr-log" style="display:none;"></div>
+    <p class="t-meta qr-meta" id="qrPayloadStatus">The QR opens a read-only emergency view. It stays valid until you revoke it or it expires.</p>
+   </section>
+  </div>
+
+  <section class="card" aria-labelledby="privacyTitle">
+   <h2 class="card-title" id="privacyTitle">Privacy</h2>
+   <p class="card-sub">Choose what the emergency QR shows. Changes apply to the next QR; revoke the old one if you already shared it.</p>
+   <div class="privacy-cols">
+    <div>
+     <h3 class="t-meta privacy-label">Shown on the emergency QR</h3>
+     <div class="switch-row"><span id="visCore">Blood group and allergies</span><button type="button" class="switch on" data-emergency-visibility="core" aria-pressed="true" aria-labelledby="visCore"></button></div>
+     <div class="switch-row"><span id="visMeds">Current medicines</span><button type="button" class="switch on" data-emergency-visibility="meds" aria-pressed="true" aria-labelledby="visMeds"></button></div>
+     <div class="switch-row"><span id="visIns">Health insurance</span><button type="button" class="switch on" data-emergency-visibility="insurance" aria-pressed="true" aria-labelledby="visIns"></button></div>
+    </div>
+    <div>
+     <h3 class="t-meta privacy-label">Never on the QR</h3>
+     <div class="switch-row"><span>Lab reports and visits</span><span class="badge">Only you</span></div>
+     <div class="switch-row"><span>Saved prescriptions</span><span class="badge">Only you</span></div>
+    </div>
+   </div>
+  </section>
  </div>
  </div>
 
  <!-- ===== RECORDS PANEL ===== -->
  <div class="panel" id="panel-records">
  <div class="content">
- <section>
- <h3>Medical Conditions</h3>
- <p class="section-sub">Current and historical conditions from the patient's health profile.</p>
- <div id="historyListRecords"></div>
- </section>
- <section>
- <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;"><div><h3>Previous Physician Visits</h3><p class="section-sub">Consultation history stored by SwasthID.</p></div><button class="n-btn" type="button" id="addVisitRecordBtn">+ Add visit</button></div>
- <div id="visitList"></div>
- </section>
- <section>
- <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-  <div>
-   <h3 style="margin-bottom:4px;">Diagnostic Lab Reports</h3>
-   <p class="section-sub" style="margin-bottom:0;">Scan a photo or PDF of a lab report to add its values to your trends, or type one in.</p>
-  </div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="n-btn solid" type="button" id="scanLabReportBtn">Scan report</button><input type="file" id="labReportFileInput" accept="image/*,application/pdf" hidden><button class="n-btn" type="button" id="addLabReportBtn">+ Add report</button><button class="n-btn" type="button" id="labTrendBtn">View trends</button></div>
+  <section>
+   <div class="section-head">
+    <div><h2 class="section-title">Conditions</h2><p class="section-sub">Current and past conditions from your profile.</p></div>
+    <button class="btn" type="button" data-go="profile">Edit in profile</button>
+   </div>
+   <div id="historyListRecords"></div>
+  </section>
+
+  <section>
+   <div class="section-head">
+    <div><h2 class="section-title">Lab reports</h2><p class="section-sub">Scan a photo or PDF of a report to add its values to your trends, or type one in.</p></div>
+    <div class="section-actions">
+     <button class="btn btn-primary" type="button" id="scanLabReportBtn">Scan report</button>
+     <input type="file" id="labReportFileInput" accept="image/*,application/pdf" hidden>
+     <button class="btn" type="button" id="addLabReportBtn">Add manually</button>
+     <button class="btn" type="button" id="labTrendBtn" aria-expanded="false" aria-controls="labTrendPanel">View trends</button>
+    </div>
+   </div>
+   <div id="labTrendPanel" class="card trend-card" style="display:none;">
+    <div class="card-head">
+     <div><h3 class="card-title">Trends</h3><p class="card-sub">Values from your scanned and typed reports.</p></div>
+     <select id="labTrendMetric" aria-label="Test to chart"></select>
+    </div>
+    <div id="labTrendChart" class="trend-chart"></div>
+    <p class="t-meta" id="labTrendSummary"></p>
+    <p class="t-meta">Check values against the original report. Trends are for information only.</p>
+   </div>
+   <div id="reportList"></div>
+  </section>
+
+  <section>
+   <div class="section-head">
+    <div><h2 class="section-title">Doctor visits</h2><p class="section-sub">Consultations you've recorded.</p></div>
+    <button class="btn" type="button" id="addVisitRecordBtn">Add visit</button>
+   </div>
+   <div id="visitList"></div>
+  </section>
+
+  <section>
+   <div class="section-head">
+    <div><h2 class="section-title">Prescriptions</h2><p class="section-sub">Prescriptions you scanned and confirmed.</p></div>
+    <button class="btn" type="button" data-go="scan">Scan prescription</button>
+   </div>
+   <div id="prescriptionList"></div>
+  </section>
  </div>
- <div id="reportList" style="margin-top:14px;"></div>
- <div id="labTrendPanel" style="display:none;margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-   <div><b>Lab report trends</b><div class="section-sub" style="margin:3px 0 0;">Values from your scanned and typed reports.</div></div>
-   <select id="labTrendMetric" class="profile-input" style="min-width:150px;padding:8px 10px;"></select>
-  </div>
-  <div id="labTrendChart" style="margin-top:12px;overflow-x:auto;"></div>
-  <div id="labTrendSummary" style="margin-top:8px;font-size:12px;color:var(--muted);"></div>
-  <div style="margin-top:10px;font-size:11px;color:var(--muted);">Trend extraction is informational only. Verify values against the original laboratory report.</div>
  </div>
- </section>
- <section>
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-   <div>
-    <h3 style="margin-bottom:4px;">Your Health, Ready to Go</h3>
-    <p class="section-sub" style="margin-bottom:0;">Keep your health information ready when you need it — save it, print it, or share it securely.</p>
-   </div>
-   <div style="display:flex;gap:8px;flex-wrap:wrap;">
-    <button class="n-btn" type="button" id="exportHealthJsonBtn">My Health Vault</button>
-    <button class="n-btn" type="button" id="exportHealthPdfBtn">Health Summary</button>
-    <button class="n-btn solid" type="button" id="shareHealthRecordBtn">Share with Doctor</button>
-   </div>
+
+ <div class="panel" id="panel-timeline">
+ <div class="content">
+  <section>
+   <h2 class="section-title">Health timeline</h2>
+   <p class="section-sub">Visits, lab reports and prescriptions, with a daily summary of doses and meals.</p>
+   <div id="recordTimeline"></div>
+  </section>
+  <section>
+   <h2 class="section-title">Doses taken</h2>
+   <p class="section-sub">Doses you marked as taken, by day.</p>
+   <div id="recordMedicationList"></div>
+  </section>
+  <section>
+   <h2 class="section-title">Meals</h2>
+   <p class="section-sub">Meals you logged in Nutrition, by day.</p>
+   <div id="recordFoodList"></div>
+  </section>
+ </div>
+ </div>
+
+ <div class="panel" id="panel-share">
+ <div class="content">
+  <h2 class="section-title">Share and export</h2>
+  <p class="section-sub">Keep a copy of your record, print a summary, or give a doctor time-limited access.</p>
+  <div class="share-grid">
+   <section class="card share-option">
+    <h3 class="card-title">Share with a doctor</h3>
+    <p class="card-sub">Creates a private link that expires. You can revoke it at any time.</p>
+    <button class="btn btn-primary" type="button" id="shareHealthRecordBtn">Create doctor link</button>
+   </section>
+   <section class="card share-option">
+    <h3 class="card-title">Health summary PDF</h3>
+    <p class="card-sub">A one-page summary of your conditions, medicines, visits and reports to print or send.</p>
+    <button class="btn" type="button" id="exportHealthPdfBtn">Download PDF</button>
+   </section>
+   <section class="card share-option">
+    <h3 class="card-title">Health Vault file</h3>
+    <p class="card-sub">Your full record as a JSON file you can keep as a backup.</p>
+    <button class="btn" type="button" id="exportHealthJsonBtn">Download file</button>
+   </section>
   </div>
-  <div id="healthShareStatus" style="margin-top:10px;font-size:12px;color:var(--muted);"></div>
-  <div id="activeDoctorSharePanel" style="display:none;margin-top:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--soft);">
-   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-    <div><b>Active doctor share</b><div id="activeDoctorShareMeta" style="font-size:11px;color:var(--muted);margin-top:3px;"></div></div>
-    <button class="n-btn" type="button" id="revokeDoctorShareBtn" style="border-color:#b84a40;color:#8f2d24;">Revoke share</button>
-   </div>
+  <p class="t-meta share-status" id="healthShareStatus" aria-live="polite"></p>
+  <div id="activeDoctorSharePanel" class="status-banner" data-state="ready" style="display:none;">
+   <div><b>Active doctor link</b><span id="activeDoctorShareMeta"></span></div>
+   <button class="btn btn-sm btn-danger" type="button" id="revokeDoctorShareBtn">Revoke link</button>
   </div>
- </section>
- <section style="border-color:#e7b9b5;">
-  <h3 style="color:#8f2d24;">Account &amp; data deletion</h3>
-  <p class="section-sub">Permanently delete this Firebase account and stored SwasthID data. This cannot be undone.</p>
-  <button class="n-btn" type="button" id="deleteAccountBtn" style="border-color:#b84a40;color:#8f2d24;">Delete my account and data</button>
-  <div id="deleteAccountStatus" style="margin-top:8px;font-size:12px;color:var(--muted);"></div>
- </section>
- <section>
- <h3>Saved Prescriptions &amp; Medications</h3>
- <p class="section-sub">Confirmed prescriptions and medication details captured by the app.</p>
- <div id="prescriptionList"></div>
- </section>
- <section>
- <h3>Nutrition history</h3>
- <p class="section-sub">Meals you logged in Nutrition, by day.</p>
- <div id="recordFoodList"></div>
- </section>
- <section>
- <h3>Medication activity</h3>
- <p class="section-sub">Doses you marked as taken, by day.</p>
- <div id="recordMedicationList"></div>
- </section>
- <section>
- <h3>Health timeline</h3>
- <p class="section-sub">Visits, lab reports and prescriptions, with a daily summary of doses and meals.</p>
- <div id="recordTimeline"></div>
- </section>
  </div>
  </div>
 
@@ -797,7 +710,7 @@
   <div class="vf" data-for="bp glucose weight spo2"><label for="vWhen">Date and time</label><input id="vWhen" type="datetime-local"></div>
   <div class="vf vf-wide" data-for="bp glucose weight spo2"><label for="vNote">Note (optional)</label><input id="vNote" type="text" maxlength="120" placeholder="e.g. after walking, felt dizzy"></div>
  </div>
- <div class="vitals-form-actions"><span id="vitalsFormError" role="alert"></span><button type="submit" class="n-btn solid">Save reading</button></div>
+ <div class="vitals-form-actions"><span id="vitalsFormError" role="alert"></span><button type="submit" class="btn btn-primary">Save reading</button></div>
  </form>
  </section>
 
@@ -817,37 +730,46 @@
  <!-- ===== PROFILE PANEL ===== -->
  <div class="panel" id="panel-profile">
  <div class="content">
- <section>
- <h3>My health profile</h3>
- <div class="profile-vitals">
- <div class="stat"><div class="num serif" id="profileHeight">--</div><div class="label">Height</div></div>
- <div class="stat"><div class="num serif" id="profileWeight">--</div><div class="label">Weight</div></div>
- <div class="stat"><div class="num serif" id="profileBloodGroup">--</div><div class="label">Blood Group</div></div>
- </div>
-
- <div style="margin: 8px 0 12px; font-size: 15px; font-weight: 600;">Personal Information</div>
- <div class="history-item"><div><div class="h-name">Date of birth</div><div class="h-meta" id="profileDob">Not provided</div></div></div>
- <div class="history-item"><div><div class="h-name">Calculated age</div><div class="h-meta" id="ageValue">--</div></div></div>
- <div class="history-item"><div><div class="h-name">Occupation</div><div class="h-meta" id="profileOccupation">Not provided</div></div></div>
-
- <div style="margin: 24px 0 12px; font-size: 15px; font-weight: 600;">Lifestyle Factors</div>
- <div class="history-item"><div><div class="h-name">Smoking Status</div><div class="h-meta" id="profileSmoking">Not provided</div></div><span class="tag resolved" id="profileSmokingTag">—</span></div>
- <div class="history-item"><div><div class="h-name">Alcohol Consumption</div><div class="h-meta" id="profileAlcohol">Not provided</div></div><span class="tag blue" id="profileAlcoholTag">—</span></div>
- <p class="section-sub" style="font-size:11px; margin-top:-6px;">These values are used to personalize health insights and can be updated from your profile.</p>
-
- <div style="margin: 24px 0 12px; font-size: 15px; font-weight: 600;">Account</div>
- <div class="history-item">
- <div><div class="h-name">Signed in as</div><div class="h-meta" id="profileEmail">Not provided</div></div>
- </div>
-
- <button type="button" class="n-btn solid" id="editProfileBtn" style="margin:18px 0 4px;">Edit my profile</button>
- <div class="accordion-head" id="historyToggle" style="margin-top: 22px;">
- <h4>Medical history</h4>
- <span class="chevron" id="historyChevron">▾</span>
- </div>
- <div class="accordion-body" id="historyBodyProfile">
- <div id="historyListProfile"></div>
- </div>
+  <div class="section-head">
+   <div><h2 class="section-title">Your profile</h2><p class="section-sub">Used to personalize your dashboard, emergency card and health estimates.</p></div>
+   <button type="button" class="btn btn-primary" id="editProfileBtn">Edit profile</button>
+  </div>
+  <div class="profile-grid">
+   <section class="card" aria-labelledby="basicsTitle">
+    <h2 class="card-title card-title-spaced" id="basicsTitle">Basics</h2>
+    <dl class="info-list">
+     <div><dt>Height</dt><dd id="profileHeight">--</dd></div>
+     <div><dt>Weight</dt><dd id="profileWeight">--</dd></div>
+     <div><dt>Blood group</dt><dd id="profileBloodGroup">--</dd></div>
+     <div><dt>Date of birth</dt><dd id="profileDob">Not provided</dd></div>
+     <div><dt>Age</dt><dd id="ageValue">--</dd></div>
+     <div><dt>Occupation</dt><dd id="profileOccupation">Not provided</dd></div>
+    </dl>
+   </section>
+   <div class="stack">
+    <section class="card" aria-labelledby="lifestyleTitle">
+     <h2 class="card-title card-title-spaced" id="lifestyleTitle">Lifestyle</h2>
+     <dl class="info-list">
+      <div><dt>Smoking</dt><dd id="profileSmoking">Not provided</dd></div>
+      <div><dt>Alcohol</dt><dd id="profileAlcohol">Not provided</dd></div>
+     </dl>
+    </section>
+    <section class="card" aria-labelledby="accountTitle">
+     <h2 class="card-title card-title-spaced" id="accountTitle">Account</h2>
+     <dl class="info-list"><div><dt>Signed in as</dt><dd id="profileEmail">Not provided</dd></div></dl>
+    </section>
+   </div>
+  </div>
+  <section class="profile-conditions" aria-labelledby="profileConditionsTitle">
+   <h2 class="section-title" id="profileConditionsTitle">Conditions</h2>
+   <p class="section-sub">Edit these in your profile.</p>
+   <div id="historyListProfile"></div>
+  </section>
+ <section class="card danger-zone" aria-labelledby="deleteAccountTitle">
+  <h2 class="card-title" id="deleteAccountTitle">Delete account</h2>
+  <p class="card-sub">Permanently deletes your SwasthID account and everything stored in it. This can't be undone.</p>
+  <button class="btn btn-danger" type="button" id="deleteAccountBtn">Delete my account and data</button>
+  <p class="t-meta" id="deleteAccountStatus" aria-live="polite"></p>
  </section>
  </div>
  </div>
@@ -855,56 +777,50 @@
  <!-- ===== ORDER MEDICINE PANEL ===== -->
  <div class="panel" id="panel-order">
  <div class="content">
- <section>
- <h3>Medicine Search &amp; Ordering</h3>
- <p class="section-sub">Search medicines, review pack and price-reference information, then continue to a pharmacy of your choice.</p>
- <div class="search-bar">
- <span></span>
- <input type="text" id="medSearch" placeholder="Search by medicine, salt or brand..." autocomplete="off">
- <button class="n-btn solid" id="searchBtn">Search</button>
- </div>
- <div style="display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 14px;">
- <a class="n-btn" href="https://nppa.gov.in/en/pharma_sahi_daam" target="_blank" rel="noopener">Check NPPA price</a>
- <span id="medicineSourceBadge" class="results-label" style="font-size:12px; color:var(--muted); padding:9px 0;">Reference catalogue</span>
- </div>
- <div class="results-label" id="resultsLabel" style="font-size:13px; color:var(--muted); margin-bottom:12px;">Search for a medicine to compare available reference data.</div>
- <div id="priceList"></div>
- <div id="prescriptionMedicineQueue" style="display:none; margin-top:14px; padding:12px 14px; border:1px solid var(--line); border-radius:var(--radius-md); background:var(--surface-2);">
- <div style="font-weight:650;font-size:13px;margin-bottom:8px;">Medicines from scanned prescription</div>
- <div id="prescriptionMedicineQueueList"></div>
- <div style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.4;">Select a medicine to search its catalogue match. No order is placed automatically.</div>
- </div>
- <div id="medicineDisclaimer" style="display:none; margin-top:14px; padding:12px 14px; border:1px solid var(--line); border-radius:var(--radius-md); background:var(--surface-2); font-size:12px; color:var(--muted); line-height:1.5;"></div>
- </section>
+  <h2 class="section-title">Find medicines</h2>
+  <p class="section-sub">Search by brand, generic name or salt to compare pack sizes and reference prices, then choose a pharmacy.</p>
+  <form class="search-field" role="search" onsubmit="event.preventDefault()">
+   <input type="search" id="medSearch" placeholder="e.g. Metformin 500" autocomplete="off" aria-label="Search medicines">
+   <button class="btn btn-primary" id="searchBtn" type="button">Search</button>
+  </form>
+  <div class="search-meta">
+   <span class="t-meta" id="resultsLabel" aria-live="polite">Search for a medicine to see reference prices.</span>
+   <span class="badge" id="medicineSourceBadge">Reference catalogue</span>
+  </div>
+  <div id="prescriptionMedicineQueue" class="card rx-queue" style="display:none;">
+   <h3 class="card-title">From your scanned prescription</h3>
+   <p class="card-sub">Choose a medicine to search for it. Nothing is ordered automatically.</p>
+   <div id="prescriptionMedicineQueueList"></div>
+  </div>
+  <div id="priceList"></div>
+  <p class="t-meta med-disclaimer" id="medicineDisclaimer" style="display:none;"></p>
+  <p class="t-meta med-nppa">Official ceiling prices: <a href="https://nppa.gov.in/en/pharma_sahi_daam" target="_blank" rel="noopener">NPPA Pharma Sahi Daam</a></p>
  </div>
  </div>
 
  <!-- ===== FAMILY PANEL ===== -->
  <div class="panel" id="panel-register">
  <div class="content">
- <section>
- <h3>Family members</h3>
- <div class="reg-card">
- <h4 style="margin:0 0 10px; font-size:15px;">Add someone you look after</h4>
- <p class="section-sub" style="padding-left:0;">Family members are saved in your account. They do not get their own login.</p>
- <label>Full Name</label>
- <input type="text" class="reg-input" id="regName" placeholder="e.g. Ramesh Sharma">
- <label style="margin-top:12px;">Relationship</label>
- <select class="reg-input" id="regRel"><option value="">Select relationship</option><option>Parent</option><option>Mother</option><option>Father</option><option>Spouse</option><option>Partner</option><option>Son</option><option>Daughter</option><option>Sibling</option><option>Brother</option><option>Sister</option><option>Grandparent</option><option>Grandmother</option><option>Grandfather</option><option>Uncle</option><option>Aunt</option><option>Cousin</option><option>Friend</option><option>Other relative</option><option>Other</option></select>
- <button class="n-btn solid" id="registerDepBtn" style="width:100%; margin-top:16px;">Add family member</button>
- <div id="dependentList" style="margin-top:14px;"></div>
- </div>
- </section>
+  <h2 class="section-title">Family members</h2>
+  <p class="section-sub">Keep track of people you look after. They're saved in your account and don't get their own login.</p>
+  <div class="family-grid">
+   <section class="card" aria-labelledby="addFamilyTitle">
+    <h3 class="card-title card-title-spaced" id="addFamilyTitle">Add someone</h3>
+    <div class="form-field"><label for="regName">Full name</label><input type="text" id="regName" placeholder="e.g. Ramesh Sharma" autocomplete="off"></div>
+    <div class="form-field form-field-spaced"><label for="regRel">Relationship</label><select id="regRel"><option value="">Select relationship</option><option>Parent</option><option>Mother</option><option>Father</option><option>Spouse</option><option>Partner</option><option>Son</option><option>Daughter</option><option>Sibling</option><option>Brother</option><option>Sister</option><option>Grandparent</option><option>Grandmother</option><option>Grandfather</option><option>Uncle</option><option>Aunt</option><option>Cousin</option><option>Friend</option><option>Other relative</option><option>Other</option></select></div>
+    <button class="btn btn-primary btn-block" id="registerDepBtn" type="button">Add family member</button>
+   </section>
+   <div id="dependentList"></div>
+  </div>
  </div>
  </div>
 
  <div id="dependentEditor" class="inline-editor-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="dependentEditorTitle">
-  <div class="inline-editor-card" style="max-width:500px;">
-   <h3 id="dependentEditorTitle">Edit dependent</h3>
-   <p class="section-sub">Update this family member's details.</p>
-   <input id="dependentEditName" class="profile-input" type="text" maxlength="100" placeholder="Full name">
-   <select id="dependentEditRelation" class="profile-input" style="margin-top:10px;"><option value="">Select relationship</option><option>Parent</option><option>Mother</option><option>Father</option><option>Spouse</option><option>Partner</option><option>Son</option><option>Daughter</option><option>Sibling</option><option>Brother</option><option>Sister</option><option>Grandparent</option><option>Grandmother</option><option>Grandfather</option><option>Uncle</option><option>Aunt</option><option>Cousin</option><option>Friend</option><option>Other relative</option><option>Other</option></select>
-   <div class="inline-editor-actions"><button type="button" class="n-btn" id="dependentEditCancel">Cancel</button><button type="button" class="n-btn solid" id="dependentEditSave">Save changes</button></div>
+  <div class="inline-editor-card">
+   <h3 id="dependentEditorTitle">Edit family member</h3>
+   <div class="form-field form-field-spaced"><label for="dependentEditName">Full name</label><input id="dependentEditName" type="text" maxlength="100"></div>
+   <div class="form-field form-field-spaced"><label for="dependentEditRelation">Relationship</label><select id="dependentEditRelation"><option value="">Select relationship</option><option>Parent</option><option>Mother</option><option>Father</option><option>Spouse</option><option>Partner</option><option>Son</option><option>Daughter</option><option>Sibling</option><option>Brother</option><option>Sister</option><option>Grandparent</option><option>Grandmother</option><option>Grandfather</option><option>Uncle</option><option>Aunt</option><option>Cousin</option><option>Friend</option><option>Other relative</option><option>Other</option></select></div>
+   <div class="inline-editor-actions"><button type="button" class="btn" id="dependentEditCancel">Cancel</button><button type="button" class="btn btn-primary" id="dependentEditSave">Save</button></div>
   </div>
  </div>
 
@@ -935,14 +851,12 @@
 </div>
 
 <!-- ===== DYNAMIC MEDICATION & ACTION TOAST ===== -->
-<div id="medToast">
- <div class="toast-icon" id="toastIconBlock"></div>
- <div style="flex: 1;">
- <div class="toast-title" id="toastTitleText">Upcoming Reminder</div>
- <div class="toast-body" id="toastBodyText">Medication reminder</div>
- <div class="toast-time" id="toastTimeText"></div>
+<div id="medToast" class="toast" role="status" aria-live="polite">
+ <div class="toast-text">
+  <div class="toast-title" id="toastTitleText"></div>
+  <div class="toast-body" id="toastBodyText"></div>
  </div>
- <button style="border:none; background:none; cursor:pointer; color:var(--muted); font-size:16px;" id="toastClose" aria-label="Close notification">×</button>
+ <button type="button" class="btn btn-ghost btn-icon btn-sm" id="toastClose" aria-label="Dismiss"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg></button>
 </div>
 
 <!-- ===== INLINE TARGET EDITORS ===== -->
@@ -952,34 +866,34 @@
     <p id="inlineTargetHelp" class="section-sub">Set a value for your daily target.</p>
     <label id="inlineTargetLabel" for="inlineTargetInput">Target</label>
     <input id="inlineTargetInput" type="number">
-    <div class="inline-editor-actions"><button type="button" class="n-btn" id="inlineTargetCancel">Cancel</button><button type="button" class="n-btn solid" id="inlineTargetSave">Save</button></div>
+    <div class="inline-editor-actions"><button type="button" class="btn" id="inlineTargetCancel">Cancel</button><button type="button" class="btn btn-primary" id="inlineTargetSave">Save</button></div>
   </div>
 </div>
 
 <!-- ===== RECORD ENTRY EDITOR ===== -->
 <div id="recordEntryEditor" class="inline-editor-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="recordEntryTitle">
-  <div class="inline-editor-card" style="max-width:520px;">
+  <div class="inline-editor-card">
     <h3 id="recordEntryTitle">Add record</h3>
     <p id="recordEntryHelp" class="section-sub">Add a new item to your health record.</p>
     <div id="visitEntryFields">
       <label for="recordDoctorInput">Doctor name</label>
       <input id="recordDoctorInput" class="profile-input" type="text" autocomplete="name" placeholder="e.g. Dr. Ananya Sen">
-      <label for="recordSpecialtyInput" style="margin-top:12px;">Specialty</label>
+      <label for="recordSpecialtyInput">Specialty</label>
       <input id="recordSpecialtyInput" class="profile-input" type="text" value="General Medicine" placeholder="e.g. Cardiology">
-      <label for="recordFacilityInput" style="margin-top:12px;">Clinic / hospital</label>
+      <label for="recordFacilityInput">Clinic / hospital</label>
       <input id="recordFacilityInput" class="profile-input" type="text" placeholder="Optional">
     </div>
     <div id="labEntryFields" hidden>
       <label for="recordReportNameInput">Report name</label>
       <input id="recordReportNameInput" class="profile-input" type="text" value="Blood test" placeholder="e.g. CBC">
-      <label for="recordResultInput" style="margin-top:12px;">Result / value</label>
+      <label for="recordResultInput">Result / value</label>
       <textarea id="recordResultInput" class="profile-input" rows="4" placeholder="e.g. Hemoglobin 13.2 g/dL"></textarea>
     </div>
-    <label for="recordDateInput" style="margin-top:12px;">Date</label>
+    <label for="recordDateInput">Date</label>
     <input id="recordDateInput" class="profile-input" type="date">
     <div class="inline-editor-actions">
-      <button type="button" class="n-btn" id="recordEntryCancel">Cancel</button>
-      <button type="button" class="n-btn solid" id="recordEntrySave">Save record</button>
+      <button type="button" class="btn" id="recordEntryCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="recordEntrySave">Save record</button>
     </div>
   </div>
 </div>
@@ -1001,42 +915,40 @@
     <select id="labScanAddSelect" class="profile-input lab-scan-add" aria-label="Add a test"></select>
     <details class="lab-scan-raw"><summary>Text read from the report</summary><pre id="labScanRaw"></pre></details>
     <div class="inline-editor-actions">
-      <button type="button" class="n-btn" id="labScanCancel">Cancel</button>
-      <button type="button" class="n-btn solid" id="labScanSave">Save report</button>
+      <button type="button" class="btn" id="labScanCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="labScanSave">Save report</button>
     </div>
   </div>
 </div>
 
 <!-- ===== REAL AI ASSISTANT (SWASTHAI) ===== -->
 <div id="aiAssistantDock">
- <div id="aiChatWindow">
+ <div id="aiChatWindow" role="dialog" aria-labelledby="aiChatTitle">
  <div class="ai-chat-header">
- <div style="min-width:0;">
-  <b><span></span> SwasthAI Assistant</b>
-  <div id="swasthaiCapabilityStatus" style="font-size:10px;opacity:.82;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Checking browser AI support…</div>
+ <div class="ai-chat-heading">
+  <b id="aiChatTitle">SwasthAI</b>
+  <div id="swasthaiCapabilityStatus">Checking browser AI support…</div>
  </div>
- <button class="ai-chat-close" id="closeAiChatBtn" aria-label="Close SwasthAI">×</button>
+ <button class="btn btn-ghost btn-icon btn-sm ai-chat-close" id="closeAiChatBtn" aria-label="Close SwasthAI"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg></button>
  </div>
  <div class="ai-chat-body" id="aiChatBody">
  <div class="ai-msg bot" id="swasthaiWelcomeBubble">
- Welcome to <b>SwasthAI Health Companion</b>. I can answer questions using the health information available in your SwasthID record.
+ I can answer questions about the information in your SwasthID record. Answers are generated on your device and can be wrong, so check anything important with your doctor.
  </div>
- <div id="swasthaiModelStatus" style="display:none;border:1px solid var(--line);border-radius:10px;background:#fff;padding:12px;font-size:12px;color:var(--muted);line-height:1.45;">
-  <div id="swasthaiModelStatusText">Preparing local AI…</div>
-  <div style="height:7px;background:var(--sage);border-radius:99px;overflow:hidden;margin-top:8px;">
-   <div id="swasthaiModelProgress" style="height:100%;width:0%;background:var(--teal);transition:width .2s ease;"></div>
-  </div>
+ <div id="swasthaiModelStatus" class="ai-model-status" style="display:none;">
+  <div id="swasthaiModelStatusText">Preparing on-device AI…</div>
+  <div class="progress"><span id="swasthaiModelProgress"></span></div>
  </div>
  </div>
  <div class="ai-suggestions">
- <span class="ai-chip" data-q="What are my active medicines?">Active medicines?</span>
- <span class="ai-chip" data-q="Summarize my recent lab reports">Recent lab status?</span>
- <span class="ai-chip" data-q="What should I know about my medicines?">Medicine guidance?</span>
- <span class="ai-chip" data-q="Who is my emergency contact?">Emergency contact?</span>
+ <button type="button" class="chip ai-chip" data-q="What are my active medicines?">My medicines</button>
+ <button type="button" class="chip ai-chip" data-q="Summarize my recent lab reports">Recent lab results</button>
+ <button type="button" class="chip ai-chip" data-q="What should I know about my medicines?">Medicine tips</button>
+ <button type="button" class="chip ai-chip" data-q="Who is my emergency contact?">Emergency contact</button>
  </div>
  <div class="ai-input-row">
- <input type="text" id="aiUserInput" placeholder="Ask about medications, labs, visits...">
- <button id="aiSendBtn"></button>
+ <input type="text" id="aiUserInput" placeholder="Ask about your medicines, labs or visits" aria-label="Message SwasthAI">
+ <button id="aiSendBtn" type="button" class="btn btn-primary btn-icon" aria-label="Send"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-send"/></svg></button>
  </div>
  </div>
   <button id="aiLauncherBtn" type="button" aria-label="Ask SwasthAI" title="Ask SwasthAI">
@@ -1834,18 +1746,20 @@ let profileOnboardingRequired = false;
 
    authModeText.textContent = isSignup ? 'Already registered?' : 'New to SwasthID?';
    createAccountBtn.textContent = isSignup ? 'Back to login' : 'Create account';
-   submitBtn.textContent = isSignup ? 'Create Account' : 'Login Securely';
-   confirmPasswordField.style.display = isSignup ? 'block' : 'none';
+   submitBtn.textContent = isSignup ? 'Create account' : 'Log in';
+   confirmPasswordField.style.display = isSignup ? '' : 'none';
+   const forgot = loginScreen.querySelector('.forgot-link'); if (forgot) forgot.hidden = isSignup;
    confirmPasswordInput.required = isSignup;
    confirmPasswordInput.value = '';
    confirmPwError.style.display = 'none';
    loginTitle.textContent = isSignup ? 'Create your account' : 'Welcome back';
    loginSub.textContent = isSignup
      ? 'Create an account to keep your health record, prescriptions and medicines in one place.'
-     : 'Sign in to see your health record, prescriptions and medicines.';
+     : 'Log in to see your health record, prescriptions and medicines.';
    document.querySelector('.security-note small').textContent = isSignup
-     ? 'Your account is secured by Firebase Authentication. Your health data is stored under your private Firebase user ID.'
-     : 'Firebase Authentication protects your account; Firestore Security Rules protect your user-owned health data.';
+     ? 'Your record is stored under your own account, and only you can read it.'
+     : 'Only you can read your record. Each account\'s data is locked to its owner, and nothing is shared unless you create a doctor link or an emergency QR.';
+   pwInput.autocomplete = isSignup ? 'new-password' : 'current-password';
  }
 
  createAccountBtn.addEventListener('click', () => {
@@ -1959,9 +1873,9 @@ window.addEventListener('DOMContentLoaded', async () => {
    }
 
    const submitBtn = loginForm.querySelector('.login-btn');
-   const originalText = isSignup ? 'Create Account' : 'Login Securely';
+   const originalText = isSignup ? 'Create account' : 'Log in';
    submitBtn.disabled = true;
-   submitBtn.textContent = isSignup ? 'Creating Account…' : 'Signing In…';
+   submitBtn.classList.add('is-loading');
 
    try {
      if (!auth) await initFirebaseDataLayer();
@@ -1992,7 +1906,7 @@ window.addEventListener('DOMContentLoaded', async () => {
      alert(firebaseAuthErrorMessage(error));
    } finally {
      submitBtn.disabled = false;
-     submitBtn.textContent = originalText;
+     submitBtn.textContent = originalText; submitBtn.classList.remove('is-loading');
    }
  });
 
@@ -2041,7 +1955,11 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
  });
 
  document.getElementById('togglePwBtn').addEventListener('click', function() {
- pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
+ const show = pwInput.type === 'password';
+ pwInput.type = show ? 'text' : 'password';
+ this.setAttribute('aria-pressed', String(show));
+ this.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+ this.querySelector('use')?.setAttribute('href', show ? '#i-eye-off' : '#i-eye');
  });
 
  /* =========================================================
@@ -2052,7 +1970,7 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
  ========================================================= */
  const NAV_GROUPS = {
    home:      { title: 'Home',      tabs: [['home', 'Home']] },
-   records:   { title: 'Records',   tabs: [['records', 'Records']] },
+   records:   { title: 'Records',   tabs: [['records', 'Your record'], ['timeline', 'Timeline'], ['share', 'Share and export']] },
    medicines: { title: 'Medicines', tabs: [['scan', 'Scan prescription'], ['order', 'Find medicines']] },
    health:    { title: 'Health',    tabs: [['vitals', 'Vitals'], ['nutrition', 'Nutrition'], ['predict', 'Heart risk']] },
    care:      { title: 'Care',      tabs: [['emergency', 'Emergency card'], ['doctor', 'Doctor summary']] },
@@ -2243,8 +2161,10 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
      color = 'var(--danger)';
    }
    ns.textContent = label;
-   ns.style.color = color;
+   ns.className = 'badge' + (/Above|Low/.test(label) ? ' badge-warning' : /track|reached/.test(label) ? ' badge-brand' : '');
  }
+ const kp = document.getElementById('kcalProgress');
+ if (kp) kp.style.width = `${Math.min(100, target ? Math.round(intake / target * 100) : 0)}%`;
  }
 
  const editCalorieTargetBtn = document.getElementById('editCalorieTargetBtn');
@@ -2312,15 +2232,14 @@ const authSuccessModal = document.getElementById('authSuccessModal');
   return div.innerHTML;
 }
 
+let toastTimer = null;
 function showToast(icon, title, body) {
- const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
- document.getElementById('toastIconBlock').textContent = icon;
  document.getElementById('toastTitleText').textContent = title;
- document.getElementById('toastBodyText').textContent = body;
- document.getElementById('toastTimeText').textContent = `Today, ${timeStr}`;
+ document.getElementById('toastBodyText').textContent = body || '';
  const t = document.getElementById('medToast');
  t.classList.add('show');
- setTimeout(() => t.classList.remove('show'), 6500);
+ clearTimeout(toastTimer);
+ toastTimer = setTimeout(() => t.classList.remove('show'), 6000);
  }
 
  function getNextMedicationDose() {
@@ -2673,7 +2592,7 @@ function getCurrentMedicationList() {
  function renderMedicationAdherence() {
    const panel=document.getElementById('medAdherencePanel'); if(!panel) return;
    const meds=getCurrentMedicationList();
-   if(!meds.length){panel.innerHTML='<b>Adherence</b><div class="adherence-sub" style="margin-top:4px;">Add a medication to start tracking adherence.</div>';return;}
+   if(!meds.length){panel.innerHTML='<b>Adherence</b><div class="adherence-sub">Add a medicine to start tracking how often you take your doses.</div>';return;}
    const history=getMedicationHistory(); const now=new Date(); const days=[];
    let totalExpected=0,totalTaken=0;
    for(let offset=6;offset>=0;offset--){
@@ -2686,7 +2605,7 @@ function getCurrentMedicationList() {
    const pct=totalExpected?Math.round(totalTaken/totalExpected*100):0;
    let streak=0;
    for(let i=days.length-1;i>=0;i--){ if(days[i].expected && days[i].taken>=days[i].expected) streak++; else break; }
-   panel.innerHTML=`<div class="adherence-head"><div><b>Medication adherence</b><div class="adherence-sub">Based on doses you mark as taken. No new tracking input is required.</div></div><div style="text-align:right"><div class="adherence-stat">${pct}%</div><div class="adherence-sub">7-day adherence · ${streak}-day streak</div></div></div><div class="adherence-chart">${days.map(x=>`<div class="adherence-day"><div class="adherence-day-pct">${x.pct}%</div><div class="adherence-bar-wrap"><div class="adherence-bar" style="height:${Math.max(3,x.pct)}%"></div></div><div class="adherence-day-label">${x.d.toLocaleDateString([], {weekday:'short'})}</div></div>`).join('')}</div>`;
+   panel.innerHTML=`<div class="adherence-head"><div><b>Medication adherence</b><div class="adherence-sub">Based on doses you mark as taken. No new tracking input is required.</div></div><div class="adherence-summary"><div class="adherence-stat">${pct}%</div><div class="adherence-sub">7-day adherence · ${streak}-day streak</div></div></div><div class="adherence-chart">${days.map(x=>`<div class="adherence-day"><div class="adherence-day-pct">${x.pct}%</div><div class="adherence-bar-wrap"><div class="adherence-bar" style="height:${Math.max(3,x.pct)}%"></div></div><div class="adherence-day-label">${x.d.toLocaleDateString([], {weekday:'short'})}</div></div>`).join('')}</div>`;
  }
  function renderMedicationRefills() {
    const panel=document.getElementById('medRefillPanel');
@@ -2755,10 +2674,10 @@ function getCurrentMedicationList() {
 
    panel.style.display='block';
    if(!items.length){
-     panel.innerHTML='<b>Refill reminders</b><div class="adherence-sub" style="margin-top:3px;">No refill reminders yet. Add a pack size to a medicine in your Profile to estimate when it may run out.</div>';
+     panel.innerHTML='<b>Refill reminders</b><div class="adherence-sub">Add a pack size to a medicine in your profile to see when it will run out.</div>';
      return;
    }
-   panel.innerHTML=`<b>Refill reminders</b><div class="adherence-sub" style="margin-top:3px;margin-bottom:5px;">Only medicines with a pack size entered in your Profile are shown.</div>${items.map(x=>`<div class="refill-item"><div><b>${escapeHtml(x.m.medicine||'Medication')}</b><div class="adherence-sub">${escapeHtml(x.m.packSize)} · ${x.daily} unit${x.daily===1?'':'s'} per day</div></div><div class="refill-warn">${x.days===0?'Refill due now':`~${x.days} day${x.days===1?'':'s'} left`} <button type="button" class="n-btn" style="margin-left:6px;padding:5px 8px;font-size:11px" data-refill-med="${escapeHtml(x.m.medicine||'')}">Reorder</button></div></div>`).join('')}`;
+   panel.innerHTML=`<b>Refill reminders</b><div class="adherence-sub">Medicines with a pack size in your profile.</div>${items.map(x=>`<div class="refill-item"><div><b>${escapeHtml(x.m.medicine||'Medication')}</b><div class="adherence-sub">${escapeHtml(x.m.packSize)} · ${x.daily} unit${x.daily===1?'':'s'} per day</div></div><div class="refill-warn">${x.days===0?'Refill due now':`~${x.days} day${x.days===1?'':'s'} left`} <button type="button" class="btn btn-sm" data-refill-med="${escapeHtml(x.m.medicine||'')}">Reorder</button></div></div>`).join('')}`;
    panel.querySelectorAll('[data-refill-med]').forEach(btn=>btn.addEventListener('click',()=>{
      const q=btn.dataset.refillMed||'';
      localStorage.setItem('swasth_pendingMedicineSearch',q);
@@ -3100,17 +3019,17 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    getFoodLogs().slice().reverse().forEach(log=>{ const key=String(log.name||'').toLowerCase(); if(key&&!seen.has(key)){seen.add(key);items.push(log);} });
    const recent=items.slice(0,8);
    if(!recent.length){el.innerHTML='';return;}
-   el.innerHTML=`<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Quick add from recent foods</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${recent.map((x,i)=>`<button type="button" class="n-btn recent-food-btn" data-index="${i}" style="padding:6px 9px;font-size:11px;">${escapeFoodText(x.name)}</button>`).join('')}</div>`;
+   el.innerHTML=`<div class="quick-add"><span class="t-meta">Add again</span>${recent.map((x,i)=>`<button type="button" class="chip recent-food-btn" data-index="${i}">${escapeFoodText(x.name)}</button>`).join('')}</div>`;
    el.querySelectorAll('.recent-food-btn').forEach(btn=>btn.addEventListener('click',()=>{
      const log=recent[Number(btn.dataset.index)]; if(!log)return;
      const logs=getFoodLogs(); logs.push({...log,id:Date.now()+Math.random(),date:getTodayKey(),time:new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),});
      saveFoodLogs(logs); syncTodayCalories(); renderTodayFoodLogs(); if(typeof window.renderWeeklyNutritionTrends==='function') window.renderWeeklyNutritionTrends(); renderRecentFoodQuickAdd();
-     showToast?.('', 'Meal Recorded', `${log.name} · ${log.portion} added again.`);
+     showToast?.('', 'Meal logged', `${log.name} · ${log.portion} added again.`);
    }));
  }
 
  function foodAllergyDisclaimer(){
-   return '<div style="font-size:10px;color:var(--muted);margin-top:7px;">Allergy flags match the food name/reference label only; they do not verify the full ingredient list or cross-contamination. Check packaging and ask a clinician/pharmacist when allergy risk matters.</div>';
+   return '<p class="t-meta">This only checks the food name, not its full ingredients. Check the packaging when an allergy matters.</p>';
  }
  function renderTodayFoodLogs() {
    const list = document.getElementById('recentMealsList');
@@ -3124,16 +3043,10 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    if (nutritionEmptyState) nutritionEmptyState.style.display = 'none';
    const groups=['Breakfast','Lunch','Dinner','Snack','Unspecified'];
    const grouped=groups.map(type=>({type,items:logs.filter(x=>(x.mealType||'Unspecified')===type)})).filter(g=>g.items.length);
-   list.innerHTML = grouped.map(group=>`<div style="margin-bottom:14px;"><div style="font-size:12px;font-weight:700;color:var(--teal);margin:0 0 6px;">${group.type}</div>${group.items.slice().reverse().map(log => {
+   list.innerHTML = grouped.map(group=>`<div class="meal-group"><h3 class="t-meta meal-group-title">${group.type === 'Unspecified' ? 'Other' : group.type}</h3><div class="list">${group.items.slice().reverse().map(log => {
      const flags=foodAllergyFlags(log.name);
-     return `<div class="visit-item swasth-stagger" style="margin-bottom:7px;animation-delay:${Math.min(280, Number(logs.indexOf(log))*35)}ms;">
-       <div class="visit-head">
-         <div><div class="doc">${escapeFoodText(log.name)}</div><div class="meta">${escapeFoodText(log.portion)} · ${escapeFoodText(log.time)} · ${escapeFoodText(log.source)}</div></div>
-         <span class="visit-toggle" style="color:var(--ink);">${Math.round(log.kcal)} kcal</span>
-       </div>
-       <div style="padding:0 14px 12px;font-size:12px;color:var(--muted);">Protein ${Number(log.protein||0).toFixed(1)}g · Carbs ${Number(log.carbs||0).toFixed(1)}g · Fat ${Number(log.fat||0).toFixed(1)}g${flags.length?`<div style="margin-top:6px;color:var(--danger);font-weight:600;">Allergy flag: ${escapeFoodText(flags.join(', '))}</div>${foodAllergyDisclaimer()}`:''}</div>
-     </div>`;
-   }).join('')}</div>`).join('');
+     return `<div class="list-row meal-row"><div class="list-main"><b>${escapeFoodText(log.name)}</b><span>${escapeFoodText(log.portion)} · ${escapeFoodText(log.time)} · P ${Number(log.protein||0).toFixed(1)} g · C ${Number(log.carbs||0).toFixed(1)} g · F ${Number(log.fat||0).toFixed(1)} g</span>${flags.length?`<span class="badge badge-danger">Allergy: ${escapeFoodText(flags.join(', '))}</span>`:''}</div><span class="list-end">${Math.round(log.kcal)} kcal</span></div>`;
+   }).join('')}</div></div>`).join('');
  }
 
  function syncTodayCalories() {
@@ -3170,58 +3083,58 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    syncTodayCalories();
    renderTodayFoodLogs();
    renderRecordFoodLogs(); renderRecordTimeline();
-   showToast('', 'Meal Recorded', `${log.name} · ${Math.round(log.kcal)} kcal added to today's log.`);
+   showToast('', 'Meal logged', `${log.name} · ${Math.round(log.kcal)} kcal added to today.`);
  }
 
  function renderFoodResults(foods) {
    if (!foodSearchResults) return;
    if (!foods.length) {
-     foodSearchResults.innerHTML = '<div style="padding:14px 0;color:var(--muted);font-size:13px;">No local match. Try barcode scan or enter a simpler food name. If this is a packaged or Western food, the app can fall back to USDA FoodData Central.</div>';
+     foodSearchResults.innerHTML = '<div class="empty">No match. Try a simpler name, or scan the barcode if it’s packaged.</div>';
      return;
    }
    foodSearchResults.innerHTML = foods.slice(0,8).map((food, i) => {
      const kcal = foodKcalPer100g(food), protein = foodMacro(food, 'Protein'), carbs = foodMacro(food, 'Carbohydrate, by difference'), fat = foodMacro(food, 'Total lipid (fat)');
      const portions=getFoodPortions(food);
      const flags=foodAllergyFlags(food.description);
-     return `<div class="visit-item swasth-stagger" style="margin-bottom:10px;animation-delay:${i*35}ms;">
-       <div class="visit-head" style="gap:12px;align-items:flex-start;">
-         <div style="min-width:0;flex:1;">
-           <div class="doc">${escapeFoodText(food.description)}</div>
-           <div class="meta">${escapeFoodText(food.dataType || 'Indian reference food')} · per 100 g</div>
-           <div style="font-size:12px;color:var(--muted);margin-top:5px;">${Math.round(kcal)} kcal · P ${protein.toFixed(1)}g · C ${carbs.toFixed(1)}g · F ${fat.toFixed(1)}g</div>
-           ${flags.length?`<div style="margin-top:6px;color:var(--danger);font-size:11px;font-weight:600;">Allergy flag: ${escapeFoodText(flags.join(', '))}</div>${foodAllergyDisclaimer()}`:''}
+     return `<div class="food-result">
+       <div class="food-result-head">
+         <div class="list-main">
+           <b>${escapeFoodText(food.description)}</b>
+           <span>${Math.round(kcal)} kcal · P ${protein.toFixed(1)} g · C ${carbs.toFixed(1)} g · F ${fat.toFixed(1)} g per 100 g · ${escapeFoodText(food.dataType || 'Indian reference food')}</span>
+           ${flags.length?`<span class="badge badge-danger">Allergy: ${escapeFoodText(flags.join(', '))}</span>${foodAllergyDisclaimer()}`:''}
          </div>
-         <button class="n-btn solid food-log-btn" data-index="${i}">Add</button>
+         <button class="btn btn-sm food-log-btn" type="button" data-index="${i}" aria-expanded="false">Add</button>
        </div>
-       <div class="food-portion-row" data-index="${i}" style="display:none;padding:0 14px 14px;gap:7px;align-items:center;flex-wrap:wrap;">
-         <label style="font-size:12px;color:var(--muted);">Portion</label>
-         ${portions.map((p,j)=>`<button type="button" class="n-btn food-portion-btn" data-index="${i}" data-grams="${p[1]}" data-label="${escapeFoodText(p[0])}" style="padding:6px 8px;font-size:11px;">${escapeFoodText(p[0])}</button>`).join('')}
-         <input class="food-grams-input" data-index="${i}" type="number" min="1" max="1000" step="1" value="100" aria-label="Custom grams" style="width:82px;padding:7px;border:1px solid var(--line);border-radius:6px;">
-         <input class="food-grams-range" data-index="${i}" type="range" min="10" max="1000" step="5" value="100" aria-label="Scale portion in grams" style="width:150px;">
-         <span class="food-grams-label" data-index="${i}" style="font-size:11px;color:var(--muted);">100 g custom</span>
-         <select class="food-meal-type" data-index="${i}" style="padding:7px;border:1px solid var(--line);border-radius:6px;background:#fff;"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
-         <button class="n-btn solid food-confirm-btn" data-index="${i}">Log meal</button>
+       <div class="food-portion-row" data-index="${i}" style="display:none;">
+         <div class="chip-row" role="group" aria-label="Portion">${portions.map((p,j)=>`<button type="button" class="chip food-portion-btn" data-index="${i}" data-grams="${p[1]}" data-label="${escapeFoodText(p[0])}">${escapeFoodText(p[0])}</button>`).join('')}</div>
+         <div class="portion-controls">
+           <label class="portion-grams"><input class="food-grams-input" data-index="${i}" type="number" min="1" max="1000" step="1" value="100" aria-label="Grams"><span>g</span></label>
+           <input class="food-grams-range" data-index="${i}" type="range" min="10" max="1000" step="5" value="100" aria-label="Portion in grams">
+           <span class="food-grams-label visually-hidden" data-index="${i}">100 g</span>
+           <select class="food-meal-type" data-index="${i}" aria-label="Meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
+           <button class="btn btn-primary btn-sm food-confirm-btn" type="button" data-index="${i}">Log meal</button>
+         </div>
        </div>
      </div>`;
    }).join('');
    document.querySelectorAll('.food-log-btn').forEach(btn => btn.addEventListener('click', () => {
-     const row = document.querySelector(`.food-portion-row[data-index="${btn.dataset.index}"]`); if(row) row.style.display=row.style.display==='none'?'flex':'none';
+     const row = document.querySelector(`.food-portion-row[data-index="${btn.dataset.index}"]`); if(row){ const open=row.style.display==='none'; row.style.display=open?'grid':'none'; btn.setAttribute('aria-expanded',String(open)); btn.textContent=open?'Cancel':'Add'; }
    }));
    document.querySelectorAll('.food-portion-btn').forEach(btn => btn.addEventListener('click', () => {
      const row=document.querySelector(`.food-portion-row[data-index="${btn.dataset.index}"]`); const input=row?.querySelector('.food-grams-input'); if(input) input.value=btn.dataset.grams;
      if(row) row.dataset.portionLabel=btn.dataset.label;
-     row?.querySelectorAll('.food-portion-btn').forEach(x=>x.classList.remove('solid')); btn.classList.add('solid');
+     row?.querySelectorAll('.food-portion-btn').forEach(x=>x.setAttribute('aria-pressed','false')); btn.setAttribute('aria-pressed','true');
    }));
    document.querySelectorAll('.food-grams-range').forEach(range => range.addEventListener('input', () => {
      const row=document.querySelector(`.food-portion-row[data-index="${range.dataset.index}"]`);
      const input=row?.querySelector('.food-grams-input'); const label=row?.querySelector('.food-grams-label');
-     if(input) input.value=range.value; if(label) label.textContent=`${Math.round(Number(range.value))} g custom`;
+     if(input) input.value=range.value; if(label) label.textContent=`${Math.round(Number(range.value))} g`;
    }));
    document.querySelectorAll('.food-grams-input').forEach(input => input.addEventListener('input', () => {
      const row=document.querySelector(`.food-portion-row[data-index="${input.dataset.index}"]`);
      const range=row?.querySelector('.food-grams-range'); const label=row?.querySelector('.food-grams-label');
      const value=Math.max(1,Math.min(1000,Number(input.value)||1));
-     if(range) range.value=Math.max(10,Math.min(1000,value)); if(label) label.textContent=`${Math.round(value)} g custom`;
+     if(range) range.value=Math.max(10,Math.min(1000,value)); if(label) label.textContent=`${Math.round(value)} g`;
    }));
    document.querySelectorAll('.food-confirm-btn').forEach(btn => btn.addEventListener('click', () => {
      const row=document.querySelector(`.food-portion-row[data-index="${btn.dataset.index}"]`); const input=row?.querySelector('.food-grams-input');
@@ -3235,20 +3148,21 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    const local=searchLocalIndianFoods(q);
    if(local.length){
      renderFoodResults(local);
-     if(foodSearchStatus) foodSearchStatus.textContent=`${local.length} Indian reference food${local.length===1?'':'s'} found from the IFCT 2017 prototype subset.`;
+     if(foodSearchStatus) foodSearchStatus.textContent=`${local.length} result${local.length===1?'':'s'} from Indian food data (IFCT 2017).`;
      return;
    }
-   if(foodSearchStatus) foodSearchStatus.textContent='No Indian reference match. Searching USDA FoodData Central…';
-   if(foodSearchBtn) foodSearchBtn.disabled=true;
+   if(foodSearchStatus) foodSearchStatus.textContent='Searching USDA FoodData Central…';
+   if(foodSearchBtn){ foodSearchBtn.disabled=true; foodSearchBtn.classList.add('is-loading'); }
+   if(foodSearchResults) foodSearchResults.innerHTML='<div class="list">'+(window.medSkeletonRows?window.medSkeletonRows(3):'')+'</div>';
    try{
      const url=`${FOOD_API_URL}?api_key=${encodeURIComponent(FOOD_API_KEY)}&query=${encodeURIComponent(q)}&pageSize=8&dataType=Foundation,SR%20Legacy,Branded`;
      const res=await fetch(url); if(!res.ok) throw new Error(`Food search failed (${res.status})`);
      const data=await res.json(); const foods=data.foods||[]; renderFoodResults(foods);
-     if(foodSearchStatus) foodSearchStatus.textContent=foods.length?`${foods.length} results from USDA FoodData Central.`:'No result found. Try barcode scan or manual food entry.';
+     if(foodSearchStatus) foodSearchStatus.textContent=foods.length?`${foods.length} result${foods.length===1?'':'s'} from USDA FoodData Central.`:'';
    }catch(err){
-     if(foodSearchStatus) foodSearchStatus.textContent='Live food search is temporarily unavailable. Try barcode scan or a simpler food name.';
-     if(foodSearchResults) foodSearchResults.innerHTML='<div style="padding:14px 0;color:var(--muted);font-size:13px;">USDA lookup failed. You can still use the Indian reference foods, barcode scanner, or try again later.</div>';
-   }finally{if(foodSearchBtn)foodSearchBtn.disabled=false;}
+     if(foodSearchStatus) foodSearchStatus.textContent='';
+     if(foodSearchResults) foodSearchResults.innerHTML='<div class="empty">USDA food search isn’t reachable right now. Indian foods and barcode lookup still work.</div>';
+   }finally{if(foodSearchBtn){foodSearchBtn.disabled=false;foodSearchBtn.classList.remove('is-loading');}}
  }
  if(foodSearchBtn) foodSearchBtn.addEventListener('click', searchFoods);
  if(foodSearchInput) foodSearchInput.addEventListener('keydown', e => { if(e.key === 'Enter') searchFoods(); });
@@ -3270,6 +3184,7 @@ LOCAL_INDIAN_FOODS.forEach(food => {
    const state=getWaterState(); const pct=Math.min(100,Math.round((state.ml/state.target)*100));
    const v=document.getElementById('waterTodayValue'),t=document.getElementById('waterTargetValue'),p=document.getElementById('waterProgressValue');
    if(v)v.textContent=`${state.ml.toLocaleString()} ml`; if(t)t.textContent=`${state.target.toLocaleString()} ml`; if(p)p.textContent=`${pct}%`;
+   const bar=document.getElementById('waterProgressBar'); if(bar) bar.style.width=`${pct}%`;
  }
  document.querySelectorAll('.water-add-btn').forEach(btn=>btn.addEventListener('click',()=>{const st=getWaterState();st.ml+=Number(btn.dataset.ml||0);saveWaterState(st);renderWaterIntake();}));
  document.getElementById('editWaterTargetBtn')?.addEventListener('click',()=>{
@@ -3508,37 +3423,34 @@ LOCAL_INDIAN_FOODS.forEach(food => {
 }
 
 function renderEditablePrescription(parsed) {
- const confirmBtn=document.getElementById('confirmRxBtn'); if(confirmBtn){confirmBtn.disabled=false;confirmBtn.textContent=' Confirm & Add to Records';}
+ const confirmBtn=document.getElementById('confirmRxBtn'); if(confirmBtn){confirmBtn.disabled=false;confirmBtn.textContent='Save to records';}
  const shopBtnReset=document.getElementById('shopRxBtn'); if(shopBtnReset)shopBtnReset.style.display='none';
  const shopHintReset=document.getElementById('shopRxHint'); if(shopHintReset)shopHintReset.style.display='none';
  const rawOcrText = document.getElementById('rawOcrText');
- if (rawOcrText) rawOcrText.innerHTML = `<div style="font-family:monospace;font-size:12px;white-space:pre-wrap;line-height:1.4;color:var(--ink);">${escapeHtml(parsed.rawText.slice(0, 1800))}</div>`;
+ if (rawOcrText) rawOcrText.textContent = parsed.rawText.slice(0, 1800);
  const physicianField = document.getElementById('detectedDocName');
  if (physicianField) physicianField.value = parsed.doctor;
  const medsList = document.getElementById('dynamicMedsList');
  medsList.innerHTML = parsed.medicines.map((m, i) => `
- <div class="medicine-row" data-med-index="${i}" style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;">
- <div class="medicine-check"></div>
- <div style="width:100%;">
- <input class="rx-med-field" data-field="medicine" value="${escapeHtml(m.medicine)}" aria-label="Medicine ${i+1}" style="font-weight:700;width:100%;border:1px solid var(--line);border-radius:7px;padding:7px;margin-bottom:5px;">
- <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
- <input class="rx-med-field" data-field="dose" value="${escapeHtml(m.dose)}" placeholder="Dose" aria-label="Dose" style="width:100%;border:1px solid var(--line);border-radius:7px;padding:6px;">
- <input class="rx-med-field" data-field="frequency" value="${escapeHtml(m.frequency)}" placeholder="Frequency (review if uncertain)" aria-label="Frequency" style="width:100%;border:1px solid var(--line);border-radius:7px;padding:6px;">
- </div>
- <input class="rx-med-field" data-field="instructions" value="${escapeHtml(m.instructions)}" placeholder="Instructions" aria-label="Instructions" style="width:100%;border:1px solid var(--line);border-radius:7px;padding:6px;margin-top:6px;">
- <button type="button" class="n-btn" data-remove-med="${i}" style="margin-top:6px;padding:4px 8px;font-size:11px;">Remove</button>
+ <div class="medicine-row rx-med" data-med-index="${i}">
+ <div class="rx-med-head"><span class="t-meta">Medicine ${i+1}</span><button type="button" class="link-btn" data-remove-med="${i}">Remove</button></div>
+ <input class="rx-med-field rx-med-name" data-field="medicine" value="${escapeHtml(m.medicine)}" aria-label="Medicine ${i+1} name">
+ <div class="rx-med-grid">
+ <input class="rx-med-field" data-field="dose" value="${escapeHtml(m.dose)}" placeholder="Dose" aria-label="Medicine ${i+1} dose">
+ <input class="rx-med-field" data-field="frequency" value="${escapeHtml(m.frequency)}" placeholder="How often" aria-label="Medicine ${i+1} frequency">
+ <input class="rx-med-field" data-field="instructions" value="${escapeHtml(m.instructions)}" placeholder="Instructions" aria-label="Medicine ${i+1} instructions">
  </div>
  </div>`).join('');
 
  medsList.querySelectorAll('[data-remove-med]').forEach(btn => btn.addEventListener('click', () => {
  btn.closest('.medicine-row').remove();
- if (!medsList.querySelector('.medicine-row')) medsList.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0;">No medicines remain. Add or re-scan the prescription before confirming.</div>';
+ if (!medsList.querySelector('.medicine-row')) medsList.innerHTML = '<div class="empty">No medicines left. Scan the prescription again to continue.</div>';
  }));
 
  currentPrescription = { ...parsed, scannedAt: new Date().toISOString() };
- document.getElementById('ocrConfBadge').textContent = parsed.parser==='local-llm' && parsed.structuredValidated ? 'Local AI structured output validated — review' : parsed.parser==='demo' ? 'Sample prescription — review' : 'Read by OCR — review';
+ document.getElementById('ocrConfBadge').textContent = parsed.parser==='local-llm' && parsed.structuredValidated ? 'Read by on-device AI' : parsed.parser==='demo' ? 'Sample' : 'Read by OCR';
  const reviewNote = document.getElementById('rxReviewNote');
- if (reviewNote) reviewNote.textContent = 'Fields marked \"Needs review\" were not confidently detected. You can edit any extracted field before saving.';
+ if (reviewNote) reviewNote.textContent = 'Correct anything that was misread before saving. Fields marked “verify manually” weren’t read confidently.';
  scanResults.classList.add('show');
  scanResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
  }
@@ -3731,6 +3643,18 @@ function renderEditablePrescription(parsed) {
  }
 
  chooseRxBtn.addEventListener('click', () => rxFileInput.click());
+ // Dropping a file on the scan area uses the same path as choosing one.
+ const rxDropzone = document.getElementById('rxDropzone');
+ if (rxDropzone) {
+   ['dragenter', 'dragover'].forEach(type => rxDropzone.addEventListener(type, e => { e.preventDefault(); rxDropzone.classList.add('is-dragover'); }));
+   ['dragleave', 'dragend'].forEach(type => rxDropzone.addEventListener(type, e => { if (!rxDropzone.contains(e.relatedTarget)) rxDropzone.classList.remove('is-dragover'); }));
+   rxDropzone.addEventListener('drop', e => {
+     e.preventDefault(); rxDropzone.classList.remove('is-dragover');
+     const file = e.dataTransfer?.files?.[0]; if (!file || chooseRxBtn.disabled) return;
+     const dt = new DataTransfer(); dt.items.add(file); rxFileInput.files = dt.files;
+     rxFileInput.dispatchEvent(new Event('change'));
+   });
+ }
 
  rxFileInput.addEventListener('change', async (e) => {
  if (!e.target.files.length) return;
@@ -3750,7 +3674,7 @@ function renderEditablePrescription(parsed) {
    showToast('', 'OCR Failed', err?.message || 'Could not read this prescription.');
    if (document.getElementById('ocrConfBadge')) document.getElementById('ocrConfBadge').textContent = 'OCR failed — try another image';
  } finally {
-   chooseRxBtn.textContent = ' Choose Prescription';
+   chooseRxBtn.textContent = 'Choose file';
    chooseRxBtn.disabled = false;
    rxFileInput.value = '';
  }
@@ -3767,7 +3691,7 @@ function renderEditablePrescription(parsed) {
      rawText:'Dr. Rohan Iyer\nRx\nThyroxine 12.5 mcg — OD\nVitamin D3 1000 IU — Weekly',
      parser:'demo'
    });
-   document.getElementById('ocrConfBadge').textContent = 'Sample prescription — review';
+   document.getElementById('ocrConfBadge').textContent = 'Sample';
  });
 
  document.getElementById('confirmRxBtn').addEventListener('click', function(){
@@ -3800,12 +3724,12 @@ function renderEditablePrescription(parsed) {
  saved.unshift(record);
  savePrescriptions(saved);
  renderSavedPrescriptions(); renderTodayMedications(); renderRecordTimeline(); renderCareJourney();
- this.textContent = ' Added to Health Records';
+ this.textContent = 'Saved';
  this.disabled = true;
- showToast('', duplicateMedicines.length ? 'Prescription Saved as Refill/Repeat' : 'Prescription Saved', `${record.medicines.length} medication(s) added to your records.${duplicateMedicines.length ? ' Existing medicines were kept; this scan is stored as a new prescription.' : ''}`);
+ showToast('', duplicateMedicines.length ? 'Saved as a repeat prescription' : 'Prescription saved', `${record.medicines.length} medicine${record.medicines.length === 1 ? '' : 's'} added to your records.${duplicateMedicines.length ? ' Your existing medicines were kept.' : ''}`);
  const shopBtn = document.getElementById('shopRxBtn');
  const shopHint = document.getElementById('shopRxHint');
- if (shopBtn) shopBtn.style.display = 'block';
+ if (shopBtn) shopBtn.style.display = 'inline-flex';
  if (shopHint) shopHint.style.display = 'block';
  });
 
@@ -3825,12 +3749,9 @@ function renderEditablePrescription(parsed) {
  if (queue && list) {
   queue.style.display = clean.length ? 'block' : 'none';
   list.innerHTML = clean.map((m, i) => `
-   <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:${i === clean.length-1 ? '0' : '1px solid var(--line)'};">
-    <div style="min-width:0;">
-     <div style="font-weight:600;font-size:12.5px;overflow-wrap:anywhere;">${escMed(m.medicine)}</div>
-     <div style="font-size:11px;color:var(--muted);">${escMed([m.dose,m.frequency].filter(Boolean).join(' · '))}</div>
-    </div>
-    <button class="n-btn" type="button" data-prescription-med-index="${i}" style="padding:5px 8px;font-size:11px;white-space:nowrap;">Search</button>
+   <div class="queue-row">
+    <div class="list-main"><b>${escMed(m.medicine)}</b><span>${escMed([m.dose,m.frequency].filter(Boolean).join(' · '))}</span></div>
+    <button class="btn btn-sm" type="button" data-prescription-med-index="${i}">Search</button>
    </div>`).join('');
   list.querySelectorAll('[data-prescription-med-index]').forEach(btn => btn.addEventListener('click', () => {
    const med = clean[Number(btn.dataset.prescriptionMedIndex)];
@@ -3858,37 +3779,27 @@ function renderEditablePrescription(parsed) {
  if (!el) return;
  const saved = getSavedPrescriptions();
  if (!saved.length) {
- el.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:13px;">No prescriptions have been confirmed yet.</div>';
+ el.innerHTML = '<div class="empty">No prescriptions yet. Scan one and confirm the medicines to save it here.</div>';
  return;
  }
  const groupKey = r => (r.medicines||[]).map(m=>`${String(m.medicine||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}|${String(m.dose||'').toLowerCase().replace(/\s+/g,' ').trim()}`).sort().join(';;');
  const groups = new Map(); saved.forEach((r,i)=>{ const key=groupKey(r); if(!groups.has(key)) groups.set(key,[]); groups.get(key).push({r,i}); });
  const repeatGroups=[...groups.values()].filter(g=>g.length>1);
- const summary=`<div style="margin-bottom:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);font-size:12px;"><b>${saved.length} prescription scan${saved.length===1?'':'s'}</b> · ${repeatGroups.length} repeat/refill group${repeatGroups.length===1?'':'s'} detected. <button type="button" class="n-btn" id="togglePrescriptionGroups" style="margin-left:6px;padding:5px 8px;font-size:11px;">View grouped repeats</button></div><div id="prescriptionGroupedView" style="display:none;margin-bottom:12px;"></div>`;
- const cards = saved.map((r, i) => `
- <div class="visit-item">
- <div class="visit-head" onclick="togglePrescription(${i})">
- <div><div class="doc">Prescription · ${escapeHtml(r.doctor)} ${r.isRefillOrRepeat ? '<span class="tag" style="margin-left:6px;">Refill / repeat</span>' : ''}</div><div class="meta">${new Date(r.date).toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'})} · ${r.medicines.length} medication(s)${r.duplicateMatches?.length ? ` · Matches: ${escapeHtml(r.duplicateMatches.join(', '))}` : ''}</div></div>
- <span class="visit-toggle" id="rxToggle${i}">View ▾</span>
- </div>
- <div class="visit-body" id="rxBody${i}">
- ${r.medicines.map(m => `<div style="padding:7px 0;border-bottom:1px solid var(--line);"><b>${escapeHtml(m.medicine)}</b> ${escapeHtml(m.dose)} · ${escapeHtml(m.frequency)}${m.instructions ? ` · ${escapeHtml(m.instructions)}` : ''}</div>`).join('')}
- <div class="rx-caption">Confirmed by the user after OCR. Always verify against the original prescription.</div>
- <button type="button" class="n-btn" style="margin-top:8px;" onclick="shopSavedPrescription(${i})">Find these medicines in Order Medicine</button>
+ const summary=repeatGroups.length?`<div class="list-summary"><span>${saved.length} prescription${saved.length===1?'':'s'} · ${repeatGroups.length} repeat${repeatGroups.length===1?'':'s'} found</span><button type="button" class="btn btn-sm" id="togglePrescriptionGroups">Show repeats</button></div><div id="prescriptionGroupedView" class="list-summary-panel" style="display:none;"></div>`:'';
+ const cards = saved.map((r, i) => `<div class="list-item">
+ <button type="button" class="list-row disclosure" aria-expanded="false" aria-controls="rxBody${i}"><span class="list-main"><b>${escapeHtml(r.doctor || 'Prescription')}${r.isRefillOrRepeat ? ' <span class="badge">Repeat</span>' : ''}</b><span>${new Date(r.date).toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'})} · ${r.medicines.length} medicine${r.medicines.length===1?'':'s'}</span></span><svg class="icon icon-sm chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+ <div class="list-panel" id="rxBody${i}" hidden>
+ <ul class="plain-list">${r.medicines.map(m => `<li><b>${escapeHtml(m.medicine)}</b><span>${[m.dose, m.frequency, m.instructions].filter(Boolean).map(escapeHtml).join(' · ')}</span></li>`).join('')}</ul>
+ <p class="t-meta">You confirmed these after scanning. Check them against the original prescription.</p>
+ <div class="list-panel-actions"><button type="button" class="btn btn-sm" onclick="shopSavedPrescription(${i})">Find these medicines</button></div>
  </div>
  </div>`).join('');
- el.innerHTML = summary + cards;
+ el.innerHTML = summary + '<div class="list">' + cards + '</div>';
  const grouped=document.getElementById('prescriptionGroupedView'); const toggle=document.getElementById('togglePrescriptionGroups');
- toggle?.addEventListener('click',()=>{const open=grouped.style.display!=='none';grouped.style.display=open?'none':'block';toggle.textContent=open?'View grouped repeats':'Hide grouped repeats';if(!open){if(!repeatGroups.length){grouped.innerHTML='<div class="record-empty">No repeated prescription scans detected yet.</div>';return;}grouped.innerHTML=repeatGroups.map(group=>{const latest=group[0].r;const names=(latest.medicines||[]).map(m=>`${escapeHtml(m.medicine)}${m.dose?' · '+escapeHtml(m.dose):''}`).join(', ');return `<div style="padding:10px 0;border-bottom:1px solid var(--line);"><b>${group.length} scans</b> · ${names}<div style="font-size:11px;color:var(--muted);margin-top:3px;">Latest: ${new Date(latest.date).toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'})}. Older scans remain stored below; this view groups them without deleting data.</div></div>`;}).join('');}});
+ toggle?.addEventListener('click',()=>{const open=grouped.style.display!=='none';grouped.style.display=open?'none':'block';toggle.textContent=open?'Show repeats':'Hide repeats';if(!open){if(!repeatGroups.length){grouped.innerHTML='<div class="empty">No repeat prescriptions found.</div>';return;}grouped.innerHTML=repeatGroups.map(group=>{const latest=group[0].r;const names=(latest.medicines||[]).map(m=>`${escapeHtml(m.medicine)}${m.dose?' · '+escapeHtml(m.dose):''}`).join(', ');return `<div class="repeat-row"><b>${group.length} scans</b> · ${names}<div class="t-meta">Latest: ${new Date(latest.date).toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'})}. Older scans remain stored below; this view groups them without deleting data.</div></div>`;}).join('');}});
  }
 
- window.togglePrescription = function(i) {
- const body = document.getElementById('rxBody' + i);
- const toggle = document.getElementById('rxToggle' + i);
- if (!body || !toggle) return;
- body.classList.toggle('open');
- toggle.textContent = body.classList.contains('open') ? 'Hide ▴' : 'View ▾';
- };
+ window.togglePrescription = function(i) { document.querySelector(`[aria-controls="rxBody${i}"]`)?.click(); };
  window.shopSavedPrescription = function(i) {
   const saved = getSavedPrescriptions();
   const record = saved[i];
@@ -4051,8 +3962,10 @@ function renderPersonalizedUI() {
   setText('emergencyMedicines', meds.length ? meds.slice(0,3).map(m => `${m.medicine || m.name}${m.dose ? ' ' + m.dose : ''}`).join(', ') : '', 'No medicines recorded');
   const contact = patientData.emergencyContact || {};
   const emergencyReady = Boolean(patientData.bloodGroup && contact.phone);
-  setText('emergencyStatusMain', emergencyReady ? 'Emergency profile ready' : 'Emergency profile incomplete');
-  setText('emergencyStatusSub', emergencyReady ? 'Blood group and emergency contact added' : 'Add your blood group and an emergency contact');
+  setText('emergencyStatusMain', emergencyReady ? 'Emergency card ready' : 'Emergency card incomplete');
+  setText('emergencyStatusSub', emergencyReady ? 'Blood group and emergency contact are added.' : 'Add your blood group and an emergency contact.');
+  const statusBanner = document.getElementById('emergencyProfileStatus');
+  if (statusBanner) statusBanner.dataset.state = emergencyReady ? 'ready' : 'incomplete';
   setText('emergencyContactDisplay', contact.name && contact.phone ? `${contact.name}${contact.relation ? ' (' + contact.relation + ')' : ''} · ${contact.phone}` : '', 'No emergency contact provided');
   const call = document.getElementById('emergencyContactCall');
   if (call) { call.href = contact.phone ? `tel:${String(contact.phone).replace(/[^+\d]/g,'')}` : '#'; call.style.display = contact.phone ? 'inline-flex' : 'none'; }
@@ -4139,6 +4052,7 @@ async function calculateClinicalRisk() {
  if(data.bmi < 18.5 || data.bmi > 39.9 || data.sbp < 90 || data.sbp > 200 || data.totalCholesterol < 130 || data.totalCholesterol > 320 || data.hdlCholesterol < 20 || data.hdlCholesterol > 100 || data.egfr < 15 || data.egfr > 140) { if(status) status.textContent='One or more values are outside the supported PREVENT input ranges.'; if(result) result.style.display='none'; return; }
  saveClinicalRiskInputs(data);
  if(status) status.textContent='Calculating…';
+ const calcBtn=document.getElementById('calculateClinicalRiskBtn'); calcBtn?.classList.add('is-loading');
  try {
    const base=(window.SWASTH_RISK_API_BASE || ((location.protocol==='http:'||location.protocol==='https:') ? location.origin + '/api/risk' : '')) .replace(/\/$/,'');
    if(!base) throw new Error('PREVENT risk service is not configured on this deployment.');
@@ -4148,22 +4062,32 @@ async function calculateClinicalRisk() {
    body._swasthInputSnapshot = data; body._swasthCalculatedAt = new Date().toISOString();
    localStorage.setItem('swasth_clinicalRiskResult',JSON.stringify(body));
    if(typeof syncCloudState==='function') syncCloudState('swasth_clinicalRiskResult');
-   if(result){ result.style.display='block'; result.innerHTML=`<div class="summary-label blue">REFERENCE CARDIOVASCULAR RISK</div><p style="margin:8px 0 4px;"><b>10-year total CVD:</b> ${Number(body.tenYearCvd).toFixed(1)}% &nbsp; <b>10-year ASCVD:</b> ${Number(body.tenYearAscvd).toFixed(1)}% &nbsp; <b>10-year HF:</b> ${Number(body.tenYearHf).toFixed(1)}%</p><p style="margin:4px 0;color:var(--muted);font-size:12px;">${escapeHtml(body.note || 'Reference estimate only. Review with a qualified clinician.')}</p>`; }
-   if(status) status.textContent='Reference estimate calculated from the entered clinical values.';
+   if(result){ result.style.display='block'; result.innerHTML=riskResultHtml(body,'10-year risk',body.note || 'Reference estimate only. Review it with a qualified clinician.'); }
+   if(status) status.textContent='Calculated from the values above.';
  } catch(error) {
    console.error('PREVENT service unavailable:',error);
    const cached=safeJsonParse(localStorage.getItem('swasth_clinicalRiskResult')||'null',null);
    if(cached && cached.tenYearCvd!==undefined){
-     if(result){result.style.display='block';result.innerHTML=`<div class="summary-label blue">LAST SAVED PREVENT REFERENCE RISK</div><p style="margin:8px 0 4px;"><b>10-year total CVD:</b> ${Number(cached.tenYearCvd).toFixed(1)}% &nbsp; <b>10-year ASCVD:</b> ${Number(cached.tenYearAscvd).toFixed(1)}% &nbsp; <b>10-year HF:</b> ${Number(cached.tenYearHf).toFixed(1)}%</p><p style="margin:4px 0;color:var(--muted);font-size:12px;">Risk service unavailable. This is the last saved server-calculated result, not a new calculation.</p>`;}
-     if(status)status.textContent='PREVENT service unavailable. Last saved result shown; no new score was calculated.';
-   }else if(status)status.textContent='PREVENT service unavailable and no cached result exists. No risk estimate was produced.';
- }
+     if(result){result.style.display='block';result.innerHTML=riskResultHtml(cached,'Last saved result','The risk service is unavailable, so this is your last saved result, not a new calculation.');}
+     if(status)status.textContent='The risk service is unavailable. Showing your last saved result.';
+   }else if(status)status.textContent='The risk service is unavailable and there is no saved result, so no estimate was made.';
+ } finally { calcBtn?.classList.remove('is-loading'); }
+}
+function riskResultHtml(body, heading, note) {
+ const pct = v => `${Number(v).toFixed(1)}<small>%</small>`;
+ return `<div class="t-meta risk-result-label">${escapeHtml(heading)}</div>
+  <div class="risk-stats">
+   <div><b>${pct(body.tenYearCvd)}</b><span>Any cardiovascular disease</span></div>
+   <div><b>${pct(body.tenYearAscvd)}</b><span>Heart attack or stroke (ASCVD)</span></div>
+   <div><b>${pct(body.tenYearHf)}</b><span>Heart failure</span></div>
+  </div>
+  <p class="t-meta">${escapeHtml(note)}</p>`;
 }
 function restoreClinicalRiskResult() {
  let body=null; try { body=JSON.parse(localStorage.getItem('swasth_clinicalRiskResult') || 'null'); } catch (_) {}
  if(!body || body.tenYearCvd === undefined) return;
  const result=document.getElementById('clinicalRiskResult'); if(!result) return;
- result.style.display='block'; result.innerHTML=`<div class="summary-label blue">REFERENCE CARDIOVASCULAR RISK</div><p style="margin:8px 0 4px;"><b>10-year total CVD:</b> ${Number(body.tenYearCvd).toFixed(1)}% &nbsp; <b>10-year ASCVD:</b> ${Number(body.tenYearAscvd).toFixed(1)}% &nbsp; <b>10-year HF:</b> ${Number(body.tenYearHf).toFixed(1)}%</p><p style="margin:4px 0;color:var(--muted);font-size:12px;">${escapeHtml(body.note || 'Reference estimate only.')}</p>`;
+ result.style.display='block'; result.innerHTML=riskResultHtml(body,'10-year risk',body.note || 'Reference estimate only.');
 }
 
 function updateRiskFactors() {
@@ -4548,8 +4472,8 @@ function renderEmergencyQRIfReady(){
  function renderHistory(containerId){
    const el = document.getElementById(containerId); if(!el) return;
    const conditions = Array.isArray(patientData.conditions) ? patientData.conditions : [];
-   if (!conditions.length) { el.innerHTML = '<div class="record-empty">No medical conditions recorded.</div>'; return; }
-   el.innerHTML = conditions.map(item => `<div class="history-item"><div><div class="h-name">${escapeHtml(item.name)}</div><div class="h-meta">${escapeHtml(item.status)} · ${escapeHtml(item.year)}${item.details ? ' · ' + escapeHtml(item.details) : ''}</div></div><span class="tag ${item.status.toLowerCase() === 'ongoing' ? 'ongoing' : 'resolved'}">${escapeHtml(item.status)}</span></div>`).join('');
+   if (!conditions.length) { el.innerHTML = '<div class="empty">No conditions recorded.</div>'; return; }
+   el.innerHTML = '<div class="list">' + conditions.map(item => `<div class="list-row"><div class="list-main"><b>${escapeHtml(item.name)}</b><span>${[item.year ? 'Since ' + escapeHtml(item.year) : '', item.details ? escapeHtml(item.details) : ''].filter(Boolean).join(' · ') || 'No details'}</span></div><span class="badge${String(item.status).toLowerCase() === 'ongoing' ? ' badge-info' : ''}">${escapeHtml(item.status || 'Ongoing')}</span></div>`).join('') + '</div>';
  }
  renderHistory('historyListRecords'); renderHistory('historyListProfile');
  const historyToggle = document.getElementById('historyToggle');
@@ -4557,23 +4481,26 @@ function renderEmergencyQRIfReady(){
  function renderVisits(){
    const el=document.getElementById('visitList'); if(!el) return;
    const visits=Array.isArray(patientData.visits)?patientData.visits:[];
-   if(!visits.length){el.innerHTML='<div class="record-empty">No physician visits recorded.</div>';return;}
-   el.innerHTML=visits.slice().sort((a,b)=>new Date(b.date)-new Date(a.date)).map((v,i)=>`<div class="visit-item"><div class="visit-head" onclick="toggleVisit(${i})"><div><div class="doc">${escapeHtml(v.doctor)} — ${escapeHtml(v.specialty)}</div><div class="meta">${escapeHtml(v.facility)} · ${formatRecordDate(v.date)}</div></div><span class="visit-toggle" id="visitToggle${i}">View ▾</span></div><div class="visit-body" id="visitBody${i}"><div class="rx-caption">Visit stored in the patient's longitudinal record.</div></div></div>`).join('');
+   if(!visits.length){el.innerHTML='<div class="empty">No doctor visits recorded yet.</div>';return;}
+   el.innerHTML='<div class="list">'+visits.slice().sort((a,b)=>new Date(b.date)-new Date(a.date)).map(v=>`<div class="list-row"><div class="list-main"><b>${escapeHtml(v.doctor)}</b><span>${[v.specialty,v.facility].filter(Boolean).map(escapeHtml).join(' · ')}</span></div><span class="list-end">${formatRecordDate(v.date)}</span></div>`).join('')+'</div>';
  }
- window.toggleVisit=function(i){const body=document.getElementById('visitBody'+i),toggle=document.getElementById('visitToggle'+i);if(!body||!toggle)return;body.classList.toggle('open');toggle.textContent=body.classList.contains('open')?'Hide ▴':'View ▾';}; renderVisits();
+ renderVisits();
+ // Expandable list rows: a button with aria-expanded controls the panel after it.
+ document.addEventListener('click',e=>{const btn=e.target.closest('.disclosure');if(!btn)return;const panel=document.getElementById(btn.getAttribute('aria-controls'));if(!panel)return;const open=btn.getAttribute('aria-expanded')!=='true';btn.setAttribute('aria-expanded',String(open));panel.hidden=!open;});
  let renderedReports=[];
  function renderReports(){
    const el=document.getElementById('reportList'); if(!el)return;
    const reports=Array.isArray(patientData.reports)?patientData.reports:[];
-   if(!reports.length){renderedReports=[];el.innerHTML='<div class="record-empty">No diagnostic reports recorded.</div>';return;}
+   if(!reports.length){renderedReports=[];el.innerHTML='<div class="empty">No lab reports yet. Scan one to start tracking values like HbA1c and cholesterol.</div>';return;}
    renderedReports=reports.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
    el.innerHTML=renderedReports.map((r,i)=>{
      const values=Array.isArray(r.values)?r.values:[];
-     const body=values.length?`<div class="lab-values">${values.map(v=>`<span class="lab-value-chip">${escapeHtml(v.test)} <b>${escapeHtml(String(v.value))}</b> ${escapeHtml(v.unit||'')}</span>`).join('')}</div>`:`<div class="rx-caption">${escapeHtml(r.result||'Report available')}</div>`;
-     return `<div class="visit-item"><div class="visit-head" onclick="toggleReport(${i})"><div><div class="doc">${escapeHtml(r.name)}</div><div class="meta">${formatRecordDate(r.date)}${values.length?` · ${values.length} value${values.length===1?'':'s'}${r.source==='scan'?' · scanned':''}`:''}</div></div><span class="visit-toggle" id="reportToggle${i}">View ▾</span></div><div class="visit-body" id="reportBody${i}">${body}<div class="report-actions"><button type="button" class="report-delete" onclick="deleteReport(${i})">Delete report</button></div></div></div>`;
+     const body=values.length?`<dl class="value-grid">${values.map(v=>`<div><dt>${escapeHtml(v.test)}</dt><dd>${escapeHtml(String(v.value))} <span>${escapeHtml(v.unit||'')}</span></dd></div>`).join('')}</dl>`:`<p>${escapeHtml(r.result||'No values recorded.')}</p>`;
+     return `<div class="list-item"><button type="button" class="list-row disclosure" aria-expanded="false" aria-controls="reportBody${i}"><span class="list-main"><b>${escapeHtml(r.name)}</b><span>${formatRecordDate(r.date)}${values.length?` · ${values.length} value${values.length===1?'':'s'}`:''}${r.source==='scan'?' · Scanned':''}</span></span><svg class="icon icon-sm chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg></button><div class="list-panel" id="reportBody${i}" hidden>${body}<div class="list-panel-actions"><button type="button" class="btn btn-sm btn-danger" onclick="deleteReport(${i})">Delete report</button></div></div></div>`;
    }).join('');
+   el.innerHTML='<div class="list">'+el.innerHTML+'</div>';
  }
- window.toggleReport=function(i){const body=document.getElementById('reportBody'+i),toggle=document.getElementById('reportToggle'+i);if(!body||!toggle)return;body.classList.toggle('open');toggle.textContent=body.classList.contains('open')?'Hide ▴':'View ▾';};
+ window.toggleReport=function(i){document.querySelector(`[aria-controls="reportBody${i}"]`)?.click();};
  window.deleteReport=function(i){const r=renderedReports[i];if(!r||!confirm(`Delete “${r.name||'this report'}”? Its values will be removed from your trends.`))return;patientData.reports=(patientData.reports||[]).filter(x=>x!==r);saveRecordCollections();showToast('','Report deleted','The report was removed from your records.');};
  renderReports();
  function saveRecordCollections(){ cacheProfileLocally(); syncProfileToCloud(); renderVisits(); renderReports(); renderRecordTimeline(); renderLabTrendChart(); }
@@ -4582,8 +4509,8 @@ function renderEmergencyQRIfReady(){
    const overlay=document.getElementById('recordEntryEditor');
    if(!overlay)return;
    const isVisit=kind==='visit';
-   document.getElementById('recordEntryTitle').textContent=isVisit?'Add physician visit':'Add lab report';
-   document.getElementById('recordEntryHelp').textContent=isVisit?'Add a consultation to your longitudinal health record.':'Add a diagnostic report and its result/value.';
+   document.getElementById('recordEntryTitle').textContent=isVisit?'Add a doctor visit':'Add a lab report';
+   document.getElementById('recordEntryHelp').textContent=isVisit?'Record a consultation.':'Type the test names and values, for example “HbA1c 6.4%”.';
    document.getElementById('visitEntryFields').hidden=!isVisit;
    document.getElementById('labEntryFields').hidden=isVisit;
    // Start each entry blank so the previous record is not saved again by accident.
@@ -4649,7 +4576,7 @@ function renderEmergencyQRIfReady(){
    return [...map.entries()].sort((a,b)=>b[0].localeCompare(a[0]));
  }
  function recordEmpty(message, tab, action){
-   return `<div class="record-empty record-empty-cta"><span>${escapeHtml(message)}</span>${tab?`<button type="button" class="n-btn" data-open-tab="${tab}">${escapeHtml(action)}</button>`:''}</div>`;
+   return `<div class="empty empty-cta"><span>${escapeHtml(message)}</span>${tab?`<button type="button" class="btn btn-sm" data-open-tab="${tab}">${escapeHtml(action)}</button>`:''}</div>`;
  }
  function recordMoreButton(kind, totalDays){
    return totalDays > recordDaysShown[kind] ? `<button type="button" class="record-more-btn" data-record-more="${kind}">Show earlier days</button>` : '';
@@ -4753,7 +4680,7 @@ function renderEmergencyQRIfReady(){
    a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
  function safeHealthName(){return String(patientData?.name||'Patient').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')||'Patient';}
- function setHealthShareStatus(text,error=false){const el=document.getElementById('healthShareStatus');if(el){el.textContent=text;el.style.color=error?'#8f2d24':'var(--muted)';}}
+ function setHealthShareStatus(text,error=false){const el=document.getElementById('healthShareStatus');if(el){el.textContent=text;el.classList.toggle('is-error',!!error);}}
  async function exportHealthSummaryPDF(){
    const btn=document.getElementById('exportHealthPdfBtn'); if(btn)btn.disabled=true;
    try{
@@ -5043,7 +4970,7 @@ function renderEmergencyQRIfReady(){
    saveRecordCollections();
    closeLabScanReview();
    const panel = document.getElementById('labTrendPanel'), trendBtn = document.getElementById('labTrendBtn');
-   if (panel && panel.style.display === 'none') { panel.style.display = 'block'; if (trendBtn) trendBtn.textContent = 'Hide trends'; }
+   if (panel && panel.style.display === 'none') { panel.style.display = 'block'; if (trendBtn) { trendBtn.textContent = 'Hide trends'; trendBtn.setAttribute('aria-expanded', 'true'); } }
    const select = document.getElementById('labTrendMetric');
    renderLabTrendChart();
    if (select && [...select.options].some(o => o.value === values[0].test)) { select.value = values[0].test; renderLabTrendChart(); }
@@ -5092,12 +5019,12 @@ function renderEmergencyQRIfReady(){
  }
  function renderLabTrendChart(){
    const panel=document.getElementById('labTrendPanel'),select=document.getElementById('labTrendMetric'),chart=document.getElementById('labTrendChart'),summary=document.getElementById('labTrendSummary');if(!panel||!select||!chart)return;
-   const groups=extractLabTrendPoints();const names=Object.keys(groups);if(!names.length){select.innerHTML='';chart.innerHTML='<div class="record-empty">No structured lab values could be detected yet. Scan a lab report, or add results such as “TSH: 2.1 mIU/L” or “HbA1c: 6.1%”, to see trends.</div>';if(summary)summary.textContent='';return;}
-   const current=names.includes(select.value)?select.value:names[0];select.innerHTML=names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');select.value=current;const g=groups[current],pts=g.points;const w=Math.max(560,pts.length*120),h=230,pad=42,vals=pts.map(p=>p.value),min=Math.min(...vals),max=Math.max(...vals),range=(max-min)||1;const x=i=>pad+(i*(w-pad*2)/Math.max(1,pts.length-1)),y=v=>h-pad-((v-min)/range)*(h-pad*2);const manyYears=new Set(pts.map(p=>String(p.date).slice(0,4))).size>1;
-   let svg=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(current)} trend"><line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#d6e0db"/><line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h-pad}" stroke="#d6e0db"/>`;
-   pts.forEach((pt,i)=>{const xx=x(i),yy=y(pt.value);if(i)svg+=`<line x1="${x(i-1)}" y1="${y(pts[i-1].value)}" x2="${xx}" y2="${yy}" stroke="#2f6956" stroke-width="2.5"/>`;svg+=`<circle cx="${xx}" cy="${yy}" r="4.5" fill="#fff" stroke="#2f6956" stroke-width="2"/><text x="${xx}" y="${h-17}" text-anchor="middle" font-size="10" fill="#65736c">${escapeHtml(pt.date?new Date(pt.date).toLocaleDateString([], manyYears?{day:'numeric',month:'short',year:'2-digit'}:{day:'numeric',month:'short'}):'Date')}</text><text x="${xx}" y="${yy-9}" text-anchor="middle" font-size="10" font-weight="600" fill="#1c2b27">${pt.value}</text>`;});svg+=`<text x="10" y="${pad+3}" font-size="10" fill="#65736c">${max} ${escapeHtml(g.unit)}</text><text x="10" y="${h-pad}" font-size="10" fill="#65736c">${min} ${escapeHtml(g.unit)}</text></svg>`;chart.innerHTML=svg;if(summary){const latest=pts[pts.length-1],first=pts[0];summary.textContent=`${pts.length} reading(s) · Latest ${latest.value} ${g.unit} on ${latest.date?new Date(latest.date).toLocaleDateString():'unknown date'}${pts.length>1?` · Change ${latest.value-first.value>=0?'+':''}${(latest.value-first.value).toFixed(2)}`:''}`;}
+   const groups=extractLabTrendPoints();const names=Object.keys(groups);if(!names.length){select.innerHTML='';chart.innerHTML='<div class="empty">No values to chart yet. Scan a lab report, or add results such as “HbA1c 6.1%”.</div>';if(summary)summary.textContent='';return;}
+   const current=names.includes(select.value)?select.value:names[0];select.innerHTML=names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');select.value=current;const g=groups[current],pts=g.points;const w=Math.max(chart.clientWidth||560,pts.length*96),h=232,pad=40,vals=pts.map(p=>p.value),min=Math.min(...vals),max=Math.max(...vals),range=(max-min)||1;const x=i=>pad+(i*(w-pad*2)/Math.max(1,pts.length-1)),y=v=>h-pad-((v-min)/range)*(h-pad*2);const manyYears=new Set(pts.map(p=>String(p.date).slice(0,4))).size>1;
+   let svg=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(current)} trend"><line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" class="chart-axis"/><line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h-pad}" class="chart-axis"/>`;
+   pts.forEach((pt,i)=>{const xx=x(i),yy=y(pt.value);if(i)svg+=`<line x1="${x(i-1)}" y1="${y(pts[i-1].value)}" x2="${xx}" y2="${yy}" class="chart-line"/>`;svg+=`<circle cx="${xx}" cy="${yy}" r="4" class="chart-dot"/><text x="${xx}" y="${h-17}" text-anchor="middle" class="chart-label">${escapeHtml(pt.date?new Date(pt.date).toLocaleDateString([], manyYears?{day:'numeric',month:'short',year:'2-digit'}:{day:'numeric',month:'short'}):'Date')}</text><text x="${xx}" y="${yy-10}" text-anchor="middle" class="chart-value">${pt.value}</text>`;});svg+=`<text x="4" y="${pad+3}" class="chart-label">${max} ${escapeHtml(g.unit)}</text><text x="4" y="${h-pad}" class="chart-label">${min} ${escapeHtml(g.unit)}</text></svg>`;chart.innerHTML=svg;if(summary){const latest=pts[pts.length-1],first=pts[0];summary.textContent=`${pts.length} reading${pts.length===1?'':'s'} · Latest ${latest.value} ${g.unit} on ${latest.date?formatRecordDate(latest.date):'an unknown date'}${pts.length>1?` · ${latest.value-first.value>=0?'Up':'Down'} ${Math.abs(latest.value-first.value).toFixed(2).replace(/\.?0+$/,'')} since ${formatRecordDate(first.date)}`:''}`;}
  }
- function initLabTrendView(){const btn=document.getElementById('labTrendBtn'),panel=document.getElementById('labTrendPanel'),select=document.getElementById('labTrendMetric');if(!btn||!panel)return;btn.addEventListener('click',()=>{const open=panel.style.display!=='none';panel.style.display=open?'none':'block';btn.textContent=open?'View trends':'Hide trends';if(!open)renderLabTrendChart();});select?.addEventListener('change',renderLabTrendChart);}
+ function initLabTrendView(){const btn=document.getElementById('labTrendBtn'),panel=document.getElementById('labTrendPanel'),select=document.getElementById('labTrendMetric');if(!btn||!panel)return;btn.addEventListener('click',()=>{const open=panel.style.display!=='none';panel.style.display=open?'none':'block';btn.textContent=open?'View trends':'Hide trends';btn.setAttribute('aria-expanded',String(!open));if(!open)renderLabTrendChart();});select?.addEventListener('change',renderLabTrendChart);}
  function renderActiveDoctorShare(){const panel=document.getElementById('activeDoctorSharePanel'),meta=document.getElementById('activeDoctorShareMeta');if(!panel||!meta)return;const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){panel.style.display='none';return;}if(saved.expiresAt&&Date.now()>=Number(saved.expiresAt)){localStorage.removeItem('swasth_activeDoctorShare');panel.style.display='none';return;}panel.style.display='block';meta.textContent=`Share ID ${String(saved.id).slice(0,10)}…${saved.expiresAt?` · expires ${new Date(saved.expiresAt).toLocaleString()}`:''}`;}
 async function revokeDoctorShare(){const saved=safeJsonParse(localStorage.getItem('swasth_activeDoctorShare')||'null',null);if(!saved?.id){renderActiveDoctorShare();return;}const btn=document.getElementById('revokeDoctorShareBtn');if(btn)btn.disabled=true;try{const apiBase=(window.SWASTH_API_BASE||((location.protocol==='http:'||location.protocol==='https:')?location.origin:'')).replace(/\/$/,'');if(!apiBase)throw new Error('Doctor sharing requires the hosted Render app.');if(!firebaseUser)throw new Error('Sign in before revoking a doctor share.');const idToken=await firebaseUser.getIdToken(true);const res=await fetch(apiBase+'/api/record-share/revoke',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':`Bearer ${idToken}`},body:JSON.stringify({shareId:saved.id})});const body=await res.json().catch(()=>({}));if(!res.ok)throw new Error(body.error||`Revoke service returned HTTP ${res.status}`);localStorage.removeItem('swasth_activeDoctorShare');syncCloudState('swasth_activeDoctorShare');renderActiveDoctorShare();setHealthShareStatus('Doctor share revoked. The previous link can no longer be opened.');showToast('','Doctor share revoked','The shared health record link is no longer active.');}catch(e){console.error('Doctor share revoke failed:',e);setHealthShareStatus('Could not revoke doctor share: '+(e?.message||'unknown error'),true);}finally{if(btn)btn.disabled=false;}}
 async function shareHealthRecordWithDoctor(){
@@ -5188,9 +5115,10 @@ async function shareHealthRecordWithDoctor(){
   renderMedicineResults([],query,'local');
   return;
  }
- if(button) { button.disabled=true; button.textContent='Searching...'; }
+ if(button) { button.disabled=true; button.classList.add('is-loading'); }
  const status=document.getElementById('resultsLabel');
- if(status) status.textContent='Searching medicine database...';
+ if(status) status.textContent='Searching…';
+ const listEl=document.getElementById('priceList'); if(listEl) listEl.innerHTML='<div class="list">'+medSkeletonRows(3)+'</div>';
  try{
   const apiResults=await fetchMedicineApi(query);
   if(apiResults && apiResults.length){
@@ -5208,10 +5136,10 @@ async function shareHealthRecordWithDoctor(){
   const disclaimer=document.getElementById('medicineDisclaimer');
   if(disclaimer){
    disclaimer.style.display='block';
-   disclaimer.innerHTML='DrugSetu live search is currently unavailable, so SwasthID is showing its local reference catalogue. ' + escMed(window.__medicineApiLastError);
+   disclaimer.textContent='Live search is unavailable right now, so these results come from SwasthID’s reference catalogue.';
   }
  }finally{
-  if(button){ button.disabled=false; button.textContent='Search'; }
+  if(button){ button.disabled=false; button.classList.remove('is-loading'); }
  }
  }
  window.searchMedicines=searchMedicines;
@@ -5231,59 +5159,45 @@ async function shareHealthRecordWithDoctor(){
  return rows.map(normalizeMedicineResult).filter(x=>x.name);
  } finally { clearTimeout(timer); }
  }
+ function medResultRow(m, action){
+  const detail=[m.salt,m.brand,m.pack].filter(Boolean).map(escMed).join(' · ');
+  return `<div class="med-result">
+   <div class="med-result-main"><b>${escMed(m.name)}</b>${detail?`<span>${detail}</span>`:''}<span class="badge ${m.rx?'badge-warning':''}">${m.rx?'Prescription may be needed':'Over the counter'}</span></div>
+   <div class="med-result-price"><b>${m.mrp ? '₹'+m.mrp.toFixed(2) : '—'}</b><span>Reference MRP</span></div>
+   ${action}
+  </div>`;
+ }
+ function pharmacyOptionsHtml(title){
+  return `<div class="pharmacy-options-head"><b>Where to buy</b><span>${title}</span></div>
+   <div class="pharmacy-links">${pharmacyLinks.map(p=>`<a class="btn btn-sm" href="${p.url}" target="_blank" rel="noopener">${p.platform}</a>`).join('')}</div>
+   <p class="t-meta">The pharmacy sets the selling price, availability, pack size and whether a prescription is needed.</p>`;
+ }
+ function medSkeletonRows(n){
+  return Array.from({length:n},()=>`<div class="med-result" aria-hidden="true"><div class="skeleton-lines"><span class="skeleton w-50"></span><span class="skeleton w-70"></span></div><span class="skeleton med-skeleton-price"></span><span class="skeleton med-skeleton-btn"></span></div>`).join('');
+ }
+ window.medSkeletonRows=medSkeletonRows;
  function renderMedicineResults(results, query, source){
  const el=document.getElementById('priceList');
  const label=document.getElementById('resultsLabel');
  const badge=document.getElementById('medicineSourceBadge');
  const disclaimer=document.getElementById('medicineDisclaimer');
- badge.textContent=source === 'api' ? 'Live API data' : 'Reference catalogue';
+ badge.textContent=source === 'api' ? 'Live data' : 'Reference catalogue';
  if(!results.length){
-  label.textContent='No matching medicine found. Try a brand name, generic name or salt.';
-  el.innerHTML='<div class="price-row"><div><strong>No matches</strong><div style="font-size:12.5px;color:var(--muted);margin-top:4px;">You can also verify the medicine and current price through NPPA Pharma Sahi Daam.</div></div><a class="n-btn" href="https://nppa.gov.in/en/pharma_sahi_daam" target="_blank" rel="noopener">Open NPPA</a></div>';
-  disclaimer.style.display='block';
-  disclaimer.textContent='Prices and availability can change by seller, location and pack size. SwasthID does not process the pharmacy order in this prototype.';
+  label.textContent=query && query.length>=2 ? `No match for “${query}”. Try the brand name, generic name or salt.` : 'Type at least two letters to search.';
+  el.innerHTML=query && query.length>=2 ? '<div class="empty empty-cta"><span>You can also check the medicine and its official ceiling price on NPPA Pharma Sahi Daam.</span><a class="btn btn-sm" href="https://nppa.gov.in/en/pharma_sahi_daam" target="_blank" rel="noopener">Open NPPA</a></div>' : '';
+  disclaimer.style.display='none';
   return;
  }
- label.textContent='Found ' + results.length + ' matching medicine record' + (results.length===1?'':'s') + ' for "' + query + '"';
- el.innerHTML=results.slice(0,12).map((m,i)=>`
-  <div class="price-row ${i===0?'best':''}">
-   <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-    <div class="platform-mark">RX</div>
-    <div style="min-width:0;">
-     <div style="font-weight:600;font-size:14.5px;overflow-wrap:anywhere;">${escMed(m.name)}</div>
-     <div style="font-size:12.5px;color:var(--muted);">${escMed(m.salt)}${m.brand?' · '+escMed(m.brand):''}${m.pack?' · '+escMed(m.pack):''}</div>
-     <div style="font-size:11.5px;margin-top:5px;color:${m.rx?'var(--warn)':'var(--ok)'};">${m.rx?'Prescription may be required':'Non-prescription reference item'}</div>
-    </div>
-   </div>
-   <div style="text-align:right;margin-right:16px;">
-    <div style="font-size:18px;font-weight:600;">${m.mrp ? '₹'+m.mrp.toFixed(2) : '—'}</div>
-    <div style="font-size:11px;color:var(--muted);">Reference MRP</div>
-   </div>
-   <button class="n-btn solid" onclick="showPharmacyOptions(${i})">Order</button>
-  </div>`).join('');
+ label.textContent=`${results.length} result${results.length===1?'':'s'} for “${query}”`;
+ el.innerHTML='<div class="list">'+results.slice(0,12).map((m,i)=>medResultRow(m,`<button class="btn btn-sm" type="button" onclick="showPharmacyOptions(${i})">Where to buy</button>`)).join('')+'</div>';
  window.__medicineResults=results.slice(0,12);
  disclaimer.style.display='block';
- disclaimer.innerHTML='Reference data is for informational use. <strong>MRP is not the same as a live pharmacy selling price.</strong> Check the seller and pack before ordering. NPPA provides an official medicine price-checking service.' + (source === 'api' ? '<div style="margin-top:7px;">Information sourced from DrugSetu is for informational purposes only. DrugSetu standardizes data but does not guarantee accuracy. Consult healthcare professionals for medical decisions.</div>' : '');
+ disclaimer.innerHTML='Reference MRP is not the price a pharmacy will charge. Check the seller and pack before buying. NPPA runs an official price-checking service.' + (source === 'api' ? ' Data from DrugSetu is standardised but not guaranteed to be accurate.' : '');
  }
 
  function medicineResultRows(results, cardIndex){
-  if(!results.length) return '<div style="padding:12px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:12px;">No catalogue match found. Verify the medicine name and check the official NPPA price service.</div>';
-  return results.slice(0,4).map((m,i)=>`
-   <div class="price-row ${i===0?'best':''}" style="margin-top:8px;">
-    <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-     <div class="platform-mark">RX</div>
-     <div style="min-width:0;">
-      <div style="font-weight:600;font-size:14px;overflow-wrap:anywhere;">${escMed(m.name)}</div>
-      <div style="font-size:12px;color:var(--muted);overflow-wrap:anywhere;">${escMed(m.salt)}${m.brand?' · '+escMed(m.brand):''}${m.pack?' · '+escMed(m.pack):''}</div>
-      <div style="font-size:11px;margin-top:4px;color:${m.rx?'var(--warn)':'var(--ok)'};">${m.rx?'Prescription may be required':'Non-prescription reference item'}</div>
-     </div>
-    </div>
-    <div style="text-align:right;margin-right:10px;white-space:nowrap;">
-     <div style="font-size:17px;font-weight:600;">${m.mrp ? '₹'+m.mrp.toFixed(2) : '—'}</div>
-     <div style="font-size:10.5px;color:var(--muted);">Reference MRP</div>
-    </div>
-    <button class="n-btn solid" type="button" data-rx-order="${cardIndex}-${i}">Order</button>
-   </div>`).join('');
+  if(!results.length) return '<div class="empty">No catalogue match. Check the medicine name, or look it up on NPPA.</div>';
+  return '<div class="list">'+results.slice(0,4).map((m,i)=>medResultRow(m,`<button class="btn btn-sm" type="button" data-rx-order="${cardIndex}-${i}">Where to buy</button>`)).join('')+'</div>';
  }
 
  async function renderPrescriptionOrderCards(medicines){
@@ -5293,22 +5207,19 @@ async function shareHealthRecordWithDoctor(){
   const disclaimer=document.getElementById('medicineDisclaimer');
   if(!el || !medicines?.length) return;
   window.__pendingPrescriptionMedicines=medicines;
-  label.textContent='Searching ' + medicines.length + ' verified prescription medicine' + (medicines.length===1?'':'s') + '...';
-  badge.textContent='Prescription search';
+  label.textContent=`Searching ${medicines.length} medicine${medicines.length===1?'':'s'} from your prescription…`;
+  badge.textContent='From your prescription';
   el.innerHTML=medicines.map((m,i)=>`
-   <div class="rx-order-card" data-rx-card="${i}" style="border:1px solid var(--line);border-radius:var(--radius-md);padding:14px;margin-bottom:14px;background:var(--surface-2);">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:9px;">
-     <div style="min-width:0;">
-      <div style="font-size:15px;font-weight:700;overflow-wrap:anywhere;">${escMed(m.medicine)}</div>
-      <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">${escMed([m.dose,m.frequency,m.instructions].filter(Boolean).join(' · '))}</div>
-     </div>
-     <span class="tag blue">From prescription</span>
+   <section class="card rx-order-card" data-rx-card="${i}">
+    <div class="card-head">
+     <div><h3 class="card-title">${escMed(m.medicine)}</h3><p class="card-sub">${escMed([m.dose,m.frequency,m.instructions].filter(Boolean).join(' · '))}</p></div>
+     <span class="badge badge-info">From prescription</span>
     </div>
-    <div class="rx-card-status" style="font-size:12px;color:var(--muted);">Searching catalogue...</div>
-    <div class="rx-card-results"></div>
-   </div>`).join('');
+    <p class="t-meta rx-card-status">Searching…</p>
+    <div class="rx-card-results"><div class="list">${medSkeletonRows(2)}</div></div>
+   </section>`).join('');
   disclaimer.style.display='block';
-  disclaimer.textContent='Each medicine below is searched separately. Review the catalogue match, pack size and reference MRP before choosing a pharmacy. No order is placed automatically.';
+  disclaimer.textContent='Each medicine is searched separately. Check the match, pack size and reference MRP before choosing a pharmacy. Nothing is ordered automatically.';
   const allResults=[];
   for(let i=0;i<medicines.length;i++){
    const m=medicines[i], card=el.querySelector(`[data-rx-card="${i}"]`);
@@ -5318,7 +5229,7 @@ async function shareHealthRecordWithDoctor(){
    try { results=await fetchMedicineApi(query); if(results?.length) source='api'; } catch(e) { results=null; }
    if(!results?.length) results=localMedicineSearch(query);
    results=results || []; allResults[i]=results;
-   if(status) status.textContent=results.length ? `${results.length} catalogue match${results.length===1?'':'es'} found · ${source==='api'?'Live API data':'Reference catalogue'}` : 'No catalogue match found';
+   if(status) status.textContent=results.length ? `${results.length} match${results.length===1?'':'es'} · ${source==='api'?'Live data':'Reference catalogue'}` : 'No catalogue match';
    if(resultsEl){
     resultsEl.innerHTML=medicineResultRows(results,i);
     resultsEl.querySelectorAll('[data-rx-order]').forEach(btn=>{
@@ -5327,22 +5238,17 @@ async function shareHealthRecordWithDoctor(){
     });
    }
   }
-  label.textContent='Search results for ' + medicines.length + ' verified prescription medicine' + (medicines.length===1?'':'s');
-  badge.textContent='Prescription search';
+  label.textContent=`Results for ${medicines.length} medicine${medicines.length===1?'':'s'} from your prescription`;
   window.__prescriptionOrderResults=allResults;
  }
 
  window.showPharmacyOptions=function(resultIndex){
   const med=(window.__medicineResults || [])[resultIndex];
-  const row=document.querySelectorAll('#priceList > .price-row')[resultIndex];
+  const row=document.querySelectorAll('#priceList .med-result')[resultIndex];
   if(!med || !row) return;
   document.querySelectorAll('#priceList .rx-pharmacy-options').forEach(x=>x.remove());
   const box=document.createElement('div'); box.className='rx-pharmacy-options';
-  box.style.cssText='margin:-4px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);';
-  box.innerHTML='<div style="font-weight:650;font-size:12.5px;">Continue to a pharmacy</div>' +
-   `<div style="font-size:11.5px;color:var(--muted);margin:4px 0 8px;">${escMed(med.name)}${med.pack?' · '+escMed(med.pack):''}</div>` +
-   pharmacyLinks.map(p=>`<a class="n-btn" style="margin:3px;" href="${p.url}" target="_blank" rel="noopener">${p.platform}</a>`).join('') +
-   '<div style="font-size:11px;color:var(--muted);margin-top:7px;line-height:1.4;">The pharmacy will determine current selling price, availability, pack size and prescription requirements.</div>';
+  box.innerHTML=pharmacyOptionsHtml(`${escMed(med.name)}${med.pack?' · '+escMed(med.pack):''}`);
   row.after(box); box.scrollIntoView({behavior:'smooth',block:'nearest'});
  };
 
@@ -5353,11 +5259,7 @@ async function shareHealthRecordWithDoctor(){
   if(!med || !card) return;
   card.querySelector('.rx-pharmacy-options')?.remove();
   const box=document.createElement('div'); box.className='rx-pharmacy-options';
-  box.style.cssText='margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);';
-  box.innerHTML='<div style="font-weight:650;font-size:12.5px;">Continue to a pharmacy</div>' +
-   `<div style="font-size:11.5px;color:var(--muted);margin:4px 0 8px;">${escMed(med.name)}${prescriptionMed?.dose?' · '+escMed(prescriptionMed.dose):''}</div>` +
-   pharmacyLinks.map(p=>`<a class="n-btn" style="margin:3px;" href="${p.url}" target="_blank" rel="noopener">${p.platform}</a>`).join('') +
-   '<div style="font-size:11px;color:var(--muted);margin-top:7px;line-height:1.4;">The pharmacy will determine current selling price, availability, pack size and prescription requirements.</div>';
+  box.innerHTML=pharmacyOptionsHtml(`${escMed(med.name)}${prescriptionMed?.dose?' · '+escMed(prescriptionMed.dose):''}`);
   card.appendChild(box); box.scrollIntoView({behavior:'smooth',block:'nearest'});
  };
 
@@ -5378,7 +5280,7 @@ async function shareHealthRecordWithDoctor(){
    const list = document.getElementById('prescriptionMedicineQueueList');
    if (!queue || !list) return;
    queue.style.display='block';
-   list.innerHTML=pending.map((m,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:${i===pending.length-1?'0':'1px solid var(--line)'};"><div style="min-width:0;"><div style="font-weight:600;font-size:12.5px;overflow-wrap:anywhere;">${escMed(m.medicine)}</div><div style="font-size:11px;color:var(--muted);">${escMed([m.dose,m.frequency].filter(Boolean).join(' · '))}</div></div><button class="n-btn" type="button" data-prescription-med-index="${i}" style="padding:5px 8px;font-size:11px;white-space:nowrap;">Search</button></div>`).join('');
+   list.innerHTML=pending.map((m,i)=>`<div class="queue-row"><div class="list-main"><b>${escMed(m.medicine)}</b><span>${escMed([m.dose,m.frequency].filter(Boolean).join(' · '))}</span></div><button class="btn btn-sm" type="button" data-prescription-med-index="${i}">Search</button></div>`).join('');
    list.querySelectorAll('[data-prescription-med-index]').forEach(btn=>btn.addEventListener('click',()=>{ const med=pending[Number(btn.dataset.prescriptionMedIndex)]; if(med) searchPrescriptionMedicine(med); }));
   } catch(e) { console.warn('Could not restore prescription medicine queue', e); }
  }
@@ -5600,8 +5502,8 @@ function renderNearbyPlaces() {
        ${tags ? `<div class="place-tags">${tags}</div>` : ''}
      </div>
      <div class="place-actions">
-       ${phone ? `<a class="n-btn" href="tel:${phone.replace(/[^+0-9]/g,'')}" aria-label="Call ${escapeHtml(h.name)}">Call</a>` : '<span class="place-action-gap" aria-hidden="true"></span>'}
-       <a class="n-btn solid" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${h.lat},${h.lon}`)}" target="_blank" rel="noopener" aria-label="Directions to ${escapeHtml(h.name)}">Directions</a>
+       ${phone ? `<a class="btn" href="tel:${phone.replace(/[^+0-9]/g,'')}" aria-label="Call ${escapeHtml(h.name)}">Call</a>` : '<span class="place-action-gap" aria-hidden="true"></span>'}
+       <a class="btn btn-primary" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${h.lat},${h.lon}`)}" target="_blank" rel="noopener" aria-label="Directions to ${escapeHtml(h.name)}">Directions</a>
      </div>
    </div>`;
  }).join('') + '</div>' + (!nearbyShowAll && matches.length > shown.length ? `<button type="button" class="record-more-btn" data-nearby-more>Show all ${matches.length}</button>` : '');
@@ -5807,14 +5709,14 @@ async function generateEmergencyQR(force = false) {
  const qrContainer = document.getElementById('realQrContainer');
  if (!qrContainer) return;
  try { await ensureQrCodeLoaded(); } catch (error) {
-   qrContainer.innerHTML = '<span style="font-size:12px;color:#8f2d24;padding:16px;text-align:center;">QR library could not be loaded. Check your connection and refresh.</span>';
+   qrContainer.innerHTML = '<span class="qr-message is-error">QR library could not be loaded. Check your connection and refresh.</span>';
    console.warn('QRCode library load failed:', error);
    return;
  }
  if (typeof QRCode === 'undefined') return;
  if (!force && qrContainer.dataset.generated) return;
  qrContainer.dataset.generated = 'true';
- qrContainer.innerHTML = '<span style="font-size:12px;color:var(--muted);">Generating secure emergency QR…</span>';
+ qrContainer.innerHTML = '<div class="skeleton qr-skeleton" aria-label="Creating your emergency QR"></div>';
  const pendingStatus = document.getElementById('qrPayloadStatus');
  if (pendingStatus) pendingStatus.textContent = 'Creating a secure QR…';
  qrContainer.style.background = '#fff';
@@ -5833,7 +5735,7 @@ async function generateEmergencyQR(force = false) {
      ? `Secure emergency QR ready. The server encrypts the emergency payload. Valid until ${expiresAt ? new Date(expiresAt).toLocaleDateString() : 'its expiry date'} unless you revoke it.`
      : 'Offline preview only: this QR is not encrypted or revocable. Open SwasthID from its website to create a secure QR.';
  } catch (error) {
-   qrContainer.innerHTML = '<span style="font-size:12px;color:#8f2d24;padding:16px;text-align:center;">No QR yet. Use Refresh to try again.</span>';
+   qrContainer.innerHTML = '<span class="qr-message is-error">No QR yet. Use Refresh to try again.</span>';
    qrContainer.dataset.generated = '';
    if (status) status.textContent = 'The secure emergency QR could not be created: ' + (error?.message || 'unknown error');
    console.error('Emergency QR generation failed:', error);
@@ -5851,7 +5753,7 @@ function showEmergencyPublicView(payload) {
    document.body.appendChild(overlay);
  }
  if (expired) {
-   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency information unavailable</h2><p>${escapeHtml(payload.reason || 'This QR payload is no longer valid.')}</p></div><span class="public-emergency-badge">${/revoked/i.test(payload.reason || '') ? 'REVOKED' : 'EXPIRED'}</span></div><div class="public-emergency-expired">For safety, ask the patient or caregiver for a newly generated Emergency QR Badge. If this is an active emergency, call 112.</div><div class="public-emergency-actions" style="padding:0 24px 22px;"><a class="emergency-call primary" href="tel:112">Call 112</a><button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div><div class="public-emergency-foot">SwasthID emergency view. Prototype only; verify critical information when possible.</div></div>`;
+   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency information unavailable</h2><p>${escapeHtml(payload.reason || 'This QR payload is no longer valid.')}</p></div><span class="public-emergency-badge">${/revoked/i.test(payload.reason || '') ? 'Revoked' : 'Expired'}</span></div><div class="public-emergency-expired">Ask the patient or a caregiver for a new emergency QR. In an emergency, call 112.</div><div class="public-emergency-actions"><a class="btn btn-danger-solid" href="tel:112">Call 112</a><button class="btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div><div class="public-emergency-foot">Verify critical information with the patient or a caregiver when you can.</div></div>`;
  } else {
    const contact = Array.isArray(payload.ec) ? payload.ec : [];
    const contactName = contact[0] || 'Not provided';
@@ -5860,7 +5762,7 @@ function showEmergencyPublicView(payload) {
    const conditions = Array.isArray(payload.c) && payload.c.length ? payload.c.join(', ') : 'None recorded';
    const meds = Array.isArray(payload.m) && payload.m.length ? payload.m.join(', ') : 'None recorded';
    const insurance = Array.isArray(payload.ins) && payload.ins.some(Boolean) ? payload.ins.filter(Boolean).join(' · ') : 'Not provided';
-   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency Health Information</h2><p>Read-only emergency information shared by the patient</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-grid"><div class="public-emergency-item full"><label>Patient</label><div>${escapeHtml(payload.n)}</div></div><div class="public-emergency-item"><label>Blood group</label><div>${escapeHtml(payload.bg || 'Not provided')}</div></div><div class="public-emergency-item"><label>Drug allergies</label><div>${escapeHtml(payload.da || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Other allergies</label><div>${escapeHtml(payload.oa || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Ongoing conditions</label><div>${escapeHtml(conditions)}</div></div><div class="public-emergency-item full"><label>Critical daily medicines</label><div>${escapeHtml(meds)}</div></div><div class="public-emergency-item full"><label>Health insurance</label><div>${escapeHtml(insurance)}</div></div><div class="public-emergency-item full"><label>Emergency contact</label><div>${escapeHtml(contactName)}${contactRelation ? ' (' + escapeHtml(contactRelation) + ')' : ''}${contactPhone ? ' · ' + escapeHtml(contactPhone) : ''}</div></div></div><div class="public-emergency-actions"><a class="emergency-call primary" href="tel:112">Call 112</a>${contactPhone ? `<a class="emergency-call" href="tel:${String(contactPhone).replace(/[^+0-9]/g, '')}">Call emergency contact</a>` : ''}<button class="n-btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div></div><div class="public-emergency-foot">This QR stays valid until the patient revokes it or it reaches its expiry date. Only the minimum necessary emergency information is shared. In an active emergency, call 112.</div></div>`;
+   overlay.innerHTML = `<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>${payload.preview ? 'Preview of your emergency card' : 'Emergency health information'}</h2><p>${payload.preview ? 'This is what someone sees after scanning your QR.' : 'Shared by the patient for emergency use. Read only.'}</p></div><span class="public-emergency-badge">${payload.preview ? 'Preview' : 'Emergency'}</span></div><div class="public-emergency-body"><div class="public-emergency-grid"><div class="public-emergency-item full"><label>Patient</label><div>${escapeHtml(payload.n)}</div></div><div class="public-emergency-item"><label>Blood group</label><div>${escapeHtml(payload.bg || 'Not provided')}</div></div><div class="public-emergency-item"><label>Drug allergies</label><div>${escapeHtml(payload.da || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Other allergies</label><div>${escapeHtml(payload.oa || 'None recorded')}</div></div><div class="public-emergency-item full"><label>Conditions</label><div>${escapeHtml(conditions)}</div></div><div class="public-emergency-item full"><label>Daily medicines</label><div>${escapeHtml(meds)}</div></div><div class="public-emergency-item full"><label>Health insurance</label><div>${escapeHtml(insurance)}</div></div><div class="public-emergency-item full"><label>Emergency contact</label><div>${escapeHtml(contactName)}${contactRelation ? ' (' + escapeHtml(contactRelation) + ')' : ''}${contactPhone ? ' · ' + escapeHtml(contactPhone) : ''}</div></div></div><div class="public-emergency-actions"><a class="btn btn-danger-solid" href="tel:112">Call 112</a>${contactPhone ? `<a class="btn" href="tel:${String(contactPhone).replace(/[^+0-9]/g, '')}">Call emergency contact</a>` : ''}<button class="btn" type="button" onclick="document.getElementById('publicEmergencyOverlay').classList.remove('show')">Close</button></div></div><div class="public-emergency-foot">Only the information needed in an emergency is shown. In an emergency, call 112.</div></div>`;
  }
  overlay.classList.add('show');
 }
@@ -5873,7 +5775,7 @@ async function openEmergencyPayloadFromUrl() {
  // Show the public shell immediately so a slow backend never leaves a blank page.
  let overlay = document.getElementById('publicEmergencyOverlay');
  if (!overlay) { overlay = document.createElement('div'); overlay.id = 'publicEmergencyOverlay'; overlay.className = 'public-emergency-overlay'; document.body.appendChild(overlay); }
- overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Loading emergency information</h2><p>Verifying the secure emergency QR…</p></div><span class="public-emergency-badge">EMERGENCY</span></div><div class="public-emergency-body"><div class="public-emergency-item full"><div>Please wait a moment.</div></div><div class="public-emergency-actions"><a class="emergency-call primary" href="tel:112">Call 112</a></div></div></div>';
+ overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Loading emergency information</h2><p>Verifying the secure emergency QR…</p></div><span class="public-emergency-badge">Emergency</span></div><div class="public-emergency-body"><div class="public-emergency-item full"><div>Please wait a moment.</div></div><div class="public-emergency-actions"><a class="btn btn-danger-solid" href="tel:112">Call 112</a></div></div></div>';
  overlay.classList.add('show');
  if (apiBase && /^v1\./.test(token)) {
   // The server may be waking from sleep; give it time and retry once.
@@ -5888,12 +5790,12 @@ async function openEmergencyPayloadFromUrl() {
    const note = overlay.querySelector('.public-emergency-item div');
    if (note) note.textContent = 'The server is starting up. This can take up to a minute…';
   }
-  overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Could not load emergency information</h2><p>The SwasthID server did not respond.</p></div><span class="public-emergency-badge">RETRY</span></div><div class="public-emergency-expired">Check the internet connection and scan the QR again. If this is an active emergency, call 112.</div><div class="public-emergency-actions" style="padding:0 24px 22px;"><a class="emergency-call primary" href="tel:112">Call 112</a><button class="n-btn" type="button" onclick="location.reload()">Try again</button></div></div>';
+  overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Could not load emergency information</h2><p>The SwasthID server did not respond.</p></div><span class="public-emergency-badge">Retry</span></div><div class="public-emergency-expired">Check the internet connection and scan the QR again. If this is an active emergency, call 112.</div><div class="public-emergency-actions"><a class="btn btn-danger-solid" href="tel:112">Call 112</a><button class="btn" type="button" onclick="location.reload()">Try again</button></div></div>';
   return false;
  }
  const payload = decodeEmergencyToken(token);
  if (payload) { showEmergencyPublicView(payload); return true; }
- overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency QR unavailable</h2><p>The emergency information could not be verified.</p></div><span class="public-emergency-badge">ERROR</span></div><div class="public-emergency-expired">Ask the patient or caregiver for a newly generated Emergency QR Badge. If this is an active emergency, call 112.</div><div class="public-emergency-actions" style="padding:0 24px 22px;"><a class="emergency-call primary" href="tel:112">Call 112</a></div></div>';
+ overlay.innerHTML = '<div class="public-emergency-card"><div class="public-emergency-head"><div><h2>Emergency QR unavailable</h2><p>The emergency information could not be verified.</p></div><span class="public-emergency-badge">ERROR</span></div><div class="public-emergency-expired">Ask the patient or caregiver for a newly generated Emergency QR Badge. If this is an active emergency, call 112.</div><div class="public-emergency-actions"><a class="btn btn-danger-solid" href="tel:112">Call 112</a></div></div>';
  return false;
 }
 
@@ -6112,20 +6014,19 @@ document.querySelectorAll('#panel-emergency .switch').forEach(sw => {
  sw.addEventListener('click', function(){ this.classList.toggle('on'); });
 });
 document.getElementById('simulateScanBtn').addEventListener('click', () => {
- const contact = getEmergencyContact();
- const active = (patientData.medications || []).map(m => `${m.name} ${m.dose}`).join(', ') || 'None listed';
- alert(`Emergency Scanner Mode:\nParamedic Device Connected.\n\nPatient: ${patientData.name}\nBlood Group: ${patientData.bloodGroup}\nDrug Allergies: ${formatAllergies(patientData.allergies)}\nOther Allergies: ${formatNormalAllergies(patientData.normalAllergies)}\nActive Medicines: ${active}\nEmergency Contact: ${contact.name} (${contact.relation}) ${contact.phone}`);
+ showEmergencyPublicView({ ...getEmergencyCompactPayload(), preview: true });
 });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('publicEmergencyOverlay')?.classList.remove('show'); });
 
 (async () => { await openEmergencyPayloadFromUrl(); })();
  /* Family Registration — linked dependent profiles with local/cloud persistence. */
  function getDependents(){const list=safeJsonParse(localStorage.getItem('swasth_dependents')||'[]',[]);const uid=firebaseUser?.uid||'';return Array.isArray(list)?list.filter(x=>!x?.ownerUid||!uid||x.ownerUid===uid):[];}
  function saveDependents(list){localStorage.setItem('swasth_dependents',JSON.stringify(list));if(typeof syncCloudState==='function')syncCloudState('swasth_dependents');}
- function renderDependents(){const el=document.getElementById('dependentList');if(!el)return;const list=getDependents();if(!list.length){el.innerHTML='<div style="padding:10px 0;color:var(--muted);font-size:12px;">No family members added yet.</div>';return;}el.innerHTML=`<div style="font-size:12px;font-weight:700;margin-bottom:6px;">Family members</div>`+list.map(d=>`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);"><div><b>${escapeHtml(d.name||'Unnamed')}</b><div style="font-size:11px;color:var(--muted);">${escapeHtml(d.relation||'Relationship not set')} · ${escapeHtml(d.status||'family member')}</div></div><div style="display:flex;gap:6px;"><button type="button" class="n-btn" data-dependent-view="${escapeHtml(d.id)}" style="padding:5px 8px;font-size:11px;">View</button><button type="button" class="n-btn" data-dependent-edit="${escapeHtml(d.id)}" style="padding:5px 8px;font-size:11px;">Edit</button><button type="button" class="n-btn" data-dependent-delete="${escapeHtml(d.id)}" style="padding:5px 8px;font-size:11px;border-color:#b84a40;color:#8f2d24;">Delete</button></div></div>`).join('');el.querySelectorAll('[data-dependent-view]').forEach(btn=>btn.addEventListener('click',()=>{const d=getDependents().find(x=>x.id===btn.dataset.dependentView);if(d)showToast('',d.name||'Dependent',`${d.relation||'Relationship not set'} · Linked profile created ${d.createdAt?new Date(d.createdAt).toLocaleDateString():'date unavailable'}.`);}));el.querySelectorAll('[data-dependent-edit]').forEach(btn=>btn.addEventListener('click',()=>openDependentEditor(btn.dataset.dependentEdit)));el.querySelectorAll('[data-dependent-delete]').forEach(btn=>btn.addEventListener('click',()=>{const d=getDependents().find(x=>x.id===btn.dataset.dependentDelete);if(!d)return;if(!window.confirm(`Remove linked dependent ${d.name||'this profile'}?`))return;saveDependents(getDependents().filter(x=>x.id!==d.id));renderDependents();showToast('','Dependent removed','The linked profile was removed from this account.');}));}
+ function renderDependents(){const el=document.getElementById('dependentList');if(!el)return;const list=getDependents();if(!list.length){el.innerHTML='<div class="empty">No family members yet.</div>';return;}el.innerHTML='<div class="list">'+list.map(d=>`<div class="list-row"><div class="list-main"><b>${escapeHtml(d.name||'Unnamed')}</b><span>${escapeHtml(d.relation||'Relationship not set')}${d.createdAt?` · Added ${formatRecordDate(d.createdAt)}`:''}</span></div><div class="section-actions"><button type="button" class="btn btn-sm" data-dependent-edit="${escapeHtml(d.id)}">Edit</button><button type="button" class="btn btn-sm btn-danger" data-dependent-delete="${escapeHtml(d.id)}">Remove</button></div></div>`).join('')+'</div>';el.querySelectorAll('[data-dependent-edit]').forEach(btn=>btn.addEventListener('click',()=>openDependentEditor(btn.dataset.dependentEdit)));el.querySelectorAll('[data-dependent-delete]').forEach(btn=>btn.addEventListener('click',()=>{const d=getDependents().find(x=>x.id===btn.dataset.dependentDelete);if(!d)return;if(!window.confirm(`Remove ${d.name||'this family member'}?`))return;saveDependents(getDependents().filter(x=>x.id!==d.id));renderDependents();showToast('','Family member removed',`${d.name||'They'} ${d.name?'was':'were'} removed from your account.`);}));}
  function openDependentEditor(id){const d=getDependents().find(x=>x.id===id);if(!d)return;const modal=document.getElementById('dependentEditor');if(!modal)return;modal.dataset.id=id;document.getElementById('dependentEditName').value=d.name||'';document.getElementById('dependentEditRelation').value=d.relation||'';modal.hidden=false;document.getElementById('dependentEditName')?.focus();}
  function closeDependentEditor(){document.getElementById('dependentEditor')?.setAttribute('hidden','');}
  function saveDependentEditor(){const modal=document.getElementById('dependentEditor');if(!modal)return;const id=modal.dataset.id,name=document.getElementById('dependentEditName')?.value.trim(),relation=document.getElementById('dependentEditRelation')?.value;if(!name||!relation){showToast('','Name and relationship required','Complete both fields before saving.');return;}const list=getDependents();const idx=list.findIndex(x=>x.id===id);if(idx<0)return;list[idx]={...list[idx],name,relation,updatedAt:new Date().toISOString()};saveDependents(list);closeDependentEditor();renderDependents();showToast('','Family member updated','Details updated.');}
- function registerDependentProfile(){const name=document.getElementById('regName').value.trim(),relation=document.getElementById('regRel').value;if(!name){showToast('','Name required','Enter the dependent name.');return;}if(!relation){showToast('','Relationship required','Select the relationship first.');return;}const list=getDependents();list.unshift({id:`dep_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,name,relation,ownerUid:firebaseUser?.uid||'',createdAt:new Date().toISOString(),status:'family member'});saveDependents(list);document.getElementById('regName').value='';document.getElementById('regRel').value='';renderDependents();showToast('','Family member added',`${name} was added.`);}
+ function registerDependentProfile(){const name=document.getElementById('regName').value.trim(),relation=document.getElementById('regRel').value;if(!name){showToast('','Name required','Enter their full name.');return;}if(!relation){showToast('','Relationship required','Select the relationship first.');return;}const list=getDependents();list.unshift({id:`dep_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,name,relation,ownerUid:firebaseUser?.uid||'',createdAt:new Date().toISOString(),status:'family member'});saveDependents(list);document.getElementById('regName').value='';document.getElementById('regRel').value='';renderDependents();showToast('','Family member added',`${name} was added.`);}
  document.getElementById('registerDepBtn')?.addEventListener('click',registerDependentProfile);document.getElementById('dependentEditCancel')?.addEventListener('click',closeDependentEditor);document.getElementById('dependentEditSave')?.addEventListener('click',saveDependentEditor);document.getElementById('dependentEditor')?.addEventListener('click',e=>{if(e.target.id==='dependentEditor')closeDependentEditor();});renderDependents();
 
  /* =========================================================
@@ -6476,7 +6377,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
           <label>Current medicines</label>
           <div class="medicine-input-header"><span>Medicine name</span><span>Dose</span><span>Schedule</span><span>Pack size (optional)</span><span></span></div>
           <div id="medicineInputRows"></div>
-          <button type="button" class="n-btn medicine-add-btn" id="addMedicineRowBtn">+ Add another medicine</button>
+          <button type="button" class="btn medicine-add-btn" id="addMedicineRowBtn">+ Add another medicine</button>
           <div class="personalization-note">Keep each medicine in its own row so the name, dose and schedule stay clear and structured.</div>
         </div>
         <div class="profile-field full">
@@ -6511,7 +6412,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
             <label class="normal-allergy-option"><input type="checkbox" value="__CUSTOM__" id="customNormalAllergyToggle"> Other</label>
           </div><input id="profileNormalAllergyCustomInput" class="allergy-custom" maxlength="300" placeholder="Other allergies, separated by commas"><div class="personalization-note">For allergies such as dust, pollen, pet dander or latex. You can select more than one, or choose “None”.</div></div>
       </div>
-      <div class="profile-modal-actions"><button type="button" class="n-btn" id="cancelProfileBtn">Cancel</button><button type="submit" class="n-btn solid" id="saveProfileBtn">Save profile</button></div>
+      <div class="profile-modal-actions"><button type="button" class="btn" id="cancelProfileBtn">Cancel</button><button type="submit" class="btn btn-primary" id="saveProfileBtn">Save profile</button></div>
     </form>
   </div>
 </div>
@@ -6676,25 +6577,25 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
     if(loggedEl) loggedEl.textContent=logged+'/7';
 
     const max=Math.max(1,...days.map(d=>d.kcal));
-    const width=Math.max(560,days.length*82), height=190, padL=46,padR=12,padT=18,padB=34;
+    const width=Math.max(chart.clientWidth||560,days.length*64), height=200, padL=16,padR=16,padT=24,padB=32;
     const innerW=width-padL-padR, innerH=height-padT-padB;
     const bars=days.map((d,i)=>{
       const bw=Math.min(46,innerW/days.length*0.56);
       const x=padL+i*(innerW/days.length)+(innerW/days.length-bw)/2;
       const bh=d.kcal ? Math.max(3,(d.kcal/max)*innerH) : 2;
       const y=padT+innerH-bh;
-      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="4" fill="currentColor" opacity=".82"><title>${d.label}: ${Math.round(d.kcal)} kcal · P ${d.protein.toFixed(1)}g · C ${d.carbs.toFixed(1)}g · F ${d.fat.toFixed(1)}g</title></rect>`+
-        `<text x="${(x+bw/2).toFixed(1)}" y="${height-12}" text-anchor="middle" font-size="11" fill="currentColor" opacity=".72">${d.label}</text>`+
-        `<text x="${(x+bw/2).toFixed(1)}" y="${Math.max(12,y-5).toFixed(1)}" text-anchor="middle" font-size="10" fill="currentColor">${d.kcal?Math.round(d.kcal):'—'}</text>`;
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="4" class="chart-bar${d.kcal?'':' is-empty'}"><title>${d.label}: ${Math.round(d.kcal)} kcal · P ${d.protein.toFixed(1)}g · C ${d.carbs.toFixed(1)}g · F ${d.fat.toFixed(1)}g</title></rect>`+
+        `<text x="${(x+bw/2).toFixed(1)}" y="${height-10}" text-anchor="middle" class="chart-label">${d.label}</text>`+
+        `<text x="${(x+bw/2).toFixed(1)}" y="${Math.max(12,y-6).toFixed(1)}" text-anchor="middle" class="chart-value">${d.kcal?Math.round(d.kcal):''}</text>`;
     }).join('');
     const grid=[0,.25,.5,.75,1].map(r=>{
       const y=padT+innerH-r*innerH;
-      return `<line x1="${padL}" y1="${y}" x2="${width-padR}" y2="${y}" stroke="currentColor" opacity=".10"/>`;
+      return `<line x1="${padL}" y1="${y}" x2="${width-padR}" y2="${y}" class="chart-axis"/>`;
     }).join('');
     const pMax=Math.max(1,...days.map(d=>d.protein));
     const proteinPoints=days.map((d,i)=>{const x=padL+i*(innerW/days.length)+(innerW/days.length)/2;const y=padT+innerH-(d.protein/pMax)*innerH;return `${x.toFixed(1)},${y.toFixed(1)}`;}).join(' ');
-    const proteinDots=days.map((d,i)=>{const x=padL+i*(innerW/days.length)+(innerW/days.length)/2;const y=padT+innerH-(d.protein/pMax)*innerH;return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="var(--blue)"><title>${d.label}: ${d.protein.toFixed(1)} g protein</title></circle>`;}).join('');
-    chart.innerHTML=`<div style="overflow-x:auto;width:100%;"><svg viewBox="0 0 ${width} ${height}" style="display:block;width:100%;min-width:${width}px;height:210px;color:var(--ink);" role="img" aria-label="Seven day calorie and protein trend">${grid}${bars}<polyline points="${proteinPoints}" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${proteinDots}</svg></div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Bars = calories. Blue line = protein. Hover a mark for exact values.</div>`;
+    const proteinDots=days.map((d,i)=>{const x=padL+i*(innerW/days.length)+(innerW/days.length)/2;const y=padT+innerH-(d.protein/pMax)*innerH;return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" class="chart-dot-2"><title>${d.label}: ${d.protein.toFixed(1)} g protein</title></circle>`;}).join('');
+    chart.innerHTML=`<div class="chart-legend"><span><i class="swatch swatch-1"></i>Calories</span><span><i class="swatch swatch-2"></i>Protein</span></div><div class="trend-chart"><svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Calories and protein over the last seven days">${grid}${bars}<polyline points="${proteinPoints}" class="chart-line-2"/>${proteinDots}</svg></div>`;
   }
 
   const FOOD_MED_RULES=[
@@ -6736,12 +6637,12 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
       DRUG_DRUG_RULES.forEach(rule=>{if((rule.a.test(a)&&rule.b.test(b))||(rule.a.test(b)&&rule.b.test(a)))ddiMatches.push({rule});});
     }
     if(!matches.length && !ddiMatches.length){
-      el.innerHTML='<div style="padding:14px;border:1px dashed var(--line);border-radius:9px;color:var(--muted);font-size:13px;"><b>No supported interaction rule was found.</b><br>This does <b>not</b> mean there is no interaction. Food and drug–drug screening is limited to the rules built into SwasthID.</div>';
+      el.innerHTML='<div class="callout"><div><b>Nothing flagged for your medicines.</b> SwasthID only knows a few rules, so this doesn’t mean there are no interactions.</div></div>';
       return;
     }
-    const foodHtml=matches.map(x=>`<div style="border:1px solid var(--line);border-left:4px solid var(--warn,#b7791f);border-radius:9px;padding:13px 14px;margin-bottom:10px;background:var(--paper,#fff);"><div style="font-weight:700;margin-bottom:6px;">${safeFood(x.med)} · ${safeFood(x.rule.name)}</div><ul style="margin:0;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.55;">${x.rule.flags.map(f=>`<li>${safeFood(f)}</li>`).join('')}</ul></div>`).join('');
-    const ddiHtml=ddiMatches.length ? ddiMatches.map(x=>`<div style="border:1px solid var(--line);border-left:4px solid var(--warn,#b7791f);border-radius:9px;padding:13px 14px;margin-top:10px;background:var(--paper,#fff);"><div style="font-weight:700;margin-bottom:6px;">${safeFood(x.rule.label)}</div><div style="color:var(--muted);font-size:12px;line-height:1.55;">${safeFood(x.rule.flag)}</div></div>`).join('') : '<div style="padding:12px;border:1px dashed var(--line);border-radius:9px;color:var(--muted);font-size:12px;margin-top:10px;">No supported drug–drug rule was triggered. This is not a complete DDI database.</div>';
-    el.innerHTML=foodHtml+'<h4 style="margin:16px 0 8px;">Medication–medication screening</h4>'+ddiHtml+'<div style="font-size:11px;color:var(--muted);margin-top:8px;">Limited rule-based screening only. Always check a pharmacist/clinician for a complete interaction review.</div>';
+    const foodHtml=matches.map(x=>`<div class="callout callout-warning"><div><b>${safeFood(x.med)} · ${safeFood(x.rule.name)}</b><ul>${x.rule.flags.map(f=>`<li>${safeFood(f)}</li>`).join('')}</ul></div></div>`).join('');
+    const ddiHtml=ddiMatches.map(x=>`<div class="callout callout-warning"><div><b>${safeFood(x.rule.label)}</b><p>${safeFood(x.rule.flag)}</p></div></div>`).join('');
+    el.innerHTML=foodHtml+ddiHtml+'<p class="t-meta">These are a few built-in rules, not a full interaction check.</p>';
   }
 
   let barcodeStream=null, barcodeTimer=null, zxingReader=null;
@@ -6755,7 +6656,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
     if(barcodeStream){barcodeStream.getTracks().forEach(t=>t.stop());barcodeStream=null;}
     const v=video(); if(v){v.pause();v.srcObject=null;v.style.display='none';}
     const b=document.getElementById('stopBarcodeScanBtn'); if(b)b.style.display='none';
-    const start=document.getElementById('startBarcodeScanBtn'); if(start)start.style.display='inline-flex';
+    const start=document.getElementById('startBarcodeScanBtn'); if(start)start.style.display='';
   }
   function showBarcodeResult(product, barcode){
     const el=result(); if(!el)return;
@@ -6767,7 +6668,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
     const protein=safeNum(n.proteins_100g);
     const carbs=safeNum(n.carbohydrates_100g);
     const fat=safeNum(n.fat_100g);
-    el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper,#fff);"><div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">${p.image_front_small_url?`<img src="${safeFood(p.image_front_small_url)}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">`:''}<div style="min-width:0;flex:1;"><div style="font-weight:700;">${safeFood(name)}</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">${safeFood(brand)} · barcode ${safeFood(barcode)}</div><div style="font-size:12px;margin-top:8px;">${kcal?Math.round(kcal)+' kcal':''}${protein?' · P '+protein.toFixed(1)+'g':''}${carbs?' · C '+carbs.toFixed(1)+'g':''}${fat?' · F '+fat.toFixed(1)+'g':''} per 100 g</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button type="button" class="n-btn solid" id="barcodeLogBtn">Log 100 g</button><button type="button" class="n-btn" id="barcodeClearBtn">Clear</button></div><div style="font-size:10px;color:var(--muted);margin-top:9px;">Barcode nutrition is provided by Open Food Facts and may be incomplete or user-contributed.</div></div>`;
+    el.innerHTML=`<div class="barcode-result">${p.image_front_small_url?`<img src="${safeFood(p.image_front_small_url)}" alt="" class="barcode-thumb">`:''}<div class="list-main"><b>${safeFood(name)}</b><span>${safeFood(brand)} · ${safeFood(barcode)}</span><span>${[kcal?Math.round(kcal)+' kcal':'',protein?'P '+protein.toFixed(1)+' g':'',carbs?'C '+carbs.toFixed(1)+' g':'',fat?'F '+fat.toFixed(1)+' g':''].filter(Boolean).join(' · ')} per 100 g</span></div><div class="section-actions"><button type="button" class="btn btn-primary btn-sm" id="barcodeLogBtn">Log 100 g</button><button type="button" class="btn btn-sm" id="barcodeClearBtn">Clear</button></div></div><p class="t-meta">From Open Food Facts; entries can be incomplete.</p>`;
     const logBtn=document.getElementById('barcodeLogBtn');
     if(logBtn) logBtn.addEventListener('click',()=>{
       if(!kcal){setBarcodeStatus('This product has no usable calorie value, so it cannot be logged automatically.');return;}
@@ -6937,7 +6838,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
     grid.replaceChildren(...steps);
     const progress=document.createElement('div');progress.className='profile-wizard-progress';progress.innerHTML='<span></span><span></span><span></span><span></span>';
     const label=document.createElement('div');label.className='profile-wizard-step-label';label.id='profileWizardStepLabel';
-    const nav=document.createElement('div');nav.className='profile-wizard-nav';nav.innerHTML='<button type="button" class="n-btn" id="profileWizardBack">Back</button><div class="profile-wizard-nav-right"><button type="button" class="n-btn" id="profileWizardCancel">Cancel</button><button type="button" class="n-btn solid" id="profileWizardNext">Next</button></div>';
+    const nav=document.createElement('div');nav.className='profile-wizard-nav';nav.innerHTML='<button type="button" class="btn" id="profileWizardBack">Back</button><div class="profile-wizard-nav-right"><button type="button" class="btn" id="profileWizardCancel">Cancel</button><button type="button" class="btn btn-primary" id="profileWizardNext">Next</button></div>';
     form.insertBefore(progress,grid); form.insertBefore(label,grid); form.appendChild(nav);
     const labels=['Personal details','Health & lifestyle','Allergies','Emergency & insurance'];
     let current=Math.max(0,Math.min(3,Number(localStorage.getItem('swasth_profileWizardStep')||0)));
@@ -7094,7 +6995,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
       : !supported() ? 'This browser can\'t show notifications here.'
       : 'Get a notification at each dose time while SwasthID is open.';
     bar.innerHTML = `<div class="reminder-bar-text"><b>Dose reminders</b><span>${escapeHtml(status)} To be reminded when it's closed, add your doses to your calendar.</span></div>
-      <div class="reminder-bar-actions">${supported() && !blocked ? `<button type="button" class="n-btn${on ? '' : ' solid'}" data-reminder-toggle>${on ? 'Turn off' : 'Turn on'}</button>` : ''}<button type="button" class="n-btn" data-reminder-calendar>Add to calendar</button></div>`;
+      <div class="reminder-bar-actions">${supported() && !blocked ? `<button type="button" class="btn btn-sm${on ? '' : ' btn-primary'}" data-reminder-toggle>${on ? 'Turn off' : 'Turn on'}</button>` : ''}<button type="button" class="btn" data-reminder-calendar>Add to calendar</button></div>`;
     bar.querySelector('[data-reminder-toggle]')?.addEventListener('click', () => on ? turnOff() : turnOn());
     bar.querySelector('[data-reminder-calendar]')?.addEventListener('click', downloadCalendar);
   }
