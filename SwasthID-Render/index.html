@@ -250,7 +250,7 @@
      </div>
      <div class="places-panel">
       <div id="nearbyLoadingState" style="display:none;" aria-live="polite">
-       <span class="visually-hidden">Finding places near you</span>
+       <p class="t-meta places-loading-text" id="nearbyLoadingText">Finding your location…</p>
        <div class="place-skeleton"><span class="skeleton tall"></span><span class="skeleton-lines"><span class="skeleton w-60"></span><span class="skeleton w-40"></span></span><span class="skeleton tall"></span></div>
        <div class="place-skeleton"><span class="skeleton tall"></span><span class="skeleton-lines"><span class="skeleton w-70"></span><span class="skeleton w-30"></span></span><span class="skeleton tall"></span></div>
        <div class="place-skeleton"><span class="skeleton tall"></span><span class="skeleton-lines"><span class="skeleton w-50"></span><span class="skeleton w-40"></span></span><span class="skeleton tall"></span></div>
@@ -5330,7 +5330,7 @@ async function fetchNearbyHospitals(lat, lon) {
 
  // Keep the query intentionally small. Public Overpass servers can be busy, and
  // a broad unbounded healthcare query is much more likely to time out.
- const query = `[out:json][timeout:18];
+ const query = `[out:json][timeout:15];
  (
    nwr["amenity"="hospital"](around:10000,${safeLat},${safeLon});
    nwr["amenity"="clinic"](around:5000,${safeLat},${safeLon});
@@ -5343,91 +5343,108 @@ async function fetchNearbyHospitals(lat, lon) {
  );
  out center tags qt;`;
 
- const endpoints = [
-   'https://overpass-api.de/api/interpreter',
-   'https://overpass.private.coffee/api/interpreter'
- ];
- let lastError = null;
+ const data = await queryOverpass(query);
+ const seen = new Set();
+ const results = (data.elements || [])
+   .map(el => {
+     const elLat = el.lat ?? el.center?.lat;
+     const elLon = el.lon ?? el.center?.lon;
+     const tags = el.tags || {};
+     if(elLat == null || elLon == null || !tags.name) return null;
+     const latNum = Number(elLat), lonNum = Number(elLon);
+     if(!Number.isFinite(latNum) || !Number.isFinite(lonNum)) return null;
+     const key = `${String(tags.name).toLowerCase()}|${latNum.toFixed(5)}|${lonNum.toFixed(5)}`;
+     if(seen.has(key)) return null;
+     seen.add(key);
+     const amenity = String(tags.amenity || '').toLowerCase();
+     const healthcare = String(tags.healthcare || '').toLowerCase();
+     const pharmacy = amenity === 'pharmacy' || healthcare === 'pharmacy';
+     const storeText = `${tags.name} ${tags.brand || ''} ${tags.operator || ''}`;
+     const janAushadhi = pharmacy && /jan\s*-?\s*aushadh|janaushadh|\bpmbj[kp]\b|\bbppi\b/i.test(storeText);
+     return {
+       id: el.id,
+       name: tags.name,
+       lat: latNum,
+       lon: lonNum,
+       dist: haversineKm(safeLat, safeLon, latNum, lonNum),
+       type: pharmacy ? 'Pharmacy' :
+             amenity === 'hospital' || healthcare === 'hospital' ? 'Hospital' :
+             amenity === 'clinic' || healthcare === 'clinic' || healthcare === 'polyclinic' ? 'Clinic' :
+             amenity === 'doctors' || healthcare === 'doctor' ? 'Doctor' : 'Healthcare centre',
+       emergency: !pharmacy && (tags.emergency === 'yes' || tags.emergency === '24/7'),
+       // Generic-medicine stores: Jan Aushadhi Kendras (PMBJP), AMRIT pharmacies (not
+       // every "Amrit Medical"), and stores that say "generic" in their name or brand.
+       generic: pharmacy && (janAushadhi || /\bgeneric\b|\bamrit\s+(?:pharmacy|deendayal)\b/i.test(storeText)),
+       janAushadhi,
+       open24: String(tags.opening_hours || '').trim() === '24/7',
+       govt: !pharmacy && /^(government|public)$/i.test(tags['operator:type'] || tags.operator_type || '') ||
+             /\b(government|govt|district hospital|state general hospital|sub[- ]?divisional hospital|primary health cent(?:re|er)|community health cent(?:re|er)|phc|chc|esi|esic)\b/i.test(`${tags.operator || ''} ${tags.name}`),
+       phone: tags.phone || tags['contact:phone'] || null,
+       address: tags['addr:full'] || [[tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '), tags['addr:suburb'] || tags['addr:city']].filter(Boolean).join(', ')
+     };
+   })
+   .filter(Boolean)
+   .sort((a,b) => a.dist - b.dist);
+ // Clinics and doctors' chambers are dense in cities; never let them push
+ // every hospital off the list. Keep the 3 nearest hospitals, then fill up.
+ // Pharmacies are chosen separately so they don't crowd out care either:
+ // the 3 nearest generic-medicine stores (searched up to 10 km) and the 8
+ // nearest other pharmacies.
+ const care = results.filter(p => p.type !== 'Pharmacy');
+ const nearestHospitals = care.filter(p => p.type === 'Hospital').slice(0, 3);
+ const others = care.filter(p => !nearestHospitals.includes(p)).slice(0, 12 - nearestHospitals.length);
+ const generics = results.filter(p => p.generic).slice(0, 3);
+ const pharmacies = results.filter(p => p.type === 'Pharmacy' && !p.generic).slice(0, 8);
+ return [...nearestHospitals, ...others, ...generics, ...pharmacies].sort((a,b) => a.dist - b.dist);
+}
 
- for(const endpoint of endpoints) {
-   const controller = new AbortController();
-   const timer = setTimeout(() => controller.abort(), 20000);
-   try {
-     const url = `${endpoint}?data=${encodeURIComponent(query)}`;
-     const res = await fetch(url, {
-       method:'GET',
-       signal:controller.signal,
-       headers:{'Accept':'application/json'}
-     });
-     if(!res.ok) throw new Error(`${endpoint} returned HTTP ${res.status}`);
-     const data = await res.json();
-     const seen = new Set();
-     const results = (data.elements || [])
-       .map(el => {
-         const elLat = el.lat ?? el.center?.lat;
-         const elLon = el.lon ?? el.center?.lon;
-         const tags = el.tags || {};
-         if(elLat == null || elLon == null || !tags.name) return null;
-         const latNum = Number(elLat), lonNum = Number(elLon);
-         if(!Number.isFinite(latNum) || !Number.isFinite(lonNum)) return null;
-         const key = `${String(tags.name).toLowerCase()}|${latNum.toFixed(5)}|${lonNum.toFixed(5)}`;
-         if(seen.has(key)) return null;
-         seen.add(key);
-         const amenity = String(tags.amenity || '').toLowerCase();
-         const healthcare = String(tags.healthcare || '').toLowerCase();
-         const pharmacy = amenity === 'pharmacy' || healthcare === 'pharmacy';
-         const storeText = `${tags.name} ${tags.brand || ''} ${tags.operator || ''}`;
-         const janAushadhi = pharmacy && /jan\s*-?\s*aushadh|janaushadh|\bpmbj[kp]\b|\bbppi\b/i.test(storeText);
-         return {
-           id: el.id,
-           name: tags.name,
-           lat: latNum,
-           lon: lonNum,
-           dist: haversineKm(safeLat, safeLon, latNum, lonNum),
-           type: pharmacy ? 'Pharmacy' :
-                 amenity === 'hospital' || healthcare === 'hospital' ? 'Hospital' :
-                 amenity === 'clinic' || healthcare === 'clinic' || healthcare === 'polyclinic' ? 'Clinic' :
-                 amenity === 'doctors' || healthcare === 'doctor' ? 'Doctor' : 'Healthcare centre',
-           emergency: !pharmacy && (tags.emergency === 'yes' || tags.emergency === '24/7'),
-           // Generic-medicine stores: Jan Aushadhi Kendras (PMBJP), AMRIT pharmacies (not
-           // every "Amrit Medical"), and stores that say "generic" in their name or brand.
-           generic: pharmacy && (janAushadhi || /\bgeneric\b|\bamrit\s+(?:pharmacy|deendayal)\b/i.test(storeText)),
-           janAushadhi,
-           open24: String(tags.opening_hours || '').trim() === '24/7',
-           govt: !pharmacy && /^(government|public)$/i.test(tags['operator:type'] || tags.operator_type || '') ||
-                 /\b(government|govt|district hospital|state general hospital|sub[- ]?divisional hospital|primary health cent(?:re|er)|community health cent(?:re|er)|phc|chc|esi|esic)\b/i.test(`${tags.operator || ''} ${tags.name}`),
-           phone: tags.phone || tags['contact:phone'] || null,
-           address: tags['addr:full'] || [[tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '), tags['addr:suburb'] || tags['addr:city']].filter(Boolean).join(', ')
-         };
+// Public Overpass mirrors. Each is free but can be busy or rate-limit a shared
+// mobile IP, so ask the first and bring in the next one if it fails or has not
+// answered within a few seconds. The first good answer wins; the rest are cancelled.
+const OVERPASS_ENDPOINTS = [
+ 'https://overpass-api.de/api/interpreter',
+ 'https://overpass.private.coffee/api/interpreter',
+ 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+];
+function queryOverpass(query, {hedgeMs=4000, timeoutMs=17000}={}) {
+ return new Promise((resolve, reject) => {
+   const controllers = [], errors = [];
+   let next = 0, running = 0, done = false, hedgeTimer = null;
+   const finish = () => { done = true; clearTimeout(hedgeTimer); controllers.forEach(c => c.abort()); };
+   const start = () => {
+     if(done || next >= OVERPASS_ENDPOINTS.length) return;
+     const endpoint = OVERPASS_ENDPOINTS[next++];
+     const controller = new AbortController(); controllers.push(controller);
+     const timer = setTimeout(() => controller.abort(), timeoutMs);
+     running++;
+     clearTimeout(hedgeTimer); hedgeTimer = setTimeout(start, hedgeMs);
+     fetch(`${endpoint}?data=${encodeURIComponent(query)}`, { signal:controller.signal, headers:{'Accept':'application/json'} })
+       .then(async res => {
+         if(!res.ok) throw new Error(`${endpoint} returned HTTP ${res.status}`);
+         const data = await res.json();
+         // A server that runs out of time still answers 200, with a "remark"
+         // and a partial or empty list. Treat that as a failure, not "nothing nearby".
+         if(data.remark && /error|timed out|out of memory/i.test(data.remark)) throw new Error(`${endpoint}: ${data.remark}`);
+         if(!done) { finish(); resolve(data); }
        })
-       .filter(Boolean)
-       .sort((a,b) => a.dist - b.dist);
-     // Clinics and doctors' chambers are dense in cities; never let them push
-     // every hospital off the list. Keep the 3 nearest hospitals, then fill up.
-     // Pharmacies are chosen separately so they don't crowd out care either:
-     // the 3 nearest generic-medicine stores (searched up to 10 km) and the 8
-     // nearest other pharmacies.
-     const care = results.filter(p => p.type !== 'Pharmacy');
-     const nearestHospitals = care.filter(p => p.type === 'Hospital').slice(0, 3);
-     const others = care.filter(p => !nearestHospitals.includes(p)).slice(0, 12 - nearestHospitals.length);
-     const generics = results.filter(p => p.generic).slice(0, 3);
-     const pharmacies = results.filter(p => p.type === 'Pharmacy' && !p.generic).slice(0, 8);
-     return [...nearestHospitals, ...others, ...generics, ...pharmacies].sort((a,b) => a.dist - b.dist);
-   } catch(err) {
-     lastError = err;
-     console.warn(`Nearby healthcare endpoint failed: ${endpoint}`, err);
-   } finally {
-     clearTimeout(timer);
-   }
- }
- throw lastError || new Error('All nearby healthcare services failed');
+       .catch(err => {
+         if(done) return;
+         errors.push(err);
+         console.warn(`Nearby healthcare endpoint failed: ${endpoint}`, err);
+         if(next < OVERPASS_ENDPOINTS.length) start();
+         else if(running === errors.length) { finish(); reject(errors[0]); }
+       })
+       .finally(() => clearTimeout(timer));
+   };
+   start();
+ });
 }
 
 function requestNearbyPosition(highAccuracy=false) {
  return new Promise((resolve, reject) => {
    navigator.geolocation.getCurrentPosition(resolve, reject, {
      enableHighAccuracy: highAccuracy,
-     timeout: highAccuracy ? 12000 : 10000,
+     timeout: highAccuracy ? 10000 : 8000,
      maximumAge: highAccuracy ? 60000 : 300000
    });
  });
@@ -5435,7 +5452,7 @@ function requestNearbyPosition(highAccuracy=false) {
 
 async function requestApproximateNetworkPosition() {
  const controller = new AbortController();
- const timer = setTimeout(() => controller.abort(), 8000);
+ const timer = setTimeout(() => controller.abort(), 6000);
  try {
    const res = await fetch('https://ipwho.is/', { signal:controller.signal, cache:'no-store' });
    if(!res.ok) throw new Error(`Network location HTTP ${res.status}`);
@@ -5534,56 +5551,99 @@ function renderNearbyPlaces() {
  list.querySelector('[data-nearby-more]')?.addEventListener('click', () => { nearbyShowAll = true; renderNearbyPlaces(); });
 }
 
-async function loadNearbyHospitals() {
- setNearbyLoading(true);
- if (!navigator.geolocation) {
-   try {
-     const networkPos = await requestApproximateNetworkPosition();
-     const hospitals = await fetchNearbyHospitals(networkPos.coords.latitude, networkPos.coords.longitude);
-     setNearbyLoading(false);
-     renderNearbyList(hospitals, networkPos.coords.latitude, networkPos.coords.longitude);
-     document.getElementById('nearbySubtitle').textContent = `Based on your approximate location. ` + document.getElementById('nearbySubtitle').textContent;
-     return;
-   } catch(err) {
-     showNearbyError('This browser has no location service and approximate network location was unavailable.');
-     return;
-   }
- }
+// Last successful search, so a busy map server still leaves something useful.
+// Stored on this device only and cleared on sign-out like other swasth_ keys.
+const NEARBY_CACHE_KEY = 'swasth_nearbyCache';
+function saveNearbyCache(lat, lon, places) {
+ try { localStorage.setItem(NEARBY_CACHE_KEY, JSON.stringify({ lat, lon, at: Date.now(), places })); } catch(e) {}
+}
+function readNearbyCache(lat, lon) {
+ try {
+   const c = JSON.parse(localStorage.getItem(NEARBY_CACHE_KEY) || 'null');
+   if(!c || !Array.isArray(c.places) || !c.places.length) return null;
+   if(Date.now() - c.at > 30 * 864e5 || haversineKm(lat, lon, c.lat, c.lon) > 2) return null;
+   const places = c.places.map(p => ({ ...p, dist: haversineKm(lat, lon, p.lat, p.lon) })).sort((x, y) => x.dist - y.dist);
+   return { at: c.at, places };
+ } catch(e) { return null; }
+}
 
+function setNearbyStatus(text) {
+ const el = document.getElementById('nearbyLoadingText');
+ if(el) el.textContent = text;
+}
+
+async function getNearbyPosition() {
+ if(!navigator.geolocation) return requestApproximateNetworkPosition();
+ try {
+   return await requestNearbyPosition(false);
+ } catch(firstErr) {
+   if(firstErr?.code === 1) throw firstErr;
+ }
+ try {
+   return await requestNearbyPosition(true);
+ } catch(secondErr) {
+   if(secondErr?.code === 1) throw secondErr;
+   // If GPS/network browser positioning fails, use an approximate IP location
+   // rather than leaving the feature completely unusable.
+   try { return await requestApproximateNetworkPosition(); } catch(e) { throw secondErr; }
+ }
+}
+
+async function loadNearbyHospitals() {
+ const btn = document.getElementById('findNearbyBtn');
+ if(btn?.getAttribute('aria-busy') === 'true') return;
+ btn?.setAttribute('aria-busy', 'true'); btn?.classList.add('is-loading');
+ setNearbyLoading(true);
+ setNearbyStatus('Finding your location…');
  try {
    let pos;
+   // Browsers don't start the location timeout until the permission prompt is
+   // answered, and phones often show that prompt only as a small address-bar
+   // icon. Say so after a few seconds, and fall back to an approximate network
+   // location instead of waiting forever.
+   const hintTimer = setTimeout(() => setNearbyStatus('Still finding your location. If your browser is asking for location access, allow it (look for a location icon in the address bar).'), 6000);
+   let giveUpTimer;
+   const waitTooLong = new Promise((resolve, reject) => { giveUpTimer = setTimeout(() => requestApproximateNetworkPosition().then(resolve, () => reject({ code: 3 })), 25000); });
    try {
-     pos = await requestNearbyPosition(false);
-   } catch(firstErr) {
-     if(firstErr?.code === 1) throw firstErr;
-     try {
-       pos = await requestNearbyPosition(true);
-     } catch(secondErr) {
-       // If GPS/network browser positioning fails, use an approximate IP location
-       // rather than leaving the feature completely unusable.
-       pos = await requestApproximateNetworkPosition();
-     }
+     pos = await Promise.race([getNearbyPosition(), waitTooLong]);
+   } catch(err) {
+     console.error('Nearby location:', err);
+     const messages = {
+       1: 'Location permission was denied. Allow location access for SwasthID in your browser settings and try again.',
+       2: 'Your location could not be determined, and an approximate network location was not available either.',
+       3: 'Finding your location took too long, and an approximate network location was not available either. Try again.'
+     };
+     showNearbyError(messages[err?.code] || (navigator.geolocation ? 'Unable to determine your location. Please try again.' : 'This browser has no location service and approximate network location was unavailable.'));
+     return;
+   } finally {
+     clearTimeout(hintTimer); clearTimeout(giveUpTimer);
    }
 
    const { latitude, longitude, accuracy } = pos.coords;
-   const hospitals = await fetchNearbyHospitals(latitude, longitude);
-   setNearbyLoading(false);
-   document.getElementById('nearbyFallback').style.display = 'none';
-   renderNearbyList(hospitals, latitude, longitude);
-   document.getElementById('nearbySubtitle').title = `Location accuracy: approximately ${Math.round(accuracy || 5000)} m${pos.approximate ? ' (network estimate)' : ''}`;
-   if(pos.approximate) document.getElementById('nearbySubtitle').textContent = `Based on your approximate location. ` + document.getElementById('nearbySubtitle').textContent;
- } catch(err) {
-   console.error('Nearby hospital search:', err);
-   if(err && err.code) {
-     const messages = {
-       1: 'Location permission was denied. Allow location access for SwasthID and try again. If you prefer, enable browser location and retry.',
-       2: 'Your exact location could not be determined. SwasthID also tried an approximate network location.',
-       3: 'Location request timed out. SwasthID also tried an approximate network location.'
-     };
-     showNearbyError(messages[err.code] || 'Unable to determine your location. Please try again.');
-   } else {
-     showNearbyError('Nearby healthcare search is temporarily unavailable. We tried the current public OpenStreetMap Overpass servers. Please retry in a few seconds.');
+   const subtitle = document.getElementById('nearbySubtitle');
+   const approxNote = pos.approximate ? 'Based on your approximate location. ' : '';
+   setNearbyStatus('Searching OpenStreetMap for places near you…');
+   let places, cachedAt = null;
+   try {
+     places = await fetchNearbyHospitals(latitude, longitude);
+     saveNearbyCache(latitude, longitude, places);
+   } catch(err) {
+     console.error('Nearby healthcare search:', err);
+     const cached = readNearbyCache(latitude, longitude);
+     if(!cached) {
+       showNearbyError('The free OpenStreetMap servers are busy right now. Try again in a minute.');
+       return;
+     }
+     places = cached.places; cachedAt = cached.at;
    }
+   renderNearbyList(places, latitude, longitude);
+   if(subtitle && places.length) {
+     subtitle.title = `Location accuracy: approximately ${Math.round(accuracy || 5000)} m${pos.approximate ? ' (network estimate)' : ''}`;
+     const cachedNote = cachedAt ? `Map servers are busy, so these are the places found on ${new Date(cachedAt).toLocaleDateString(undefined, { day:'numeric', month:'short' })}. ` : '';
+     subtitle.textContent = cachedNote + approxNote + subtitle.textContent;
+   }
+ } finally {
+   btn?.removeAttribute('aria-busy'); btn?.classList.remove('is-loading');
  }
 }
 
