@@ -832,6 +832,8 @@ button.list-row:hover { background: var(--c-surface-2); }
 .lab-scan-card { width: min(560px, 100%); }
 .profile-modal { width: min(760px, 100%); max-height: min(90vh, 820px); overflow: auto; padding: var(--space-8); }
 .profile-modal h2 { font-size: var(--text-xl); line-height: var(--leading-xl); margin: 0 0 var(--space-1); }
+/* One wizard step at a time (the legacy rule relied on !important). */
+.profile-wizard-step.profile-wizard-hidden { display: none; }
 .profile-modal .modal-sub { margin: 0 0 var(--space-6); color: var(--c-text-2); }
 
 /* Offline banner */
