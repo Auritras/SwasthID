@@ -40,6 +40,10 @@ phone or a computer, and everything is stored in your own account.
 - **Family.** Keep track of people you look after.
 - **SwasthAI.** An optional assistant that runs entirely in your browser
   (WebLLM); nothing you ask it leaves your device.
+- **Works offline and installs like an app.** After one visit, SwasthID opens
+  without a connection and shows what is saved on the device. Install it from
+  the account menu (**Install app**), or on an iPhone with Share → Add to Home
+  Screen.
 - Light and dark mode, and layouts for phones and desktops.
 
 ## How it is built
@@ -68,7 +72,9 @@ SwasthID-Render/            The web app and its Node server
   server.js                 HTTP server: static files and /api/* routes
   firebase-config.js        Firebase web config (safe to be public)
   firestore.rules           Firestore security rules
-  sw.js                     Service worker, only for dose notifications
+  sw.js                     Service worker: offline copy of the app, dose notifications
+  playwright.config.js      Browser test setup
+  tests/                    server/ (API tests), e2e/ (browser), emulator/ (accounts)
   assets/
     app.css                 Design system: tokens, components, screens
     legacy.css              Older styles still used by a few screens
@@ -96,8 +102,11 @@ SwasthID-Render/            The web app and its Node server
       pdf-kit.js              Shared PDF drawing helpers
       pdf-builders.js         Emergency card and health summary PDFs
       vitals.js               Vitals log and charts
+      pwa.js                  Offline service worker and "Install app"
     favicon.svg, icon-*.png, og-image.png, site.webmanifest
 SwasthID-Risk-API/          FastAPI service for the PREVENT equations
+  test_api.py               Its tests
+.github/workflows/ci.yml    Runs every test on each pull request
 ```
 
 The scripts are ordinary `<script>` tags that share one global scope, so their
@@ -115,9 +124,9 @@ npm start
 ```
 
 Open http://localhost:10000. It signs in with the Firebase project in
-`firebase-config.js`. To try it without Firebase, set that file to
-`window.SWASTH_FIREBASE_CONFIG = {};` and the app runs in local demo mode,
-keeping everything in the browser.
+`firebase-config.js`. To try it without Firebase, start it with
+`DEMO_MODE=1 npm start`: the app runs in local demo mode and keeps everything
+in the browser.
 
 Features that need the server's secrets (emergency QR, doctor links, account
 deletion, heart risk, live medicine search) stay switched off until the
@@ -133,6 +142,31 @@ uvicorn main:app --port 8001
 ```
 
 Then start the Node server with `RISK_API_URL=http://localhost:8001`.
+
+## Tests
+
+Every pull request runs all of these on GitHub Actions
+(`.github/workflows/ci.yml`). To run them yourself:
+
+```bash
+cd SwasthID-Render
+npm install
+npx playwright install chromium   # once
+
+npm test                 # server and API tests
+npm run test:e2e         # the app in a browser, in demo mode
+npm run test:emulator    # accounts, sync, security rules and deletion
+                         # (needs Java; starts the Firebase emulators itself)
+
+cd ../SwasthID-Risk-API
+pip install -r requirements-dev.txt
+pytest                   # heart risk API
+```
+
+The browser tests never contact real outside services: map servers, food and
+medicine APIs are blocked or faked. The emulator tests use a throwaway
+`demo-swasthid` project and your real `firestore.rules`, so they never touch
+your live Firebase data.
 
 ## Configuration
 
@@ -150,6 +184,7 @@ start it.
 | `ALLOWED_ORIGIN` | CORS origin for the API. Default `*`. |
 | `OVERPASS_URLS` | Comma-separated Overpass servers for Nearby care, if you want to override the defaults. |
 | `PORT` | Port to listen on. Default 10000; Render sets this for you. |
+| `DEMO_MODE` | `1` runs the app without Firebase, keeping data in the browser. For trying it out; never set it on the live site. |
 
 ## Setting up Firebase
 

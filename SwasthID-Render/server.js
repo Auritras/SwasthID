@@ -15,6 +15,12 @@ const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || '';
 const FIREBASE_CLIENT_EMAIL = process.env.FIREBASE_CLIENT_EMAIL || '';
 const FIREBASE_PRIVATE_KEY = (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
 
+// DEMO_MODE=1 serves an empty Firebase config, so the app runs without an
+// account and keeps data in the browser. When the Firebase emulator variables
+// are set (tests, local development), Admin and the web app both use them.
+const DEMO_MODE = process.env.DEMO_MODE === '1';
+const USING_EMULATORS = !DEMO_MODE && Boolean(FIREBASE_PROJECT_ID && process.env.FIREBASE_AUTH_EMULATOR_HOST && process.env.FIRESTORE_EMULATOR_HOST);
+
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
 
@@ -32,6 +38,12 @@ let firebaseAdmin = null;
 let firebaseInitError = null;
 
 function tryInitFirebaseAdmin() {
+  // Against the local emulators, Firebase Admin needs only the project ID.
+  if (USING_EMULATORS) {
+    firebaseAdmin = require('firebase-admin');
+    if (!firebaseAdmin.apps.length) firebaseAdmin.initializeApp({ projectId: FIREBASE_PROJECT_ID });
+    return;
+  }
   if (!FIREBASE_PROJECT_ID || !FIREBASE_CLIENT_EMAIL || !FIREBASE_PRIVATE_KEY) {
     firebaseInitError = new Error(
       'Firebase Admin environment variables are not configured.'
@@ -668,9 +680,11 @@ function queryOverpassServers(query) {
 }
 
 async function handleNearby(req, res, url) {
-  const lat = Number(url.searchParams.get('lat'));
-  const lon = Number(url.searchParams.get('lon'));
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+  // Missing or blank values must not turn into 0 (a real place in the Atlantic).
+  const rawLat = String(url.searchParams.get('lat') ?? '').trim();
+  const rawLon = String(url.searchParams.get('lon') ?? '').trim();
+  const lat = Number(rawLat), lon = Number(rawLon);
+  if (!rawLat || !rawLon || !Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
     return json(res, 400, { error: 'lat and lon are required.' });
   }
 
@@ -2026,8 +2040,8 @@ const server =
 
           // Social previews need absolute URLs; fill in this deployment's origin.
           const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
-          const proto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() || 'https';
-          const origin = /^[a-z0-9.-]+(:\d+)?$/i.test(host) ? `${proto === 'http' ? 'http' : 'https'}://${host}` : '';
+          const proto = String(req.headers['x-forwarded-proto'] || (req.socket.encrypted ? 'https' : 'http')).split(',')[0].trim();
+          const origin = PUBLIC_BASE_URL || (/^[a-z0-9.-]+(:\d+)?$/i.test(host) ? `${proto === 'https' ? 'https' : 'http'}://${host}` : '');
           return res.end(
             fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').replaceAll('__ORIGIN__', origin)
           );
@@ -2101,6 +2115,14 @@ const server =
               ...corsHeaders()
             }
           );
+
+          // DEMO_MODE=1: run without Firebase; the app keeps data in the browser.
+          if (DEMO_MODE) return res.end('window.SWASTH_FIREBASE_CONFIG = {};\n');
+          // Local Firebase emulators (tests and local development only).
+          if (USING_EMULATORS) {
+            return res.end(`window.SWASTH_FIREBASE_CONFIG = ${JSON.stringify({ apiKey: 'demo-key', authDomain: `${FIREBASE_PROJECT_ID}.firebaseapp.com`, projectId: FIREBASE_PROJECT_ID, appId: 'demo-app' })};\n` +
+              `window.SWASTH_EMULATORS = ${JSON.stringify({ auth: `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}`, firestore: process.env.FIRESTORE_EMULATOR_HOST })};\n`);
+          }
 
           return fs
             .createReadStream(

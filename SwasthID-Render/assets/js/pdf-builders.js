@@ -56,7 +56,7 @@ function buildEmergencyPdf(jsPDF) {
   pdf.text('Daily medicines', M, ly + 4, { size: 10.5, bold: true }); ly += 8;
   if (meds.length) {
     meds.forEach(m => {
-      const name = clean(m.name || m.medicine), detail = [m.dose, m.schedule || m.frequency].map(clean).filter(Boolean).join(' · ');
+      const name = clean(m.name || m.medicine), detail = [m.dose, medicationScheduleText(m)].map(clean).filter(Boolean).join(' · ');
       const h1 = pdf.text(name, M, ly + 3.2, { size: 10, bold: true, maxW: leftW * 0.45 });
       const h2 = detail ? pdf.text(detail, M + leftW * 0.47, ly + 3.2, { size: 10, color: C.text2, maxW: leftW * 0.53 }) : 0;
       ly += Math.max(h1, h2) + 2.2;
@@ -185,7 +185,7 @@ function buildHealthSummaryPdf(jsPDF) {
   pdf.section('Current medicines');
   if (meds.length) pdf.table(
     [{ label: 'Medicine', w: 0.3, bold: true }, { label: 'Dose', w: 0.16 }, { label: 'When', w: 0.24 }, { label: 'Notes', w: 0.3 }],
-    meds.map(m => [clean(m.name || m.medicine), clean(m.dose), clean(m.frequency || m.schedule) + (Array.isArray(m.times) && m.times.length ? ` (${m.times.join(', ')})` : ''), clean(m.instructions)]));
+    meds.map(m => [clean(m.name || m.medicine), clean(m.dose), clean(medicationScheduleText(m)) + (Array.isArray(m.times) && m.times.length ? ` (${m.times.join(', ')})` : ''), clean(m.instructions)]));
   else pdf.note('None recorded.');
 
   const conditions = Array.isArray(p.conditions) ? p.conditions.filter(c => clean(c.name)) : [];

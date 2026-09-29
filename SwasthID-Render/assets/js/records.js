@@ -224,7 +224,7 @@
        drug:(Array.isArray(profile.allergies)?profile.allergies:[]).map(String).filter(a=>a&&a!=='__NONE__'),
        other:(Array.isArray(profile.normalAllergies)?profile.normalAllergies:[]).map(String).filter(a=>a&&a!=='__NONE__')
      },
-     medications:meds.map((m,i)=>({resourceType:'MedicationStatement',id:`medication-${i+1}`,medication:{text:m.name||m.medicine||''},dose:{text:m.dose||''},frequency:{text:m.frequency||m.schedule||''},instructions:m.instructions||''})),
+     medications:meds.map((m,i)=>({resourceType:'MedicationStatement',id:`medication-${i+1}`,medication:{text:m.name||m.medicine||''},dose:{text:m.dose||''},frequency:{text:medicationScheduleText(m)},instructions:m.instructions||''})),
      prescriptions:prescriptions.map(r=>({resourceType:'MedicationRequest',id:r.id||`rx-${Date.now()}`,authoredOn:r.date||'',requester:{display:r.doctor||''},medications:r.medicines||[]})),
      encounters:visits.map((v,i)=>({resourceType:'Encounter',id:`encounter-${i+1}`,date:v.date||'',provider:v.doctor||'',specialty:v.specialty||'',facility:v.facility||''})),
      diagnosticReports:reports.map((r,i)=>({resourceType:'DiagnosticReport',id:`report-${i+1}`,date:r.date||'',code:{text:r.name||''},result:{text:r.result||''}})),

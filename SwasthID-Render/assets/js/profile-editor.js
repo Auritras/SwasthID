@@ -17,14 +17,7 @@
   window.__addMedicineRow = function (event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     try {
-      const rows = [...document.querySelectorAll('#medicineInputRows .medicine-input-row')].map(row => ({
-        name: row.querySelector('.medicine-name-input')?.value || '',
-        dose: row.querySelector('.medicine-dose-input')?.value || '',
-        schedule: row.querySelector('.medicine-schedule-input')?.value || '',
-        packSize: row.querySelector('.medicine-pack-input')?.value || '',
-        times: [...row.querySelectorAll('.medicine-time-input')].map(input => input.value || ''),
-        reason: ''
-      }));
+      const rows = readMedicineRowsRaw();
       if (!rows.length) rows.push({name:'', dose:'', schedule:'', packSize:'', times:[], reason:''});
       rows.push({name:'', dose:'', schedule:'', packSize:'', times:[], reason:''});
       renderMedicineInputRows(rows);
