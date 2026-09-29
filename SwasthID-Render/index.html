@@ -129,6 +129,7 @@
  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></symbol>
  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></symbol>
  <symbol id="i-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
  <symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
  <symbol id="i-logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1D6B53" stroke="none"/><path d="M16 9v14M9 16h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/></symbol>
 </svg>
@@ -842,7 +843,7 @@
 <!-- ===== ACCOUNT CREATED MODAL ===== -->
 <div id="authSuccessModal" role="dialog" aria-modal="true" aria-labelledby="authSuccessTitle">
  <div class="auth-success-card">
-  <div class="auth-success-check" aria-hidden="true">✓</div>
+  <div class="auth-success-check" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></div>
   <h3 id="authSuccessTitle">Welcome to SwasthID</h3>
   <p id="authSuccessMessage">Your account is ready. You are now securely signed in and can access your health dashboard.</p>
   <button type="button" class="auth-success-btn" id="authSuccessContinue">Continue to SwasthID</button>
@@ -6995,7 +6996,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
       : !supported() ? 'This browser can\'t show notifications here.'
       : 'Get a notification at each dose time while SwasthID is open.';
     bar.innerHTML = `<div class="reminder-bar-text"><b>Dose reminders</b><span>${escapeHtml(status)} To be reminded when it's closed, add your doses to your calendar.</span></div>
-      <div class="reminder-bar-actions">${supported() && !blocked ? `<button type="button" class="btn btn-sm${on ? '' : ' btn-primary'}" data-reminder-toggle>${on ? 'Turn off' : 'Turn on'}</button>` : ''}<button type="button" class="btn" data-reminder-calendar>Add to calendar</button></div>`;
+      <div class="reminder-bar-actions">${supported() && !blocked ? `<button type="button" class="btn btn-sm${on ? '' : ' btn-primary'}" data-reminder-toggle>${on ? 'Turn off' : 'Turn on'}</button>` : ''}<button type="button" class="btn btn-sm" data-reminder-calendar>Add to calendar</button></div>`;
     bar.querySelector('[data-reminder-toggle]')?.addEventListener('click', () => on ? turnOff() : turnOn());
     bar.querySelector('[data-reminder-calendar]')?.addEventListener('click', downloadCalendar);
   }
