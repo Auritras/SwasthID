@@ -594,17 +594,20 @@ const OVERPASS_ENDPOINTS = (process.env.OVERPASS_URLS || [
 const nearbyCache = new Map();
 const nearbyHits = new Map();
 
+// The bounding box lets the map servers use their spatial index, so the
+// name and brand patterns only run over places within ~10 km.
 function nearbyQuery(lat, lon) {
-  return `[out:json][timeout:20];
+  const dLat = 10 / 111.32, dLon = 10 / (111.32 * Math.max(0.1, Math.cos(lat * Math.PI / 180)));
+  const bbox = [lat - dLat, lon - dLon, lat + dLat, lon + dLon].map(v => v.toFixed(5)).join(',');
+  return `[out:json][timeout:25][bbox:${bbox}];
 (
   nwr["amenity"="hospital"](around:10000,${lat},${lon});
-  nwr["amenity"="clinic"](around:5000,${lat},${lon});
-  nwr["amenity"="doctors"](around:5000,${lat},${lon});
+  nwr["amenity"~"^(clinic|doctors)$"](around:5000,${lat},${lon});
   nwr["healthcare"~"^(hospital|clinic|doctor|centre|center|polyclinic)$"](around:5000,${lat},${lon});
   nwr["amenity"="pharmacy"](around:3000,${lat},${lon});
   nwr["healthcare"="pharmacy"](around:3000,${lat},${lon});
-  nwr["amenity"="pharmacy"]["name"~"aushadh|generic|amrit",i](around:10000,${lat},${lon});
-  nwr["amenity"="pharmacy"]["brand"~"aushadh|generic|amrit",i](around:10000,${lat},${lon});
+  nwr["amenity"="pharmacy"]["name"~"aushadh|generic|amrit",i];
+  nwr["amenity"="pharmacy"]["brand"~"aushadh|generic|amrit",i];
 );
 out center tags qt;`;
 }
@@ -641,7 +644,7 @@ function queryOverpassServers(query) {
       const endpoint = OVERPASS_ENDPOINTS[next++];
       const controller = new AbortController();
       controllers.push(controller);
-      const timer = setTimeout(() => controller.abort(), 25000);
+      const timer = setTimeout(() => controller.abort(), 28000);
       clearTimeout(hedge);
       hedge = setTimeout(start, 4000);
       overpassFetch(endpoint, query, controller.signal)
@@ -649,7 +652,7 @@ function queryOverpassServers(query) {
         .catch(err => {
           if (done) return;
           failed++;
-          reasons.push(`${new URL(endpoint).host}: ${err.name === 'AbortError' ? 'no answer in 25 s' : err.message}`);
+          reasons.push(`${new URL(endpoint).host}: ${err.name === 'AbortError' ? 'no answer in 28 s' : err.message}`);
           if (next < OVERPASS_ENDPOINTS.length) start();
           else if (failed === next) {
             finish();
@@ -1817,7 +1820,13 @@ const server =
               emergency:
                 Boolean(
                   EMERGENCY_SECRET
-                )
+                ),
+
+              // Which build is running (Render sets RENDER_GIT_COMMIT).
+              version:
+                String(process.env.RENDER_GIT_COMMIT || 'local').slice(0, 7),
+
+              nearby: true
             }
           );
         }
