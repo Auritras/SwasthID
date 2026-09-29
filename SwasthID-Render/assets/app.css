@@ -705,16 +705,39 @@ button.list-row:hover { background: var(--c-surface-2); }
 /* ---------- Login ---------- */
 #loginScreen { min-height: 100vh; background: var(--c-bg); display: flex; }
 .login-brand, .login-panel { margin: 0; }
-.login-shell { width: 100%; min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.login-brand { display: flex; flex-direction: column; justify-content: center; gap: var(--space-8); padding: var(--space-16) var(--space-12); background: var(--c-brand-soft); border-right: 1px solid var(--c-border); }
-.login-brand .brand { font-size: var(--text-lg); line-height: var(--leading-lg); }
-.login-headline { font-size: var(--text-2xl); line-height: var(--leading-2xl); letter-spacing: -0.02em; max-width: 480px; }
-.login-features { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-5); max-width: 440px; }
-.login-features li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: var(--space-3); align-items: start; }
-.login-features .icon { color: var(--c-brand-text); margin-top: 2px; }
-.login-features b { display: block; font-weight: 600; }
-.login-features span { display: block; color: var(--c-text-2); }
-.login-panel { align-self: center; justify-self: center; width: 100%; max-width: 440px; padding: var(--space-12) var(--space-6); }
+/* The brand panel is the one deep-colour surface in the product: it anchors
+   the page and shows what SwasthID looks like before you sign in. */
+:root { --c-hero: #04506F; --c-on-hero: #FFFFFF; --c-on-hero-2: rgba(255, 255, 255, .78); --c-hero-line: rgba(255, 255, 255, .16); }
+body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(228, 237, 240, .74); --c-hero-line: rgba(228, 237, 240, .12); }
+.login-shell { width: 100%; min-height: 100vh; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
+.login-brand { display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-10); padding: var(--space-12) var(--space-12) var(--space-10); background: var(--c-hero); color: var(--c-on-hero); }
+.login-brand-top { display: grid; gap: var(--space-8); }
+.login-brand .brand { font-size: var(--text-lg); line-height: var(--leading-lg); color: var(--c-on-hero); }
+.login-headline { font-size: var(--text-2xl); line-height: var(--leading-2xl); letter-spacing: -0.02em; max-width: 460px; color: var(--c-on-hero); }
+.login-preview { position: relative; max-width: 420px; }
+.login-preview-card { background: var(--c-surface); color: var(--c-text); border-radius: var(--radius-surface); padding: var(--space-5); box-shadow: 0 24px 48px rgba(0, 20, 30, .28); }
+.login-preview-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); font-size: var(--text-sm); }
+.login-preview-head span { color: var(--c-text-3); font-size: var(--text-xs); }
+.login-preview-bar { height: 4px; border-radius: var(--radius-pill); background: var(--c-surface-2); margin: var(--space-3) 0 var(--space-1); overflow: hidden; }
+.login-preview-bar span { display: block; width: 33%; height: 100%; background: var(--c-brand); }
+.login-preview-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: var(--space-3); align-items: center; padding: var(--space-3) 0; border-top: 1px solid var(--c-border); font-size: var(--text-sm); }
+.login-preview-row:first-of-type { border-top: 0; }
+.login-preview-row time { font-weight: 600; }
+.login-preview-row b { display: block; font-weight: 600; }
+.login-preview-row span { display: block; color: var(--c-text-3); font-size: var(--text-xs); line-height: var(--leading-xs); }
+.login-preview-row em { font-style: normal; font-size: var(--text-xs); font-weight: 500; padding: var(--space-1) var(--space-3); border: 1px solid var(--c-border-strong); border-radius: var(--radius-control); white-space: nowrap; }
+.login-preview-row em.is-done { border-color: transparent; background: var(--c-brand-soft); color: var(--c-brand-text); border-radius: var(--radius-pill); }
+.login-preview-chip { position: absolute; right: calc(-1 * var(--space-8)); bottom: calc(-1 * var(--space-5)); display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); background: var(--c-surface); color: var(--c-text); border-radius: var(--radius-pill); font-size: var(--text-xs); box-shadow: 0 12px 24px rgba(0, 20, 30, .24); }
+.login-preview-chip .icon { color: var(--c-danger); }
+.login-preview-chip b { font-weight: 600; margin-right: var(--space-1); }
+.login-features { list-style: none; margin: 0; padding: var(--space-6) 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); border-top: 1px solid var(--c-hero-line); font-size: var(--text-sm); line-height: var(--leading-sm); }
+.login-features li { display: grid; gap: var(--space-2); align-content: start; }
+.login-features .icon { color: var(--c-on-hero); }
+.login-features b { display: block; font-weight: 600; color: var(--c-on-hero); }
+.login-features span { display: block; color: var(--c-on-hero-2); }
+.login-panel { align-self: center; justify-self: center; width: 100%; max-width: 480px; padding: var(--space-12) var(--space-6); }
+.login-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-surface); padding: var(--space-10) var(--space-8); }
+.login-panel .security-note { margin: var(--space-5) var(--space-2) 0; padding-top: 0; border-top: 0; color: var(--c-text-3); }
 .login-panel h1 { font-size: var(--text-xl); line-height: var(--leading-xl); }
 .login-panel .sub { color: var(--c-text-2); margin: var(--space-1) 0 var(--space-8); }
 .label-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
@@ -902,9 +925,14 @@ button.list-row:hover { background: var(--c-surface-2); }
 /* ---------- Responsive ---------- */
 @media (max-width: 1024px) {
   .home-grid, .risk-grid, .scan-layout { grid-template-columns: 1fr; }
-  .login-shell { grid-template-columns: 1fr; }
-  .login-brand { order: 2; border-right: 0; border-top: 1px solid var(--c-border); padding: var(--space-10) var(--space-6); gap: var(--space-6); }
-  .login-headline { font-size: var(--text-xl); line-height: var(--leading-xl); }
+  .login-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  /* Phones and tablets: a compact brand bar on top, then the form, and no preview. */
+  .login-brand { padding: var(--space-6); gap: var(--space-4); }
+  .login-brand-top { gap: var(--space-3); }
+  .login-headline { font-size: var(--text-md); line-height: var(--leading-md); font-weight: 500; color: var(--c-on-hero-2); }
+  .login-preview, .login-features { display: none; }
+  .login-panel { align-self: start; padding: var(--space-8) var(--space-4) var(--space-10); }
+  .login-card { padding: var(--space-8) var(--space-5); }
   .topbar { gap: var(--space-4); }
 }
 @media (max-width: 767px) {
