@@ -5087,12 +5087,16 @@ async function shareHealthRecordWithDoctor(){
  {name:'Cetirizine 10 mg', salt:'Cetirizine Hydrochloride', brand:'Cetcip', pack:'10 tablets', mrp:18.00, rx:false},
  {name:'ORS Powder', salt:'Oral Rehydration Salts', brand:'Electral', pack:'21.8 g sachet', mrp:21.00, rx:false}
  ];
+ // search(q) opens that pharmacy's results for the medicine; sites without a
+ // known search URL open their home page instead.
  const pharmacyLinks = [
- {platform:'Netmeds', mark:'NM', url:'https://www.netmeds.com/'},
- {platform:'Tata 1mg', mark:'1mg', url:'https://www.1mg.com/'},
- {platform:'Apollo Pharmacy', mark:'AP', url:'https://www.apollopharmacy.in/'},
- {platform:'MedPlus', mark:'MP', url:'https://www.medplusmart.com/'}
+ {platform:'Tata 1mg', search:q=>`https://www.1mg.com/search/all?name=${encodeURIComponent(q)}`},
+ {platform:'PharmEasy', search:q=>`https://pharmeasy.in/search/all?name=${encodeURIComponent(q)}`},
+ {platform:'Apollo Pharmacy', search:q=>`https://www.apollopharmacy.in/search-medicines/${encodeURIComponent(q)}`},
+ {platform:'Netmeds', home:'https://www.netmeds.com/'},
+ {platform:'MedPlus', home:'https://www.medplusmart.com/'}
  ];
+ function pharmacyHref(p,query){ return query && p.search ? p.search(query) : p.home; }
  function escMed(v){ const d=document.createElement('div'); d.textContent=String(v ?? ''); return d.innerHTML; }
  function normalizeMedicineResult(item){
  return {
@@ -5184,10 +5188,12 @@ async function shareHealthRecordWithDoctor(){
    ${action}
   </div>`;
  }
- function pharmacyOptionsHtml(title){
+ function pharmacyOptionsHtml(title,query){
+  const q=String(query||'').replace(/\s+/g,' ').trim();
+  const homeOnly=pharmacyLinks.filter(p=>!p.search).map(p=>p.platform);
   return `<div class="pharmacy-options-head"><b>Where to buy</b><span>${title}</span></div>
-   <div class="pharmacy-links">${pharmacyLinks.map(p=>`<a class="btn btn-sm" href="${p.url}" target="_blank" rel="noopener">${p.platform}</a>`).join('')}</div>
-   <p class="t-meta">The pharmacy sets the selling price, availability, pack size and whether a prescription is needed.</p>`;
+   <div class="pharmacy-links">${pharmacyLinks.map(p=>`<a class="btn btn-sm" href="${escMed(pharmacyHref(p,q))}" target="_blank" rel="noopener" data-pharmacy="${escMed(p.platform)}">${p.platform}</a>`).join('')}</div>
+   <p class="t-meta">${q?`Links open each pharmacy's search for “${escMed(q)}”. ${homeOnly.length?`${homeOnly.join(' and ')} open${homeOnly.length===1?'s':''} the home page, so search there. `:''}`:''}The pharmacy sets the selling price, availability, pack size and whether a prescription is needed.</p>`;
  }
  function medSkeletonRows(n){
   return Array.from({length:n},()=>`<div class="med-result" aria-hidden="true"><div class="skeleton-lines"><span class="skeleton w-50"></span><span class="skeleton w-70"></span></div><span class="skeleton med-skeleton-price"></span><span class="skeleton med-skeleton-btn"></span></div>`).join('');
@@ -5265,7 +5271,7 @@ async function shareHealthRecordWithDoctor(){
   if(!med || !row) return;
   document.querySelectorAll('#priceList .rx-pharmacy-options').forEach(x=>x.remove());
   const box=document.createElement('div'); box.className='rx-pharmacy-options';
-  box.innerHTML=pharmacyOptionsHtml(`${escMed(med.name)}${med.pack?' · '+escMed(med.pack):''}`);
+  box.innerHTML=pharmacyOptionsHtml(`${escMed(med.name)}${med.pack?' · '+escMed(med.pack):''}`, med.name);
   row.after(box); box.scrollIntoView({behavior:'smooth',block:'nearest'});
  };
 
@@ -5276,7 +5282,7 @@ async function shareHealthRecordWithDoctor(){
   if(!med || !card) return;
   card.querySelector('.rx-pharmacy-options')?.remove();
   const box=document.createElement('div'); box.className='rx-pharmacy-options';
-  box.innerHTML=pharmacyOptionsHtml(`${escMed(med.name)}${prescriptionMed?.dose?' · '+escMed(prescriptionMed.dose):''}`);
+  box.innerHTML=pharmacyOptionsHtml(`${escMed(med.name)}${prescriptionMed?.dose?' · '+escMed(prescriptionMed.dose):''}`, med.name);
   card.appendChild(box); box.scrollIntoView({behavior:'smooth',block:'nearest'});
  };
 
