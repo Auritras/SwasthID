@@ -509,28 +509,52 @@ function renderMedicineInputRows(medicines=[]) {
   wrap.innerHTML=rows.map((m,i)=>{
     const count=medicationSlotCount({dose:m.dose||'',frequency:m.schedule||m.frequency||''});
     const times=suggestedMedicationTimes(m,count);
+    // Days already chosen; an older "weekly" medicine shows the day it has been
+    // falling on; anything else starts as every day.
+    const legacyWeekly=!medicationDays(m) && medicationFrequencyType({frequency:m.schedule||m.frequency||''})==='weekly';
+    const anchor=m.startDate||m.date||m.prescribedDate;
+    const anchorDay=anchor && !Number.isNaN(new Date(anchor).getTime()) ? new Date(anchor).getDay() : 1;
+    const selected=medicationDays(m) || (legacyWeekly ? [anchorDay] : [0,1,2,3,4,5,6]);
+    const label=escapeHtml(String(m.name||m.medicine||'this medicine'));
     return `<div class="medicine-input-row" data-index="${i}">
       <input type="text" class="medicine-name-input" placeholder="Medicine name" value="${escapeHtml(String(m.name||m.medicine||''))}">
       <input type="text" class="medicine-dose-input" placeholder="Dose (e.g. 2 tablets)" value="${escapeHtml(String(m.dose||''))}">
-      <input type="text" class="medicine-schedule-input" placeholder="Schedule (e.g. Twice daily)" value="${escapeHtml(String(m.schedule||m.frequency||''))}">
+      <input type="text" class="medicine-schedule-input" placeholder="How often a day (e.g. Twice daily)" value="${escapeHtml(String(m.schedule||m.frequency||''))}">
       <input type="text" class="medicine-pack-input" placeholder="Pack size" aria-label="Pack size (optional, e.g. 30 tablets)" title="Optional, e.g. 30 tablets" value="${escapeHtml(String(m.packSize||m.pack||''))}">
       <button type="button" class="medicine-remove-btn" aria-label="Remove medicine" data-remove-medicine="${i}">×</button>
       <div class="med-time-editor">
         <div class="med-time-editor-label">When should each dose be taken?</div>
         ${times.slice(0,count).map((t,j)=>`<label class="med-time-slot">${count>1?'Dose '+(j+1):'Time'} <input type="time" class="medicine-time-input" data-time-index="${j}" value="${escapeHtml(String(t||''))}"></label>`).join('')}
       </div>
+      <div class="med-days" role="group" aria-label="Days to take ${label}">
+        <div class="med-time-editor-label">Which days? <span class="med-days-summary">${escapeHtml(medicationDaysSummary(selected))}</span></div>
+        <div class="med-days-chips">${[1,2,3,4,5,6,0].map(n=>`<button type="button" class="med-day" data-day="${n}" aria-pressed="${selected.includes(n)}" aria-label="${WEEKDAY_LONG[n]}" title="${WEEKDAY_LONG[n]}">${WEEKDAY_SHORT[n].slice(0,2)}</button>`).join('')}</div>
+      </div>
     </div>`;
   }).join('');
 }
+function medicationDaysSummary(days) {
+  return days.length >= 7 ? 'Every day' : formatMedicationDays({days}) || 'Every day';
+}
+// Every row in the medicine editor, including blank ones (used when adding
+// or removing a row, so nothing typed is lost). Days are stored only when
+// they are not every day.
+function readMedicineRowsRaw() {
+  return [...document.querySelectorAll('#medicineInputRows .medicine-input-row')].map(row=>{
+    const days=[...row.querySelectorAll('.med-day[aria-pressed="true"]')].map(b=>Number(b.dataset.day)).sort((a,b)=>a-b);
+    return {
+      name:row.querySelector('.medicine-name-input')?.value.trim()||'',
+      dose:row.querySelector('.medicine-dose-input')?.value.trim()||'',
+      schedule:row.querySelector('.medicine-schedule-input')?.value.trim()||'',
+      packSize:row.querySelector('.medicine-pack-input')?.value.trim()||'',
+      times:[...row.querySelectorAll('.medicine-time-input')].map(input=>input.value).filter(Boolean),
+      ...(days.length && days.length<7 ? {days} : {}),
+      reason:''
+    };
+  });
+}
 function readMedicineRows() {
-  return [...document.querySelectorAll('#medicineInputRows .medicine-input-row')].map(row=>({
-    name:row.querySelector('.medicine-name-input')?.value.trim()||'',
-    dose:row.querySelector('.medicine-dose-input')?.value.trim()||'',
-    schedule:row.querySelector('.medicine-schedule-input')?.value.trim()||'',
-    packSize:row.querySelector('.medicine-pack-input')?.value.trim()||'',
-    times:[...row.querySelectorAll('.medicine-time-input')].map(input=>input.value).filter(Boolean),
-    reason:''
-  })).filter(m=>m.name);
+  return readMedicineRowsRaw().filter(m=>m.name);
 }
 async function savePersonalizedProfile() {
   const get = id => document.getElementById(id)?.value.trim() || '';
@@ -614,22 +638,26 @@ document.addEventListener('click', async e => {
   }
   const addMed=target?.closest('#addMedicineRowBtn');
   if(addMed){
-    const current=[...document.querySelectorAll('#medicineInputRows .medicine-input-row')].map(row=>({
-      name:row.querySelector('.medicine-name-input')?.value.trim()||'',
-      dose:row.querySelector('.medicine-dose-input')?.value.trim()||'',
-      schedule:row.querySelector('.medicine-schedule-input')?.value.trim()||'',
-      packSize:row.querySelector('.medicine-pack-input')?.value.trim()||'',
-      times:[...row.querySelectorAll('.medicine-time-input')].map(input=>input.value).filter(Boolean),
-      reason:''
-    }));
+    const current=readMedicineRowsRaw();
     current.push({name:'',dose:'',schedule:'',packSize:'',times:[],reason:''});
     renderMedicineInputRows(current);
     setTimeout(()=>document.querySelector('#medicineInputRows .medicine-input-row:last-child .medicine-name-input')?.focus(),30);
     return;
   }
+  // Day buttons in the medicine editor. At least one day stays selected.
+  const dayBtn=target?.closest('#medicineInputRows .med-day');
+  if(dayBtn){
+    const row=dayBtn.closest('.med-days');
+    const on=dayBtn.getAttribute('aria-pressed')==='true';
+    if(on && row.querySelectorAll('.med-day[aria-pressed="true"]').length===1) return;
+    dayBtn.setAttribute('aria-pressed',String(!on));
+    const days=[...row.querySelectorAll('.med-day[aria-pressed="true"]')].map(b=>Number(b.dataset.day));
+    row.querySelector('.med-days-summary').textContent=medicationDaysSummary(days);
+    return;
+  }
   const removeMed=target?.closest('[data-remove-medicine]');
   if(removeMed){
-    const current=readMedicineRows();
+    const current=readMedicineRowsRaw();
     const idx=Number(removeMed.dataset.removeMedicine);
     current.splice(idx,1);
     renderMedicineInputRows(current);

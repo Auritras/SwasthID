@@ -22,7 +22,7 @@ function getEmergencyCompactPayload() {
    .slice(0, 6)
    .map(c => c.name)
    .filter(Boolean);
- const activeMeds = getEmergencyMedicines().map(m => [m.name || m.medicine, m.dose, m.schedule || m.frequency].filter(Boolean).join(' ')).filter(Boolean);
+ const activeMeds = getEmergencyMedicines().map(m => [m.name || m.medicine, m.dose, medicationScheduleText(m)].filter(Boolean).join(' ')).filter(Boolean);
  const allergies = formatAllergies(patientData.allergies);
  const otherAllergies = formatNormalAllergies(patientData.normalAllergies);
  return {

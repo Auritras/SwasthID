@@ -17,7 +17,29 @@
  if (/monthly|once a month|q30d/.test(f)) return 1;
  return 1;
  }
+ // Chosen days of the week (0 = Sunday), or null for every day. Missing, empty
+ // or all seven days all mean every day, so older medicines are unaffected.
+ const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+ const WEEKDAY_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+ function medicationDays(m) {
+   const days = Array.isArray(m?.days) ? [...new Set(m.days.map(Number).filter(n => Number.isInteger(n) && n >= 0 && n <= 6))].sort((a, b) => a - b) : [];
+   return days.length && days.length < 7 ? days : null;
+ }
+ // "Weekdays", "Weekends", "Mon, Thu" or '' for every day (Monday first).
+ function formatMedicationDays(m) {
+   const days = medicationDays(m);
+   if (!days) return '';
+   const key = days.join('');
+   if (key === '12345') return 'Weekdays';
+   if (key === '06') return 'Weekends';
+   return [1, 2, 3, 4, 5, 6, 0].filter(n => days.includes(n)).map(n => WEEKDAY_SHORT[n]).join(', ');
+ }
+ // The schedule text plus any chosen days, e.g. "Once daily · Mon, Thu".
+ function medicationScheduleText(m) {
+   return [String(m?.frequency || m?.schedule || '').trim(), formatMedicationDays(m)].filter(Boolean).join(' · ');
+ }
  function medicationFrequencyType(m) {
+   if (medicationDays(m)) return 'days';
    const f=String(m?.frequency||m?.schedule||'').toLowerCase();
    if (/weekly|once a week|one time a week|q7d/.test(f)) return 'weekly';
    if (/monthly|once a month|q30d/.test(f)) return 'monthly';
@@ -29,6 +51,8 @@
    return Math.max(1, parseMedicationFrequencyCount(m));
  }
  function medicationExpectedOnDate(m, date=new Date()) {
+   const days=medicationDays(m);
+   if(days) return days.includes(date.getDay());
    const type=medicationFrequencyType(m);
    if(type==='daily') return true;
    const anchor = m?.startDate || m?.date || m?.prescribedDate;
@@ -154,9 +178,10 @@ function getCurrentMedicationList() {
    return;
  }
  const scheduledDoses = [];
+ const notToday = [];
  meds.forEach((m, i) => {
    const count = medicationSlotCount(m);
-   if (!medicationExpectedOnDate(m, new Date())) return;
+   if (!medicationExpectedOnDate(m, new Date())) { notToday.push(m); return; }
    const times = suggestedMedicationTimes(m, count);
    for (let unit = 0; unit < count; unit++) {
      scheduledDoses.push({ m, i, unit, time: times[unit] || '' });
@@ -188,7 +213,7 @@ function getCurrentMedicationList() {
        <div class="today-med-time">${time ? formatMedicationTime(time) : 'No time'}${label ? `<small>${label}</small>` : ''}</div>
        <div>
          <div class="today-med-name">${escapeHtml(m.medicine)}${m.dose ? ' · ' + escapeHtml(m.dose) : ''}</div>
-         <div class="today-med-meta">${escapeHtml(m.frequency || 'Review schedule')}${m.instructions ? ' · ' + escapeHtml(m.instructions) : ''}${overdueBadge}</div>
+         <div class="today-med-meta">${escapeHtml(medicationScheduleText(m) || 'Review schedule')}${m.instructions ? ' · ' + escapeHtml(m.instructions) : ''}${overdueBadge}</div>
          ${time ? `<button type="button" class="link-btn" data-edit-med-time aria-expanded="false">Change time</button>` : ''}
          <div class="today-med-time-editor"${time ? ' hidden' : ''}>
            <input type="time" value="${escapeHtml(time)}" data-med-time-index="${i}" data-med-time-unit="${unit}" aria-label="Time for ${escapeHtml(m.medicine)} dose ${unit + 1}">
@@ -198,6 +223,9 @@ function getCurrentMedicationList() {
        <button class="med-action" type="button" data-mark-med="${id}" data-med-name="${escapeHtml(m.medicine)}">${savedStatus?.taken ? `Taken ${escapeHtml(savedStatus.time || '')}` : 'Mark taken'}</button>
      </div>`;
    });
+ if (!scheduledDoses.length) html = '<div class="today-med-empty">No medicines due today.</div>';
+ // Medicines on other days, so they don't look like they have gone missing.
+ if (notToday.length) html += `<p class="today-med-later">Not due today: ${notToday.map(m => `${escapeHtml(m.medicine)} (${escapeHtml(formatMedicationDays(m) || medicationScheduleText(m))})`).join(', ')}</p>`;
  list.innerHTML = html;
  list.querySelectorAll('[data-edit-med-time]').forEach(btn => btn.addEventListener('click', () => {
    const editor = btn.nextElementSibling;
@@ -229,7 +257,17 @@ function getCurrentMedicationList() {
    const value = Number(match[1]);
    return Number.isFinite(value) && value > 0 ? value : null;
  }
+ // Units used on a day the medicine is taken.
  function medicationDailyUnits(m) { return Math.max(1, parseMedicationDoseCount(m) * parseMedicationFrequencyCount(m)); }
+ // Days a pack lasts, counting only the days it is taken.
+ function medicationSupplyDays(m, pack) {
+   const perDay = medicationDailyUnits(m);
+   const days = medicationDays(m);
+   const type = medicationFrequencyType(m);
+   const daysPerWeek = days ? days.length : type === 'weekly' ? 1 : 7;
+   if (type === 'monthly') return Math.max(0, Math.floor(pack / perDay) * 30);
+   return Math.max(0, Math.floor(pack / perDay / daysPerWeek * 7));
+ }
  function medicationIsCritical(m) {
    return /\b(insulin|levothyroxine|thyroxine|euthyrox|insulin pen)\b/i.test(`${m?.medicine||''} ${m?.dose||''}`);
  }
@@ -295,7 +333,8 @@ function getCurrentMedicationList() {
        dose:String(m?.dose || '').trim(),
        frequency:String(m?.schedule || m?.frequency || '').trim(),
        packSize:String(m?.packSize || m?.pack || '').trim(),
-       times:Array.isArray(m?.times) ? m.times : []
+       times:Array.isArray(m?.times) ? m.times : [],
+       days:Array.isArray(m?.days) ? m.days : undefined
      });
    });
    prescriptionMeds.forEach(rx=>{
@@ -318,8 +357,8 @@ function getCurrentMedicationList() {
      const pack=extractPack(rawPack);
      if(!rawPack || pack===null) return;
      const daily=medicationDailyUnits(m);
-     const days=Math.max(0,Math.floor(pack/daily));
-     items.push({m,days,pack,daily});
+     const days=medicationSupplyDays(m,pack);
+     items.push({m,days,pack,daily,when:formatMedicationDays(m)});
    });
 
    panel.style.display='block';
@@ -327,7 +366,7 @@ function getCurrentMedicationList() {
      panel.innerHTML='<b>Refill reminders</b><div class="adherence-sub">Add a pack size to a medicine in your profile to see when it will run out.</div>';
      return;
    }
-   panel.innerHTML=`<b>Refill reminders</b><div class="adherence-sub">Medicines with a pack size in your profile.</div>${items.map(x=>`<div class="refill-item"><div><b>${escapeHtml(x.m.medicine||'Medication')}</b><div class="adherence-sub">${escapeHtml(x.m.packSize)} · ${x.daily} unit${x.daily===1?'':'s'} per day</div></div><div class="refill-warn">${x.days===0?'Refill due now':`~${x.days} day${x.days===1?'':'s'} left`} <button type="button" class="btn btn-sm" data-refill-med="${escapeHtml(x.m.medicine||'')}">Reorder</button></div></div>`).join('')}`;
+   panel.innerHTML=`<b>Refill reminders</b><div class="adherence-sub">Medicines with a pack size in your profile.</div>${items.map(x=>`<div class="refill-item"><div><b>${escapeHtml(x.m.medicine||'Medication')}</b><div class="adherence-sub">${escapeHtml(x.m.packSize)} · ${x.daily} unit${x.daily===1?'':'s'} ${x.when?`on ${escapeHtml(x.when)}`:'per day'}</div></div><div class="refill-warn">${x.days===0?'Refill due now':`~${x.days} day${x.days===1?'':'s'} left`} <button type="button" class="btn btn-sm" data-refill-med="${escapeHtml(x.m.medicine||'')}">Reorder</button></div></div>`).join('')}`;
    panel.querySelectorAll('[data-refill-med]').forEach(btn=>btn.addEventListener('click',()=>{
      const q=btn.dataset.refillMed||'';
      showTab('order');

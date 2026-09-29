@@ -95,12 +95,13 @@
       if (d.type !== 'daily') { while (!medicationExpectedOnDate(d.m, start)) start.setDate(start.getDate() + 1); }
       const dt = `${start.getFullYear()}${pad(start.getMonth() + 1)}${pad(start.getDate())}T${pad(h)}${pad(min)}00`;
       let rule = 'FREQ=DAILY';
+      if (d.type === 'days') rule = `FREQ=WEEKLY;BYDAY=${medicationDays(d.m).map(n => days[n]).join(',')}`;
       if (d.type === 'weekly') rule = `FREQ=WEEKLY;BYDAY=${days[start.getDay()]}`;
       if (d.type === 'monthly') rule = `FREQ=MONTHLY;BYMONTHDAY=${start.getDate()}`;
       const course = d.type === 'daily' ? courseLength(d.m) : null;
       if (course) rule += `;COUNT=${course}`;
       const summary = `Take ${doseLabel(d)}`;
-      const note = [d.count > 1 ? `Dose ${d.unit + 1} of ${d.count}` : '', d.m.frequency, d.m.instructions, 'From SwasthID.'].filter(Boolean).join(' · ');
+      const note = [d.count > 1 ? `Dose ${d.unit + 1} of ${d.count}` : '', medicationScheduleText(d.m), d.m.instructions, 'From SwasthID.'].filter(Boolean).join(' · ');
       return ['BEGIN:VEVENT', `UID:swasthid-${ensureMedicationStableId(d.m)}-${d.unit}@swasthid`, `DTSTAMP:${stamp}`, `DTSTART:${dt}`, 'DURATION:PT10M', `RRULE:${rule}`,
         `SUMMARY:${icsText(summary)}`, `DESCRIPTION:${icsText(note)}`,
         'BEGIN:VALARM', 'ACTION:DISPLAY', 'TRIGGER:PT0M', `DESCRIPTION:${icsText(summary)}`, 'END:VALARM', 'END:VEVENT'].join('\r\n');
