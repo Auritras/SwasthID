@@ -457,6 +457,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
   transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease);
   display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 0; width: auto; min-width: 0; box-shadow: none; transform: none;
 }
+.mood-emoji-icon { font-size: var(--text-md); line-height: 1; margin-right: var(--space-1); }
 .mood-row .mood-emoji:hover { border-color: var(--c-brand); color: var(--c-text); transform: none; }
 .mood-row .mood-emoji.active { background: var(--c-brand-soft); border-color: var(--c-brand); color: var(--c-brand-text); }
 .mood-response { font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--c-text-2); min-height: 0; margin: 0 0 var(--space-4); }
@@ -551,6 +552,14 @@ button.list-row:hover { background: var(--c-surface-2); }
 .type-rx .record-timeline-dot { border-color: var(--c-brand); }
 .type-log .record-timeline-dot { border-color: var(--c-border-strong); }
 .type-log { background: var(--c-surface-2); }
+
+.day-tabs { display: flex; gap: var(--space-1); padding: var(--space-1); margin-bottom: var(--space-3); background: var(--c-surface-2); border-radius: var(--radius-control); overflow-x: auto; scrollbar-width: none; }
+.day-tabs::-webkit-scrollbar { display: none; }
+.day-tabs button { flex: none; display: inline-flex; align-items: center; gap: var(--space-2); height: 32px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-inner); background: transparent; color: var(--c-text-2); font: 500 var(--text-sm)/var(--leading-sm) var(--font); cursor: pointer; white-space: nowrap; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease); }
+.day-tabs button:hover { color: var(--c-text); }
+.day-tabs button[aria-selected="true"] { background: var(--c-surface); color: var(--c-text); box-shadow: 0 0 0 1px var(--c-border); }
+.day-tab-count { min-width: 20px; height: 20px; padding: 0 var(--space-1); display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-pill); background: var(--c-border); color: var(--c-text-2); font-size: var(--text-xs); line-height: var(--leading-xs); font-variant-numeric: tabular-nums; }
+.day-tabs button[aria-selected="true"] .day-tab-count { background: var(--c-brand-soft); color: var(--c-brand-text); }
 
 /* Charts (inline SVG) */
 .trend-card { margin-bottom: var(--space-4); }
@@ -823,6 +832,8 @@ button.list-row:hover { background: var(--c-surface-2); }
 .lab-scan-card { width: min(560px, 100%); }
 .profile-modal { width: min(760px, 100%); max-height: min(90vh, 820px); overflow: auto; padding: var(--space-8); }
 .profile-modal h2 { font-size: var(--text-xl); line-height: var(--leading-xl); margin: 0 0 var(--space-1); }
+/* One wizard step at a time (the legacy rule relied on !important). */
+.profile-wizard-step.profile-wizard-hidden { display: none; }
 .profile-modal .modal-sub { margin: 0 0 var(--space-6); color: var(--c-text-2); }
 
 /* Offline banner */

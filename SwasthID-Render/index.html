@@ -295,11 +295,11 @@
      <h2 class="card-title" id="supportTitle">How are you feeling today?</h2>
      <p class="card-sub">If things feel heavy, Tele-MANAS is a free mental-health helpline, open 24 hours.</p>
      <div class="mood-row" role="group" aria-label="Your mood today">
-      <button type="button" class="mood-emoji" data-mood="Stressed" data-msg="Take a slow breath. Talking to someone can help, and Tele-MANAS is free.">Stressed</button>
-      <button type="button" class="mood-emoji" data-mood="Low" data-msg="Difficult days happen. You don't have to handle them alone.">Low</button>
-      <button type="button" class="mood-emoji" data-mood="Okay" data-msg="Thanks for checking in.">Okay</button>
-      <button type="button" class="mood-emoji" data-mood="Good" data-msg="Good to hear. Remember water and your doses today.">Good</button>
-      <button type="button" class="mood-emoji" data-mood="Happy" data-msg="Glad you're having a good day.">Happy</button>
+      <button type="button" class="mood-emoji" data-mood="Stressed" data-msg="Take a slow breath. Talking to someone can help, and Tele-MANAS is free."><span class="mood-emoji-icon" aria-hidden="true">😣</span>Stressed</button>
+      <button type="button" class="mood-emoji" data-mood="Low" data-msg="Difficult days happen. You don't have to handle them alone."><span class="mood-emoji-icon" aria-hidden="true">😔</span>Low</button>
+      <button type="button" class="mood-emoji" data-mood="Okay" data-msg="Thanks for checking in."><span class="mood-emoji-icon" aria-hidden="true">😐</span>Okay</button>
+      <button type="button" class="mood-emoji" data-mood="Good" data-msg="Good to hear. Remember water and your doses today."><span class="mood-emoji-icon" aria-hidden="true">🙂</span>Good</button>
+      <button type="button" class="mood-emoji" data-mood="Happy" data-msg="Glad you're having a good day."><span class="mood-emoji-icon" aria-hidden="true">😄</span>Happy</button>
      </div>
      <div class="mood-response" id="moodResponseText" aria-live="polite"></div>
      <button type="button" class="btn call-btn" id="callSupportBtn"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-phone"/></svg>Call Tele-MANAS (14416)</button>
@@ -2681,9 +2681,9 @@ function getCurrentMedicationList() {
    panel.innerHTML=`<b>Refill reminders</b><div class="adherence-sub">Medicines with a pack size in your profile.</div>${items.map(x=>`<div class="refill-item"><div><b>${escapeHtml(x.m.medicine||'Medication')}</b><div class="adherence-sub">${escapeHtml(x.m.packSize)} · ${x.daily} unit${x.daily===1?'':'s'} per day</div></div><div class="refill-warn">${x.days===0?'Refill due now':`~${x.days} day${x.days===1?'':'s'} left`} <button type="button" class="btn btn-sm" data-refill-med="${escapeHtml(x.m.medicine||'')}">Reorder</button></div></div>`).join('')}`;
    panel.querySelectorAll('[data-refill-med]').forEach(btn=>btn.addEventListener('click',()=>{
      const q=btn.dataset.refillMed||'';
-     localStorage.setItem('swasth_pendingMedicineSearch',q);
-     syncCloudState('swasth_pendingMedicineSearch');
      showTab('order');
+     const input=document.getElementById('medSearch');
+     if(input){ input.value=q; window.searchMedicines?.(); }
    }));
  }
  function renderMedicationMissedDoses() {
@@ -4589,6 +4589,27 @@ function renderEmergencyQRIfReady(){
      ({food:renderRecordFoodLogs, meds:renderRecordMedicationActivity, timeline:renderRecordTimeline})[kind]();
    }));
  }
+ // Day tabs: one tab per day (newest first) and a panel for the selected day.
+ const recordSelectedDay = {};
+ function renderDayTabs(el, kind, days, summaryOf, rowsOf){
+   const keys=days.map(([k])=>k);
+   if(!keys.includes(recordSelectedDay[kind])) recordSelectedDay[kind]=keys[0];
+   const sel=recordSelectedDay[kind];
+   const items=days.find(([k])=>k===sel)?.[1]||[];
+   el.innerHTML=`<div class="day-tabs" role="tablist" aria-label="Days">${days.map(([k,list])=>`<button type="button" role="tab" id="${kind}-tab-${k}" aria-controls="${kind}-panel" aria-selected="${k===sel}" tabindex="${k===sel?0:-1}" data-day="${k}">${escapeHtml(recordDayLabel(k))}<span class="day-tab-count">${list.length}</span></button>`).join('')}</div>`+
+     `<div class="record-day" role="tabpanel" id="${kind}-panel" aria-labelledby="${kind}-tab-${sel}"><div class="record-day-head"><span>${escapeHtml(recordDayLabel(sel))}</span><span>${summaryOf(items)}</span></div>${rowsOf(items)}</div>`;
+   const tabs=[...el.querySelectorAll('[role="tab"]')];
+   const select=(key,focus)=>{ recordSelectedDay[kind]=key; renderDayTabs(el,kind,days,summaryOf,rowsOf); const t=el.querySelector(`[data-day="${key}"]`); t?.scrollIntoView({block:'nearest',inline:'nearest'}); if(focus) t?.focus(); };
+   tabs.forEach((t,i)=>{
+     t.addEventListener('click',()=>select(t.dataset.day,true));
+     t.addEventListener('keydown',e=>{
+       const step={ArrowRight:1,ArrowLeft:-1}[e.key]; if(e.key==='Home'||e.key==='End'){e.preventDefault();select(keys[e.key==='Home'?0:keys.length-1],true);return;}
+       if(!step) return; e.preventDefault(); select(keys[(i+step+keys.length)%keys.length],true);
+     });
+   });
+   el.querySelector('[aria-selected="true"]')?.scrollIntoView({block:'nearest',inline:'nearest'});
+ }
+
  // Meals store a display time like "06:40 PM"; the id is the creation timestamp, so sort by it.
  function foodLogTimestamp(log){ const t=Number(log.id); return Number.isFinite(t) && t>1e12 ? t : new Date(`${log.date}T12:00:00`).getTime(); }
 
@@ -4597,16 +4618,13 @@ function renderEmergencyQRIfReady(){
    const logs=getRecordFoodLogs().slice().sort((a,b)=>foodLogTimestamp(b)-foodLogTimestamp(a));
    if(!logs.length){el.innerHTML=recordEmpty('No meals logged yet.','nutrition','Log a meal');bindRecordListActions(el);return;}
    const days=groupRecordsByDay(logs, log=>log.date || recordDayKey(foodLogTimestamp(log)));
-   el.innerHTML=days.slice(0,recordDaysShown.food).map(([key,items])=>{
-     const kcal=items.reduce((sum,x)=>sum+Number(x.kcal||0),0);
-     return `<div class="record-day"><div class="record-day-head"><span>${escapeHtml(recordDayLabel(key))}</span><span>${Math.round(kcal).toLocaleString()} kcal · ${items.length} ${items.length===1?'meal':'meals'}</span></div>`+
-       items.map(log=>{
-         const macros=[['P',log.protein],['C',log.carbs],['F',log.fat]].filter(([,v])=>Number(v)>0).map(([k,v])=>`${k} ${Number(v).toFixed(0)}g`).join(' · ');
-         const detail=[log.mealType && log.mealType!=='Unspecified' ? log.mealType : '', log.portion, macros].filter(Boolean).join(' · ');
-         return `<div class="record-row"><span class="record-row-time">${escapeFoodText(log.time||'')}</span><div class="record-row-main"><b>${escapeFoodText(log.name)}</b><span>${escapeFoodText(detail)}</span></div><span class="record-row-value">${Math.round(Number(log.kcal||0))} kcal</span></div>`;
-       }).join('')+'</div>';
-   }).join('')+recordMoreButton('food',days.length);
-   bindRecordListActions(el);
+   renderDayTabs(el,'food',days,
+     items=>`${Math.round(items.reduce((sum,x)=>sum+Number(x.kcal||0),0)).toLocaleString()} kcal · ${items.length} ${items.length===1?'meal':'meals'}`,
+     items=>items.map(log=>{
+       const macros=[['P',log.protein],['C',log.carbs],['F',log.fat]].filter(([,v])=>Number(v)>0).map(([k,v])=>`${k} ${Number(v).toFixed(0)}g`).join(' · ');
+       const detail=[log.mealType && log.mealType!=='Unspecified' ? log.mealType : '', log.portion, macros].filter(Boolean).join(' · ');
+       return `<div class="record-row"><span class="record-row-time">${escapeFoodText(log.time||'')}</span><div class="record-row-main"><b>${escapeFoodText(log.name)}</b><span>${escapeFoodText(detail)}</span></div><span class="record-row-value">${Math.round(Number(log.kcal||0))} kcal</span></div>`;
+     }).join(''));
  }
 
  function renderRecordMedicationActivity(){
@@ -4615,17 +4633,15 @@ function renderEmergencyQRIfReady(){
    const doses=getMedicationHistory().filter(x=>x?.taken).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
    if(!doses.length){el.innerHTML=recordEmpty('No doses marked as taken yet.','home',"Open today's medicines");bindRecordListActions(el);return;}
    const days=groupRecordsByDay(doses, d=>recordDayKey(d.date));
-   el.innerHTML=days.slice(0,recordDaysShown.meds).map(([key,items])=>
-     `<div class="record-day"><div class="record-day-head"><span>${escapeHtml(recordDayLabel(key))}</span><span>${items.length} ${items.length===1?'dose':'doses'} taken</span></div>`+
-     items.map(d=>{
+   renderDayTabs(el,'meds',days,
+     items=>`${items.length} ${items.length===1?'dose':'doses'} taken`,
+     items=>items.map(d=>{
        const med=current.find(m=>medicationIdentityKey(m.medicine)===medicationIdentityKey(d.medicine));
        const count=med ? medicationSlotCount(med) : 0;
        const unit=Number(d.unitIndex);
        const detail=[d.dose, count>1 && unit>=0 ? `Dose ${unit+1} of ${count}` : ''].filter(Boolean).join(' · ');
-       return `<div class="record-row"><span class="record-row-time">${escapeHtml(d.time||'')}</span><div class="record-row-main"><b>${escapeHtml(d.medicine||'Medication')}</b>${detail?`<span>${escapeHtml(detail)}</span>`:''}</div><span class="record-row-check" aria-label="Taken">✓ Taken</span></div>`;
-     }).join('')+'</div>'
-   ).join('')+recordMoreButton('meds',days.length);
-   bindRecordListActions(el);
+       return `<div class="record-row"><span class="record-row-time">${escapeHtml(d.time||'')}</span><div class="record-row-main"><b>${escapeHtml(d.medicine||'Medication')}</b>${detail?`<span>${escapeHtml(detail)}</span>`:''}</div><span class="badge badge-brand">Taken</span></div>`;
+     }).join(''));
  }
 
  function renderRecordTimeline(){
@@ -5071,12 +5087,16 @@ async function shareHealthRecordWithDoctor(){
  {name:'Cetirizine 10 mg', salt:'Cetirizine Hydrochloride', brand:'Cetcip', pack:'10 tablets', mrp:18.00, rx:false},
  {name:'ORS Powder', salt:'Oral Rehydration Salts', brand:'Electral', pack:'21.8 g sachet', mrp:21.00, rx:false}
  ];
+ // search(q) opens that pharmacy's results for the medicine; sites without a
+ // known search URL open their home page instead.
  const pharmacyLinks = [
- {platform:'Netmeds', mark:'NM', url:'https://www.netmeds.com/'},
- {platform:'Tata 1mg', mark:'1mg', url:'https://www.1mg.com/'},
- {platform:'Apollo Pharmacy', mark:'AP', url:'https://www.apollopharmacy.in/'},
- {platform:'MedPlus', mark:'MP', url:'https://www.medplusmart.com/'}
+ {platform:'Tata 1mg', search:q=>`https://www.1mg.com/search/all?name=${encodeURIComponent(q)}`},
+ {platform:'PharmEasy', search:q=>`https://pharmeasy.in/search/all?name=${encodeURIComponent(q)}`},
+ {platform:'Apollo Pharmacy', search:q=>`https://www.apollopharmacy.in/search-medicines/${encodeURIComponent(q)}`},
+ {platform:'Netmeds', home:'https://www.netmeds.com/'},
+ {platform:'MedPlus', home:'https://www.medplusmart.com/'}
  ];
+ function pharmacyHref(p,query){ return query && p.search ? p.search(query) : p.home; }
  function escMed(v){ const d=document.createElement('div'); d.textContent=String(v ?? ''); return d.innerHTML; }
  function normalizeMedicineResult(item){
  return {
@@ -5168,10 +5188,12 @@ async function shareHealthRecordWithDoctor(){
    ${action}
   </div>`;
  }
- function pharmacyOptionsHtml(title){
+ function pharmacyOptionsHtml(title,query){
+  const q=String(query||'').replace(/\s+/g,' ').trim();
+  const homeOnly=pharmacyLinks.filter(p=>!p.search).map(p=>p.platform);
   return `<div class="pharmacy-options-head"><b>Where to buy</b><span>${title}</span></div>
-   <div class="pharmacy-links">${pharmacyLinks.map(p=>`<a class="btn btn-sm" href="${p.url}" target="_blank" rel="noopener">${p.platform}</a>`).join('')}</div>
-   <p class="t-meta">The pharmacy sets the selling price, availability, pack size and whether a prescription is needed.</p>`;
+   <div class="pharmacy-links">${pharmacyLinks.map(p=>`<a class="btn btn-sm" href="${escMed(pharmacyHref(p,q))}" target="_blank" rel="noopener" data-pharmacy="${escMed(p.platform)}">${p.platform}</a>`).join('')}</div>
+   <p class="t-meta">${q?`Links open each pharmacy's search for “${escMed(q)}”. ${homeOnly.length?`${homeOnly.join(' and ')} open${homeOnly.length===1?'s':''} the home page, so search there. `:''}`:''}The pharmacy sets the selling price, availability, pack size and whether a prescription is needed.</p>`;
  }
  function medSkeletonRows(n){
   return Array.from({length:n},()=>`<div class="med-result" aria-hidden="true"><div class="skeleton-lines"><span class="skeleton w-50"></span><span class="skeleton w-70"></span></div><span class="skeleton med-skeleton-price"></span><span class="skeleton med-skeleton-btn"></span></div>`).join('');
@@ -5249,7 +5271,7 @@ async function shareHealthRecordWithDoctor(){
   if(!med || !row) return;
   document.querySelectorAll('#priceList .rx-pharmacy-options').forEach(x=>x.remove());
   const box=document.createElement('div'); box.className='rx-pharmacy-options';
-  box.innerHTML=pharmacyOptionsHtml(`${escMed(med.name)}${med.pack?' · '+escMed(med.pack):''}`);
+  box.innerHTML=pharmacyOptionsHtml(`${escMed(med.name)}${med.pack?' · '+escMed(med.pack):''}`, med.name);
   row.after(box); box.scrollIntoView({behavior:'smooth',block:'nearest'});
  };
 
@@ -5260,7 +5282,7 @@ async function shareHealthRecordWithDoctor(){
   if(!med || !card) return;
   card.querySelector('.rx-pharmacy-options')?.remove();
   const box=document.createElement('div'); box.className='rx-pharmacy-options';
-  box.innerHTML=pharmacyOptionsHtml(`${escMed(med.name)}${prescriptionMed?.dose?' · '+escMed(prescriptionMed.dose):''}`);
+  box.innerHTML=pharmacyOptionsHtml(`${escMed(med.name)}${prescriptionMed?.dose?' · '+escMed(prescriptionMed.dose):''}`, med.name);
   card.appendChild(box); box.scrollIntoView({behavior:'smooth',block:'nearest'});
  };
 
