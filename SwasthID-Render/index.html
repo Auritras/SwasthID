@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SwasthID — Your health record, medicines and emergency card</title>
 <meta name="description" content="Keep your health record, medicines, vitals and lab results in one private place. Scan prescriptions and lab reports, get dose reminders, and carry an emergency QR card.">
-<meta name="theme-color" content="#1D6B53" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0D1311" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#05668D" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1417" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <link rel="manifest" href="/assets/site.webmanifest">
@@ -131,7 +131,7 @@
  <symbol id="i-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
  <symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
- <symbol id="i-logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1D6B53" stroke="none"/><path d="M16 9v14M9 16h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/></symbol>
+ <symbol id="i-logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#05668D" stroke="none"/><path d="M16 9v14M9 16h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/></symbol>
 </svg>
 <div id="offlineBanner" class="offline-banner" role="status">You are offline. Saved information remains available, but live services may be unavailable until your connection returns.</div><!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
@@ -5853,14 +5853,14 @@ async function generateEmergencyQR(force = false) {
  if (pendingStatus) pendingStatus.textContent = 'Creating a secure QR…';
  qrContainer.style.background = '#fff';
  qrContainer.style.boxShadow = 'none';
- qrContainer.style.border = '1px solid #e1e8e4';
+ qrContainer.style.border = '1px solid #D3E0E5';
  qrContainer.style.width = '240px';
  qrContainer.style.height = '240px';
  const status = document.getElementById('qrPayloadStatus');
  try {
    const qrText = await getEmergencyQRText();
    qrContainer.innerHTML = '';
-   new QRCode(qrContainer, {text: qrText,width:220,height:220,colorDark:'#111814',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+   new QRCode(qrContainer, {text: qrText,width:220,height:220,colorDark:'#0F1E26',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
    const serverBacked = /emergency=v1\./.test(qrText) || /^v1\./.test(qrText);
    const expiresAt = Number(localStorage.getItem('swasth_emergencyExpiresAt') || 0);
    if (status) status.textContent = serverBacked
@@ -5947,7 +5947,7 @@ async function downloadEmergencyPDF() {
   const originalStatusText = statusEl ? statusEl.textContent : '';
   const originalStatusColor = statusEl ? statusEl.style.color : '';
   const setStatus = (msg, isError) => {
-    if (statusEl) { statusEl.textContent = msg; statusEl.style.color = isError ? '#b44e39' : '#3a7d5b'; }
+    if (statusEl) { statusEl.textContent = msg; statusEl.style.color = isError ? '#b44e39' : '#04506F'; }
     console[isError ? 'error' : 'log']('[Emergency PDF]', msg);
   };
   const restoreStatus = () => setTimeout(() => {
