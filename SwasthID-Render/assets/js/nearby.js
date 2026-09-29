@@ -207,6 +207,7 @@ function setNearbyLoading(isLoading) {
  const list = document.getElementById('nearbyItemsList');
  if (loading) loading.style.display = isLoading ? 'block' : 'none';
  if (isLoading) {
+   const note = document.getElementById('nearbyNote'); if (note) note.hidden = true;
    if (fallback) fallback.style.display = 'none';
    if (list) list.innerHTML = '';
  }
@@ -214,6 +215,7 @@ function setNearbyLoading(isLoading) {
 
 function showNearbyError(message, { title = 'Location unavailable', detail = '' } = {}) {
  setNearbyLoading(false);
+ const note = document.getElementById('nearbyNote'); if (note) note.hidden = true;
  const titleEl = document.getElementById('nearbyFallbackTitle');
  if (titleEl) titleEl.textContent = title;
  const detailEl = document.getElementById('nearbyFallbackDetail');
@@ -389,11 +391,15 @@ async function loadNearbyHospitals() {
    const { latitude, longitude, accuracy } = pos.coords;
    const subtitle = document.getElementById('nearbySubtitle');
    // Say plainly when the position is coarse, since every distance depends on
-   // it. Phones that were given "approximate" location blur it by 1–3 km.
+   // it. Phones that were given "approximate" location blur it by 1–3 km;
+   // computers without GPS estimate it from Wi-Fi.
+   const onPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
    const approxNote = pos.approximate
-     ? 'Based on your internet connection, which only gives your city, so distances may be off. Allow location access for an exact position. '
+     ? 'This is based on your internet connection, which only gives your city, so distances may be off. Allow location access for an exact position.'
      : accuracy > 500
-       ? `Your location is only accurate to about ${formatAccuracy(accuracy)}, so distances may be off. For exact results, turn on precise location for your browser in your phone's location settings, then try again. `
+       ? `Your location is only accurate to about ${formatAccuracy(accuracy)}, so distances may be off. ` + (onPhone
+         ? "For exact results, turn on precise location for your browser in your phone's settings, then try again."
+         : 'Computers usually estimate location from Wi-Fi. For exact results, open SwasthID on your phone with location turned on.')
        : '';
    setNearbyStatus('Searching OpenStreetMap for places near you…');
    let places, cachedAt = null;
@@ -415,8 +421,12 @@ async function loadNearbyHospitals() {
    renderNearbyList(places, latitude, longitude);
    if(subtitle && places.length) {
      subtitle.title = `Location accuracy: about ${formatAccuracy(accuracy || 5000)}${pos.approximate ? ' (network estimate)' : ''}`;
-     const cachedNote = cachedAt ? `Map servers are busy, so these are the places found on ${new Date(cachedAt).toLocaleDateString(undefined, { day:'numeric', month:'short' })}. ` : '';
-     subtitle.textContent = cachedNote + approxNote + subtitle.textContent;
+   }
+   const cachedNote = cachedAt ? `Map servers are busy, so these are the places found on ${new Date(cachedAt).toLocaleDateString(undefined, { day:'numeric', month:'short' })}.` : '';
+   const note = document.getElementById('nearbyNote');
+   if(note && places.length) {
+     note.textContent = [cachedNote, approxNote].filter(Boolean).join(' ');
+     note.hidden = !note.textContent;
    }
  } finally {
    btn?.removeAttribute('aria-busy'); btn?.classList.remove('is-loading');

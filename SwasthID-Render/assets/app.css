@@ -481,6 +481,8 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
 .places-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); flex-wrap: nowrap; }
 .places-head > div { flex: 1; min-width: 0; }
 .places-head > .btn { flex: none; }
+.places-note { display: block; margin: 0 0 var(--space-4); font-size: var(--text-sm); line-height: var(--leading-sm); }
+.places-note[hidden] { display: none; }
 .places-panel { border: 1px solid var(--c-border); border-radius: var(--radius-surface); background: var(--c-surface); overflow: hidden; }
 .places-empty { padding: var(--space-6); text-align: center; color: var(--c-text-2); font-size: var(--text-sm); }
 .places-source { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--c-border); background: var(--c-surface-2); color: var(--c-text-3); font-size: var(--text-xs); line-height: var(--leading-xs); }
