@@ -5,12 +5,18 @@
   "description": "SwasthID Render server for medicine proxy and encrypted emergency QR tokens",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test tests/server/server.test.js",
+    "test:e2e": "playwright test --project=app",
+    "test:emulator": "npx --yes firebase-tools@15 emulators:exec --only auth,firestore --project demo-swasthid \"npx playwright test --project=emulator\""
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
   }
 }

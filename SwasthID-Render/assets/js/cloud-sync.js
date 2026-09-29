@@ -54,6 +54,14 @@
        if (!firebase.apps.length) firebase.initializeApp(window.SWASTH_FIREBASE_CONFIG);
        auth = firebase.auth();
        db = firebase.firestore();
+       // Local Firebase emulators, set by the server in tests and local
+       // development. Ignored anywhere but localhost.
+       const emu = window.SWASTH_EMULATORS;
+       if (emu && ['localhost', '127.0.0.1'].includes(location.hostname)) {
+         auth.useEmulator(emu.auth, { disableWarnings: true });
+         const [host, port] = String(emu.firestore).split(':');
+         db.useEmulator(host, Number(port));
+       }
 
        // Keep the Firebase session after refresh/browser restart. Firestore is the
        // source of truth for the user's profile and app data; localStorage is only
