@@ -11,7 +11,13 @@
  aiLauncherBtn?.addEventListener('click', () => aiChatWindow?.classList.toggle('open'));
  closeAiChatBtn?.addEventListener('click', () => aiChatWindow?.classList.remove('open'));
 
- const SWASTHAI_MODEL = 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC';
+ // Pinned to the 0.2 releases so a future major version can't change the API
+ // under us.
+ const WEBLLM_URL = 'https://esm.run/@mlc-ai/web-llm@0.2';
+ // The f16 build needs the GPU's 16-bit float support (shader-f16). Many
+ // laptops and Android phones don't have it, so they get the f32 build.
+ const SWASTHAI_MODELS = { f16: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', f32: 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC' };
+ let swasthaiModel = SWASTHAI_MODELS.f16;
  let swasthaiEngine = null;
  let swasthaiEnginePromise = null;
  let swasthaiBusy = false;
@@ -154,10 +160,14 @@ Rules:
    if (!swasthaiHasWebGPU()) throw new Error('WebGPU is not available in this browser. Please use Chrome or Edge with WebGPU enabled.');
    swasthaiEnginePromise = (async () => {
      setSwasthaiStatus('Preparing SwasthAI…', 0, 'loading');
-     swasthaiModule = await import('https://esm.run/@mlc-ai/web-llm');
+     const adapter = await navigator.gpu.requestAdapter().catch(() => null);
+     if (!adapter) throw new Error('WebGPU is turned on, but no usable graphics adapter was found on this device.');
+     swasthaiModule = await import(WEBLLM_URL);
      const createMLCEngine = swasthaiModule.CreateMLCEngine || swasthaiModule.createMLCEngine;
      if (!createMLCEngine) throw new Error('WebLLM loader is unavailable.');
-     swasthaiEngine = await createMLCEngine(SWASTHAI_MODEL, {
+     const known = (swasthaiModule.prebuiltAppConfig?.model_list || []).map(m => m.model_id);
+     swasthaiModel = adapter.features?.has('shader-f16') || !known.includes(SWASTHAI_MODELS.f32) ? SWASTHAI_MODELS.f16 : SWASTHAI_MODELS.f32;
+     swasthaiEngine = await createMLCEngine(swasthaiModel, {
        initProgressCallback: progress => {
          const text = progress?.text || 'Downloading local AI model…';
          setSwasthaiStatus(text, Number(progress?.progress), 'loading');
@@ -174,6 +184,35 @@ Rules:
      throw error;
    });
    return swasthaiEnginePromise;
+ }
+
+ // The browser can drop the model from GPU memory (tab in the background, low
+ // memory, a driver reset). The engine object survives but answers "Model not
+ // loaded", so reload the model and retry once; if the GPU device itself is
+ // gone, start a fresh engine.
+ function swasthaiModelWasDropped(error) {
+   return /not loaded|MLCEngine\.reload|device (was |is )?lost|GPUDevice|disposed/i.test(String(error?.message || error));
+ }
+ async function swasthaiComplete(request) {
+   const engine = await loadSwasthaiEngine();
+   try {
+     return await engine.chat.completions.create(request);
+   } catch (error) {
+     if (!swasthaiModelWasDropped(error)) throw error;
+     console.warn('SwasthAI model was unloaded by the browser; reloading it.', error);
+     setSwasthaiStatus('Reloading the local AI model…', 0, 'loading');
+     try {
+       await engine.reload(swasthaiModel);
+       setSwasthaiStatus('SwasthAI ready · running locally in your browser.', 1, 'ready');
+       return await engine.chat.completions.create(request);
+     } catch (reloadError) {
+       console.warn('Reload failed; starting a fresh SwasthAI engine.', reloadError);
+       try { await engine.unload?.(); } catch (_) {}
+       swasthaiEngine = null; swasthaiEnginePromise = null;
+       const fresh = await loadSwasthaiEngine();
+       return await fresh.chat.completions.create(request);
+     }
+   }
  }
 
  async function handleAiQuestion(questionText) {
@@ -209,7 +248,6 @@ Rules:
        return;
      }
 
-     const engine = await loadSwasthaiEngine();
      const context = JSON.stringify(buildSwasthAIContext());
      const recent = chatHistory.slice(-12).map(m => ({
        role: m.role === 'assistant' || m.role === 'bot' ? 'assistant' : 'user',
@@ -217,7 +255,7 @@ Rules:
      })).filter(m => m.content);
      recent.push({role:'user', content: `SWASTHID RECORD:\n${context}\n\nUSER QUESTION:\n${trimmedQuery}`});
 
-     const response = await engine.chat.completions.create({
+     const response = await swasthaiComplete({
        messages: [
          {role:'system', content:swasthaiSystemPrompt()},
          ...recent
@@ -234,9 +272,9 @@ Rules:
    } catch (error) {
      console.error('SwasthAI local model error:', error);
      typingIndicator.remove();
-     const msg = /WebGPU/i.test(String(error.message || error))
-       ? 'SwasthAI needs a browser with WebGPU enabled. Chrome, Edge, or a recent Chromium-based browser is recommended.\n\nSwasthID still works normally without the AI model.'
-       : `I could not load the free local AI model right now. The first load downloads the model to this browser and can take a few minutes.\n\nTechnical detail: ${error.message || error}`;
+     const msg = /WebGPU|adapter/i.test(String(error.message || error))
+       ? 'SwasthAI needs a browser with WebGPU, such as a recent Chrome or Edge, on a device with a working graphics chip.\n\nEverything else in SwasthID works without it.'
+       : `SwasthAI couldn't start its local model. It runs entirely in your browser, so it needs a recent Chrome or Edge and about 1 GB of free memory; the first time, it also downloads the model, which can take a few minutes. Close other heavy tabs and try again.\n\nEverything else in SwasthID works without it.\n\nDetail: ${error.message || error}`;
      aiAddBubble('bot', msg);
    } finally {
      swasthaiBusy = false;

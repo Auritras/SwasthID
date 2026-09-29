@@ -210,8 +210,7 @@
  // never start a large model download just to read a prescription.
  if(!swasthaiEngine) return {...fallback,parser:'regex-fallback',structuredValidated:false};
  try{
-  const engine=swasthaiEngine;
-  const response=await engine.chat.completions.create({messages:[
+  const response=await swasthaiComplete({messages:[
     {role:'system',content:'You extract prescription OCR into a strict JSON object. Return ONLY valid JSON, with no markdown. Schema: {"doctor":"string","medicines":[{"medicine":"string","dose":"string","frequency":"string","instructions":"string"}]}. Never invent or normalize away uncertain information. Use empty strings when a field is not present. Every medicine must be supported by the OCR text.'},
     {role:'user',content:`OCR TEXT:\n${String(rawText).slice(0,12000)}`}
   ],temperature:0,max_tokens:700});
