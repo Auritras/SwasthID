@@ -256,8 +256,9 @@
        <div class="place-skeleton"><span class="skeleton tall"></span><span class="skeleton-lines"><span class="skeleton w-50"></span><span class="skeleton w-40"></span></span><span class="skeleton tall"></span></div>
       </div>
       <div id="nearbyFallback" class="places-state" style="display:none;">
-       <b>Location unavailable</b>
+       <b id="nearbyFallbackTitle">Location unavailable</b>
        <div id="nearbyFallbackMessage">Allow location access in your browser and try again.</div>
+       <p class="t-meta places-error-detail" id="nearbyFallbackDetail" hidden></p>
        <button class="btn" id="retryLocationBtn" type="button">Try again</button>
       </div>
       <div id="nearbyItemsList">
@@ -5343,7 +5344,23 @@ async function fetchNearbyHospitals(lat, lon) {
  );
  out center tags qt;`;
 
- const data = await queryOverpass(query);
+ // Ask our own server first (it identifies itself to the map servers and
+ // caches answers); if that fails, ask the public servers straight from here.
+ let data;
+ const reasons = [];
+ try {
+   data = await fetchNearbyViaServer(safeLat, safeLon);
+ } catch(serverErr) {
+   reasons.push(...(serverErr.reasons || [`SwasthID server: ${serverErr.message}`]));
+   try {
+     data = await queryOverpass(query);
+   } catch(directErr) {
+     reasons.push(...(directErr.reasons || [directErr.message]));
+     const e = new Error('All nearby healthcare services failed');
+     e.reasons = reasons;
+     throw e;
+   }
+ }
  const seen = new Set();
  const results = (data.elements || [])
    .map(el => {
@@ -5398,6 +5415,26 @@ async function fetchNearbyHospitals(lat, lon) {
  return [...nearestHospitals, ...others, ...generics, ...pharmacies].sort((a,b) => a.dist - b.dist);
 }
 
+async function fetchNearbyViaServer(lat, lon) {
+ const controller = new AbortController();
+ const timer = setTimeout(() => controller.abort(), 30000);
+ try {
+   const res = await fetch(`/api/nearby?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, { signal:controller.signal });
+   const body = await res.json().catch(() => ({}));
+   if(!res.ok || !Array.isArray(body.elements)) {
+     const e = new Error(body.error || `HTTP ${res.status}`);
+     if(Array.isArray(body.reasons)) e.reasons = body.reasons.map(r => `via server, ${r}`);
+     throw e;
+   }
+   return body;
+ } catch(err) {
+   if(err.name === 'AbortError') throw new Error('SwasthID server: no answer in 30 s');
+   throw err;
+ } finally {
+   clearTimeout(timer);
+ }
+}
+
 // Public Overpass mirrors. Each is free but can be busy or rate-limit a shared
 // mobile IP, so ask the first and bring in the next one if it fails or has not
 // answered within a few seconds. The first good answer wins; the rest are cancelled.
@@ -5420,19 +5457,24 @@ function queryOverpass(query, {hedgeMs=4000, timeoutMs=17000}={}) {
      clearTimeout(hedgeTimer); hedgeTimer = setTimeout(start, hedgeMs);
      fetch(`${endpoint}?data=${encodeURIComponent(query)}`, { signal:controller.signal, headers:{'Accept':'application/json'} })
        .then(async res => {
-         if(!res.ok) throw new Error(`${endpoint} returned HTTP ${res.status}`);
+         if(!res.ok) throw new Error(`HTTP ${res.status}`);
          const data = await res.json();
          // A server that runs out of time still answers 200, with a "remark"
          // and a partial or empty list. Treat that as a failure, not "nothing nearby".
-         if(data.remark && /error|timed out|out of memory/i.test(data.remark)) throw new Error(`${endpoint}: ${data.remark}`);
+         if(data.remark && /error|timed out|out of memory/i.test(data.remark)) throw new Error(String(data.remark).slice(0, 120));
          if(!done) { finish(); resolve(data); }
        })
        .catch(err => {
          if(done) return;
-         errors.push(err);
+         errors.push(`direct, ${new URL(endpoint).host}: ${err.name === 'AbortError' ? 'no answer in time' : err.message}`);
          console.warn(`Nearby healthcare endpoint failed: ${endpoint}`, err);
          if(next < OVERPASS_ENDPOINTS.length) start();
-         else if(running === errors.length) { finish(); reject(errors[0]); }
+         else if(running === errors.length) {
+           finish();
+           const e = new Error('All map servers failed');
+           e.reasons = errors;
+           reject(e);
+         }
        })
        .finally(() => clearTimeout(timer));
    };
@@ -5476,8 +5518,12 @@ function setNearbyLoading(isLoading) {
  }
 }
 
-function showNearbyError(message) {
+function showNearbyError(message, { title = 'Location unavailable', detail = '' } = {}) {
  setNearbyLoading(false);
+ const titleEl = document.getElementById('nearbyFallbackTitle');
+ if (titleEl) titleEl.textContent = title;
+ const detailEl = document.getElementById('nearbyFallbackDetail');
+ if (detailEl) { detailEl.textContent = detail; detailEl.hidden = !detail; }
  const fallback = document.getElementById('nearbyFallback');
  const list = document.getElementById('nearbyItemsList');
  if (list) list.innerHTML = '';
@@ -5631,7 +5677,10 @@ async function loadNearbyHospitals() {
      console.error('Nearby healthcare search:', err);
      const cached = readNearbyCache(latitude, longitude);
      if(!cached) {
-       showNearbyError('The free OpenStreetMap servers are busy right now. Try again in a minute.');
+       showNearbyError('The free OpenStreetMap map servers did not answer. Try again in a minute.', {
+         title: 'Could not load nearby places',
+         detail: err.reasons?.length ? `Details: ${err.reasons.join(' · ')}` : ''
+       });
        return;
      }
      places = cached.places; cachedAt = cached.at;
