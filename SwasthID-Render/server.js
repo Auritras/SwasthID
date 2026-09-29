@@ -581,6 +581,122 @@ async function handleMedicine(req, res, url) {
   }
 }
 
+// Nearby care. The browser sends only its coordinates; the query is built here
+// so this can't be used as a general Overpass proxy. The free public servers
+// ask callers to identify themselves, which a browser can't do, and they
+// rate-limit shared mobile IPs, so asking from the server is more reliable.
+// Answers are cached for an hour per ~100 m, and failures are logged.
+const OVERPASS_ENDPOINTS = (process.env.OVERPASS_URLS || [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+].join(',')).split(',').map(s => s.trim()).filter(Boolean);
+const nearbyCache = new Map();
+const nearbyHits = new Map();
+
+function nearbyQuery(lat, lon) {
+  return `[out:json][timeout:20];
+(
+  nwr["amenity"="hospital"](around:10000,${lat},${lon});
+  nwr["amenity"="clinic"](around:5000,${lat},${lon});
+  nwr["amenity"="doctors"](around:5000,${lat},${lon});
+  nwr["healthcare"~"^(hospital|clinic|doctor|centre|center|polyclinic)$"](around:5000,${lat},${lon});
+  nwr["amenity"="pharmacy"](around:3000,${lat},${lon});
+  nwr["healthcare"="pharmacy"](around:3000,${lat},${lon});
+  nwr["amenity"="pharmacy"]["name"~"aushadh|generic|amrit",i](around:10000,${lat},${lon});
+  nwr["amenity"="pharmacy"]["brand"~"aushadh|generic|amrit",i](around:10000,${lat},${lon});
+);
+out center tags qt;`;
+}
+
+async function overpassFetch(endpoint, query, signal) {
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    signal,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json',
+      'User-Agent': 'SwasthID/1.0 (+https://github.com/Auritras/SwasthID)'
+    },
+    body: 'data=' + encodeURIComponent(query)
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  // A server that runs out of time still answers 200 with a "remark".
+  if (data.remark && /error|timed out|out of memory/i.test(data.remark)) {
+    throw new Error(String(data.remark).slice(0, 120));
+  }
+  return data;
+}
+
+// Ask the first server; bring in the next as soon as one fails or after 4 s
+// without an answer. First good answer wins and the others are cancelled.
+function queryOverpassServers(query) {
+  return new Promise((resolve, reject) => {
+    const controllers = [], reasons = [];
+    let next = 0, failed = 0, done = false, hedge = null;
+    const finish = () => { done = true; clearTimeout(hedge); controllers.forEach(c => c.abort()); };
+    const start = () => {
+      if (done || next >= OVERPASS_ENDPOINTS.length) return;
+      const endpoint = OVERPASS_ENDPOINTS[next++];
+      const controller = new AbortController();
+      controllers.push(controller);
+      const timer = setTimeout(() => controller.abort(), 25000);
+      clearTimeout(hedge);
+      hedge = setTimeout(start, 4000);
+      overpassFetch(endpoint, query, controller.signal)
+        .then(data => { if (!done) { finish(); resolve(data); } })
+        .catch(err => {
+          if (done) return;
+          failed++;
+          reasons.push(`${new URL(endpoint).host}: ${err.name === 'AbortError' ? 'no answer in 25 s' : err.message}`);
+          if (next < OVERPASS_ENDPOINTS.length) start();
+          else if (failed === next) {
+            finish();
+            const e = new Error('All map servers failed');
+            e.reasons = reasons;
+            reject(e);
+          }
+        })
+        .finally(() => clearTimeout(timer));
+    };
+    start();
+  });
+}
+
+async function handleNearby(req, res, url) {
+  const lat = Number(url.searchParams.get('lat'));
+  const lon = Number(url.searchParams.get('lon'));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    return json(res, 400, { error: 'lat and lon are required.' });
+  }
+
+  // 30 searches per 10 minutes per client is plenty for a person.
+  const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  const now = Date.now();
+  const recent = (nearbyHits.get(ip) || []).filter(t => now - t < 600000);
+  if (recent.length >= 30) return json(res, 429, { error: 'Too many searches. Try again in a few minutes.' });
+  recent.push(now);
+  nearbyHits.set(ip, recent);
+  if (nearbyHits.size > 5000) nearbyHits.clear();
+
+  const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+  const hit = nearbyCache.get(key);
+  if (hit && now - hit.at < 3600000) return json(res, 200, { elements: hit.elements, cached: true });
+
+  try {
+    const data = await queryOverpassServers(nearbyQuery(Number(lat.toFixed(4)), Number(lon.toFixed(4))));
+    const elements = Array.isArray(data.elements) ? data.elements : [];
+    if (nearbyCache.size > 500) nearbyCache.clear();
+    nearbyCache.set(key, { at: now, elements });
+    return json(res, 200, { elements });
+  } catch (err) {
+    const reasons = err.reasons || [err.message];
+    console.warn('Nearby search failed:', reasons.join(' | '));
+    return json(res, 502, { error: 'The map servers did not answer.', reasons });
+  }
+}
+
 async function handleRisk(req, res) {
   if (!RISK_API_URL) {
     return json(res, 503, {
@@ -867,7 +983,7 @@ function recordSharePage(token) {
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* Same tokens as assets/app.css: 4 pt spacing, Inter, 8/12 px radii. */
-:root{--bg:#F6F7F6;--surface:#fff;--surface-2:#F1F4F2;--border:#E2E7E4;--text:#14201C;--text-2:#4A5752;--text-3:#66736D;--brand:#1D6B53;--brand-soft:#E6F1EC;--brand-text:#16553F;--danger:#B42318}
+:root{--bg:#E6F0F3;--surface:#F7FBFC;--surface-2:#EEF6F8;--border:#D3E0E5;--text:#0F1E26;--text-2:#3E525C;--text-3:#556A72;--brand:#05668D;--brand-soft:#DDEEF4;--brand-text:#04506F;--danger:#B42318}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:400 14px/20px Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 .wrap{max-width:880px;margin:0 auto;padding:32px 16px 64px}
@@ -1704,6 +1820,13 @@ const server =
                 )
             }
           );
+        }
+
+        if (
+          req.method === 'GET' &&
+          url.pathname === '/api/nearby'
+        ) {
+          return await handleNearby(req, res, url);
         }
 
         if (

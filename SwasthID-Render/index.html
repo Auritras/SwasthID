@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SwasthID — Your health record, medicines and emergency card</title>
 <meta name="description" content="Keep your health record, medicines, vitals and lab results in one private place. Scan prescriptions and lab reports, get dose reminders, and carry an emergency QR card.">
-<meta name="theme-color" content="#1D6B53" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0D1311" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#05668D" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1417" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <link rel="manifest" href="/assets/site.webmanifest">
@@ -131,7 +131,7 @@
  <symbol id="i-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
  <symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
- <symbol id="i-logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1D6B53" stroke="none"/><path d="M16 9v14M9 16h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/></symbol>
+ <symbol id="i-logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#05668D" stroke="none"/><path d="M16 9v14M9 16h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/></symbol>
 </svg>
 <div id="offlineBanner" class="offline-banner" role="status">You are offline. Saved information remains available, but live services may be unavailable until your connection returns.</div><!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
@@ -256,8 +256,9 @@
        <div class="place-skeleton"><span class="skeleton tall"></span><span class="skeleton-lines"><span class="skeleton w-50"></span><span class="skeleton w-40"></span></span><span class="skeleton tall"></span></div>
       </div>
       <div id="nearbyFallback" class="places-state" style="display:none;">
-       <b>Location unavailable</b>
+       <b id="nearbyFallbackTitle">Location unavailable</b>
        <div id="nearbyFallbackMessage">Allow location access in your browser and try again.</div>
+       <p class="t-meta places-error-detail" id="nearbyFallbackDetail" hidden></p>
        <button class="btn" id="retryLocationBtn" type="button">Try again</button>
       </div>
       <div id="nearbyItemsList">
@@ -4702,23 +4703,8 @@ function renderEmergencyQRIfReady(){
    const btn=document.getElementById('exportHealthPdfBtn'); if(btn)btn.disabled=true;
    try{
      const jsPDF=await ensureJsPdfLoaded(); if(!jsPDF)throw new Error('PDF generator could not be loaded.');
-     const b=buildSwasthHealthBundle(); const doc=new jsPDF({unit:'mm',format:'a4',compress:true});
-     const W=210,H=297,M=15,CW=W-2*M; let y=15;
-     const dark=[28,43,39],muted=[101,115,108],line=[214,224,219],light=[247,249,248],accent=[47,105,86];
-     const text=v=>String(v??'').trim()||'Not provided';
-     const pageBreak=need=>{if(y+need>H-20){doc.addPage();y=15;}};
-     const heading=(t)=>{pageBreak(18);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(...dark);doc.text(t,M,y);y+=8;};
-     const row=(label,value)=>{pageBreak(13);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...muted);doc.text(label.toUpperCase(),M,y);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...dark);const lines=doc.splitTextToSize(text(value),CW-45);doc.text(lines,M+45,y);y+=Math.max(7,lines.length*4.5)+2;};
-     doc.setFillColor(...accent);doc.roundedRect(M,y,CW,27,4,4,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('SWASTHID',M+8,y+11);doc.setFontSize(11);doc.text('Portable Health Summary',M+8,y+19);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text('Patient-controlled prototype record',W-M-8,y+11,{align:'right'});y+=35;
-     doc.setTextColor(...dark);doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text(text(b.patient.name),M,y);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...muted);doc.text(`Generated ${new Date().toLocaleString()}`,M,y+6);y+=14;
-     heading('Patient'); row('Date of birth',b.patient.birthDate); row('Blood group',b.patient.bloodGroup); row('Email',b.patient.telecom?.[0]?.value);
-     heading('Vitals & lifestyle'); row('Height',b.vitals.height); row('Weight',b.vitals.weight); row('BMI',b.vitals.bmi); row('Smoking',b.lifestyle.smoking); row('Alcohol',b.lifestyle.alcohol);
-     heading('Medical conditions'); if(!b.conditions.length)row('Conditions','None recorded'); else b.conditions.forEach(c=>row('Condition',`${c.code.text} · ${c.clinicalStatus.text||'Status not provided'}${c.onsetYear?' · '+c.onsetYear:''}${c.note?' · '+c.note:''}`));
-     heading('Current medications'); if(!b.medications.length)row('Medication','None recorded'); else b.medications.forEach(m=>row('Medication',`${m.medication.text} · ${m.dose.text||'Dose not provided'} · ${m.frequency.text||'Frequency not provided'}${m.instructions?' · '+m.instructions:''}`));
-     heading('Recent visits'); if(!b.encounters.length)row('Visits','None recorded'); else b.encounters.slice(0,12).forEach(v=>row('Visit',`${v.date?new Date(v.date).toLocaleDateString():'Date unavailable'} · ${v.provider||'Provider not provided'} · ${v.specialty||'Specialty not provided'} · ${v.facility||'Facility not provided'}`));
-     heading('Diagnostic reports'); if(!b.diagnosticReports.length)row('Reports','None recorded'); else b.diagnosticReports.slice(0,15).forEach(r=>row('Report',`${r.date?new Date(r.date).toLocaleDateString():'Date unavailable'} · ${r.code.text}${r.result.text?' · '+r.result.text:''}`));
-     pageBreak(25);doc.setDrawColor(...line);doc.line(M,H-16,W-M,H-16);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...muted);doc.text('This export is informational and should be verified by a healthcare professional.',M,H-10,{maxWidth:CW});
-     const filename=`SwasthID-Health-Summary-${safeHealthName()}.pdf`;const blob=doc.output('blob');const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);setHealthShareStatus(`Health Summary PDF ready: ${filename}`);
+     const {doc,filename}=buildHealthSummaryPdf(jsPDF);
+     SwasthPdf.save(doc,filename);setHealthShareStatus(`Health summary PDF ready: ${filename}`);
    }catch(e){console.error('Health summary PDF failed:',e);setHealthShareStatus('Health Summary PDF failed: '+(e?.message||'unknown error'),true);alert('The health summary PDF could not be generated. Please try again.');}finally{if(btn)btn.disabled=false;}
  }
  /* ---------------------------------------------------------------
@@ -5343,7 +5329,23 @@ async function fetchNearbyHospitals(lat, lon) {
  );
  out center tags qt;`;
 
- const data = await queryOverpass(query);
+ // Ask our own server first (it identifies itself to the map servers and
+ // caches answers); if that fails, ask the public servers straight from here.
+ let data;
+ const reasons = [];
+ try {
+   data = await fetchNearbyViaServer(safeLat, safeLon);
+ } catch(serverErr) {
+   reasons.push(...(serverErr.reasons || [`SwasthID server: ${serverErr.message}`]));
+   try {
+     data = await queryOverpass(query);
+   } catch(directErr) {
+     reasons.push(...(directErr.reasons || [directErr.message]));
+     const e = new Error('All nearby healthcare services failed');
+     e.reasons = reasons;
+     throw e;
+   }
+ }
  const seen = new Set();
  const results = (data.elements || [])
    .map(el => {
@@ -5398,6 +5400,26 @@ async function fetchNearbyHospitals(lat, lon) {
  return [...nearestHospitals, ...others, ...generics, ...pharmacies].sort((a,b) => a.dist - b.dist);
 }
 
+async function fetchNearbyViaServer(lat, lon) {
+ const controller = new AbortController();
+ const timer = setTimeout(() => controller.abort(), 30000);
+ try {
+   const res = await fetch(`/api/nearby?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, { signal:controller.signal });
+   const body = await res.json().catch(() => ({}));
+   if(!res.ok || !Array.isArray(body.elements)) {
+     const e = new Error(body.error || `HTTP ${res.status}`);
+     if(Array.isArray(body.reasons)) e.reasons = body.reasons.map(r => `via server, ${r}`);
+     throw e;
+   }
+   return body;
+ } catch(err) {
+   if(err.name === 'AbortError') throw new Error('SwasthID server: no answer in 30 s');
+   throw err;
+ } finally {
+   clearTimeout(timer);
+ }
+}
+
 // Public Overpass mirrors. Each is free but can be busy or rate-limit a shared
 // mobile IP, so ask the first and bring in the next one if it fails or has not
 // answered within a few seconds. The first good answer wins; the rest are cancelled.
@@ -5420,19 +5442,24 @@ function queryOverpass(query, {hedgeMs=4000, timeoutMs=17000}={}) {
      clearTimeout(hedgeTimer); hedgeTimer = setTimeout(start, hedgeMs);
      fetch(`${endpoint}?data=${encodeURIComponent(query)}`, { signal:controller.signal, headers:{'Accept':'application/json'} })
        .then(async res => {
-         if(!res.ok) throw new Error(`${endpoint} returned HTTP ${res.status}`);
+         if(!res.ok) throw new Error(`HTTP ${res.status}`);
          const data = await res.json();
          // A server that runs out of time still answers 200, with a "remark"
          // and a partial or empty list. Treat that as a failure, not "nothing nearby".
-         if(data.remark && /error|timed out|out of memory/i.test(data.remark)) throw new Error(`${endpoint}: ${data.remark}`);
+         if(data.remark && /error|timed out|out of memory/i.test(data.remark)) throw new Error(String(data.remark).slice(0, 120));
          if(!done) { finish(); resolve(data); }
        })
        .catch(err => {
          if(done) return;
-         errors.push(err);
+         errors.push(`direct, ${new URL(endpoint).host}: ${err.name === 'AbortError' ? 'no answer in time' : err.message}`);
          console.warn(`Nearby healthcare endpoint failed: ${endpoint}`, err);
          if(next < OVERPASS_ENDPOINTS.length) start();
-         else if(running === errors.length) { finish(); reject(errors[0]); }
+         else if(running === errors.length) {
+           finish();
+           const e = new Error('All map servers failed');
+           e.reasons = errors;
+           reject(e);
+         }
        })
        .finally(() => clearTimeout(timer));
    };
@@ -5476,8 +5503,12 @@ function setNearbyLoading(isLoading) {
  }
 }
 
-function showNearbyError(message) {
+function showNearbyError(message, { title = 'Location unavailable', detail = '' } = {}) {
  setNearbyLoading(false);
+ const titleEl = document.getElementById('nearbyFallbackTitle');
+ if (titleEl) titleEl.textContent = title;
+ const detailEl = document.getElementById('nearbyFallbackDetail');
+ if (detailEl) { detailEl.textContent = detail; detailEl.hidden = !detail; }
  const fallback = document.getElementById('nearbyFallback');
  const list = document.getElementById('nearbyItemsList');
  if (list) list.innerHTML = '';
@@ -5631,7 +5662,10 @@ async function loadNearbyHospitals() {
      console.error('Nearby healthcare search:', err);
      const cached = readNearbyCache(latitude, longitude);
      if(!cached) {
-       showNearbyError('The free OpenStreetMap servers are busy right now. Try again in a minute.');
+       showNearbyError('The free OpenStreetMap map servers did not answer. Try again in a minute.', {
+         title: 'Could not load nearby places',
+         detail: err.reasons?.length ? `Details: ${err.reasons.join(' · ')}` : ''
+       });
        return;
      }
      places = cached.places; cachedAt = cached.at;
@@ -5658,6 +5692,14 @@ function getEmergencyContact() {
  return contact && typeof contact==='object' ? contact : {name:'',relation:'',phone:''};
 }
 
+// Profile medicines plus those from saved prescriptions, without duplicates.
+function getEmergencyMedicines() {
+ const profileMeds = Array.isArray(patientData.medications) ? patientData.medications : [];
+ const rxMeds = getSavedPrescriptions().flatMap(r=>Array.isArray(r.medicines)?r.medicines:[]);
+ const key = m => `${String(m.name||m.medicine||'').toLowerCase()}|${String(m.dose||'').toLowerCase()}`;
+ return [...profileMeds, ...rxMeds].filter(Boolean).filter((m,i,a)=>a.findIndex(x=>key(x)===key(m))===i).slice(0, 8);
+}
+
 function getEmergencyCompactPayload() {
  const contact = getEmergencyContact();
  const visibility=safeJsonParse(localStorage.getItem('swasth_emergencyVisibility')||'{}',{});
@@ -5666,10 +5708,7 @@ function getEmergencyCompactPayload() {
    .slice(0, 6)
    .map(c => c.name)
    .filter(Boolean);
- const profileMeds = Array.isArray(patientData.medications) ? patientData.medications : [];
- const rxMeds = getSavedPrescriptions().flatMap(r=>Array.isArray(r.medicines)?r.medicines:[]);
- const mergedMeds = [...profileMeds, ...rxMeds].filter(Boolean).filter((m,i,a)=>{const k=`${String(m.name||m.medicine||'').toLowerCase()}|${String(m.dose||'').toLowerCase()}`;return a.findIndex(x=>`${String(x.name||x.medicine||'').toLowerCase()}|${String(x.dose||'').toLowerCase()}`===k)===i;});
- const activeMeds = mergedMeds.slice(0, 8).map(m => [m.name || m.medicine, m.dose, m.schedule || m.frequency].filter(Boolean).join(' ')).filter(Boolean);
+ const activeMeds = getEmergencyMedicines().map(m => [m.name || m.medicine, m.dose, m.schedule || m.frequency].filter(Boolean).join(' ')).filter(Boolean);
  const allergies = formatAllergies(patientData.allergies);
  const otherAllergies = formatNormalAllergies(patientData.normalAllergies);
  return {
@@ -5804,14 +5843,14 @@ async function generateEmergencyQR(force = false) {
  if (pendingStatus) pendingStatus.textContent = 'Creating a secure QR…';
  qrContainer.style.background = '#fff';
  qrContainer.style.boxShadow = 'none';
- qrContainer.style.border = '1px solid #e1e8e4';
+ qrContainer.style.border = '1px solid #D3E0E5';
  qrContainer.style.width = '240px';
  qrContainer.style.height = '240px';
  const status = document.getElementById('qrPayloadStatus');
  try {
    const qrText = await getEmergencyQRText();
    qrContainer.innerHTML = '';
-   new QRCode(qrContainer, {text: qrText,width:220,height:220,colorDark:'#111814',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+   new QRCode(qrContainer, {text: qrText,width:220,height:220,colorDark:'#0F1E26',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
    const serverBacked = /emergency=v1\./.test(qrText) || /^v1\./.test(qrText);
    const expiresAt = Number(localStorage.getItem('swasth_emergencyExpiresAt') || 0);
    if (status) status.textContent = serverBacked
@@ -5898,7 +5937,7 @@ async function downloadEmergencyPDF() {
   const originalStatusText = statusEl ? statusEl.textContent : '';
   const originalStatusColor = statusEl ? statusEl.style.color : '';
   const setStatus = (msg, isError) => {
-    if (statusEl) { statusEl.textContent = msg; statusEl.style.color = isError ? '#b44e39' : '#3a7d5b'; }
+    if (statusEl) { statusEl.textContent = msg; statusEl.style.color = isError ? '#b44e39' : '#04506F'; }
     console[isError ? 'error' : 'log']('[Emergency PDF]', msg);
   };
   const restoreStatus = () => setTimeout(() => {
@@ -5915,159 +5954,9 @@ async function downloadEmergencyPDF() {
       return;
     }
 
-    const payload = getEmergencyCompactPayload();
-    const contact = getEmergencyContact();
-    const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
-    const pageW = 210;
-    const pageH = 297;
-    const margin = 15;
-    const contentW = pageW - margin * 2;
-    const red = [143, 45, 36];
-    const dark = [28, 43, 39];
-    const muted = [101, 115, 108];
-    const light = [247, 249, 248];
-    const line = [214, 224, 219];
-    let y = 15;
-
-    const safeText = value => String(value || '').trim() || 'Not provided';
-    const drawCard = (title, value, x, top, w, minH = 22) => {
-      const text = safeText(value);
-      const valueLines = doc.splitTextToSize(text, w - 10);
-      const h = Math.max(minH, 11 + valueLines.length * 4.8);
-      doc.setFillColor(...light);
-      doc.setDrawColor(...line);
-      doc.roundedRect(x, top, w, h, 2.5, 2.5, 'FD');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7.5);
-      doc.setTextColor(...muted);
-      doc.text(title.toUpperCase(), x + 5, top + 6.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10.2);
-      doc.setTextColor(...dark);
-      doc.text(valueLines, x + 5, top + 12);
-      return h;
-    };
-    const drawFullCard = (title, value, minH = 22) => {
-      const h = drawCard(title, value, margin, y, contentW, minH);
-      y += h + 4;
-    };
-
-    doc.setFillColor(...red);
-    doc.roundedRect(margin, y, contentW, 31, 4, 4, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.text('SWASTHID', margin + 8, y + 11);
-    doc.setFontSize(11.5);
-    doc.text('Emergency Health Passport', margin + 8, y + 19);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.text('KEEP WITH THE PATIENT FOR EMERGENCY REFERENCE', margin + 8, y + 25);
-    doc.setFontSize(8.5);
-    doc.text('Call 112 for an active emergency', pageW - margin - 8, y + 11, { align: 'right' });
-    doc.setFontSize(7.5);
-    doc.text('Patient-controlled emergency reference', pageW - margin - 8, y + 18, { align: 'right' });
-    y += 39;
-
-    doc.setTextColor(...dark);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(17);
-    doc.text(safeText(payload.n), margin, y);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...muted);
-    doc.text(`Generated ${new Date().toLocaleString()}`, margin, y + 6);
-    y += 13;
-
-    const colGap = 5;
-    const colW = (contentW - colGap) / 2;
-    const h1 = drawCard('Blood group', payload.bg, margin, y, colW, 21);
-    const h2 = drawCard('Drug allergies', payload.da, margin + colW + colGap, y, colW, 21);
-    y += Math.max(h1, h2) + 4;
-
-    const h3 = drawCard('Other allergies', payload.oa, margin, y, colW, 21);
-    const h4 = drawCard('Emergency contact', [contact.name, contact.relation, contact.phone].filter(Boolean).join(' | '), margin + colW + colGap, y, colW, 21);
-    y += Math.max(h3, h4) + 4;
-
-    drawFullCard('Ongoing conditions', Array.isArray(payload.c) && payload.c.length ? payload.c.join(', ') : 'None recorded', 23);
-    drawFullCard('Critical daily medicines', Array.isArray(payload.m) && payload.m.length ? payload.m.join(', ') : 'None recorded', 23);
-
-    const footerLineY = Math.min(y + 4, 178);
-    const qrSize = 48;
-    const qrFrame = 54;
-    const qrX = pageW - margin - qrFrame + 3;
-    const qrY = footerLineY + 8;
-    const noteX = margin;
-    const noteW = contentW - qrFrame - 12;
-
-    doc.setDrawColor(...line);
-    doc.line(margin, footerLineY, pageW - margin, footerLineY);
-
-    doc.setTextColor(...red);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
-    doc.text('IMPORTANT', noteX, footerLineY + 8);
-    doc.setTextColor(...muted);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.7);
-    const note = doc.splitTextToSize(
-      'This document is a patient-controlled emergency reference. It is not a diagnosis and does not replace emergency medical care. Verify critical information when possible.',
-      noteW
-    );
-    doc.text(note, noteX, footerLineY + 14);
-
-    const qr = document.querySelector('#realQrContainer canvas, #realQrContainer img');
-    let qrEmbedded = false;
-    doc.setDrawColor(...line);
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(qrX - 3, qrY - 3, qrFrame, qrFrame + 10, 2.5, 2.5, 'FD');
-    if (qr) {
-      try {
-        const src = qr.tagName.toLowerCase() === 'canvas' ? qr.toDataURL('image/png') : qr.src;
-        if (!src || src === 'data:,') throw new Error('QR image data was empty.');
-        doc.addImage(src, 'PNG', qrX, qrY, qrSize, qrSize);
-        doc.setTextColor(...muted);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(6.8);
-        doc.text('Scan for read-only emergency view', qrX + qrSize / 2, qrY + qrSize + 6, { align: 'center', maxWidth: qrSize + 4 });
-        qrEmbedded = true;
-      } catch (err) {
-        console.error('QR embed into PDF failed, continuing without QR:', err);
-      }
-    }
-    if (!qrEmbedded) {
-      doc.setTextColor(...muted);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      doc.text(doc.splitTextToSize('QR not ready in this download. Open the Emergency tab in the app to view or scan it live.', qrSize + 2), qrX + qrSize / 2, qrY + 10, { align: 'center' });
-    }
-
-    const metaY = pageH - 12;
-    doc.setDrawColor(...line);
-    doc.line(margin, metaY - 5, pageW - margin, metaY - 5);
-    doc.setTextColor(...muted);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    const pdfExpiry = Number(localStorage.getItem('swasth_emergencyExpiresAt') || 0);
-    doc.text(`Emergency QR valid until ${pdfExpiry ? new Date(pdfExpiry).toLocaleDateString() : 'revoked or expired'} unless revoked.`, margin, metaY);
-    doc.text('Share only with intended emergency responders.', pageW - margin, metaY, { align: 'right' });
-
-    const filename = `SwasthID-Emergency-${String(payload.n).replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'') || 'Passport'}.pdf`;
-    const blob = doc.output('blob');
-    if (!blob || !blob.size) throw new Error('The generated PDF was empty.');
-
-    const blobUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = filename;
-    link.rel = 'noopener';
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-    setStatus(qrEmbedded ? `PDF ready: ${filename}` : `PDF ready: ${filename} (QR not embedded)`, !qrEmbedded);
+    const { doc, filename, qrEmbedded } = buildEmergencyPdf(jsPDF);
+    SwasthPdf.save(doc, filename);
+    setStatus(qrEmbedded ? `PDF ready: ${filename}` : `PDF ready: ${filename} (without the QR code; it wasn't ready yet)`, false);
     restoreStatus();
   } catch (error) {
     console.error('Emergency PDF generation failed:', error);
@@ -7088,6 +6977,477 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
   if (localStorage.getItem(PREF_KEY) === 'on' && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 })();
 </script>
+<script id="pdf-kit">
+/* PDF building blocks for the emergency card and the health summary.
+   Text is set in Helvetica when it can be encoded. Anything else (names in
+   Hindi or Bengali, ₹) is drawn by the browser onto a canvas and placed as an
+   image, so every script is shaped correctly without downloading a font. */
+const SwasthPdf = (() => {
+  const C = {
+    text: [15, 30, 38], text2: [62, 82, 92], text3: [85, 106, 114],
+    border: [211, 224, 229], soft: [238, 246, 248],
+    brand: [5, 102, 141], brandSoft: [221, 238, 244],
+    danger: [180, 35, 24], dangerSoft: [251, 237, 236], white: [255, 255, 255]
+  };
+  const PT = 0.3528;          // mm per point
+  const PX_PER_MM = 12;       // canvas resolution for non-Latin text (~300 dpi)
+  const ENCODABLE = /^[\x20-\x7E\xA0-\xFF–—‘’“”•…]*$/;
+  const CANVAS_FONT = 'Inter, "Noto Sans", "Noto Sans Devanagari", "Noto Sans Bengali", "Nirmala UI", system-ui, sans-serif';
+
+  // "2026-08-02" is a calendar date, not midnight UTC, so read it as local.
+  function toDate(v) {
+    if (!v) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v));
+    const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  function fmtDate(v, withYear = true) {
+    const d = toDate(v);
+    if (!d) return v ? String(v) : '';
+    const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()];
+    return `${d.getDate()} ${month}${withYear ? ' ' + d.getFullYear() : ''}`;
+  }
+  function ageFrom(dob) {
+    const d = toDate(dob); if (!d) return null;
+    const now = new Date();
+    let a = now.getFullYear() - d.getFullYear();
+    if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) a--;
+    return a >= 0 && a < 130 ? a : null;
+  }
+  const clean = v => String(v ?? '').replace(/\s+/g, ' ').trim();
+
+  function create(jsPDF, { header, footer } = {}) {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+    const W = 210, H = 297, M = 16, TOP = 16, BOTTOM = 18;
+    const measureCtx = document.createElement('canvas').getContext('2d');
+    const canvasFont = (size, bold) => `${bold ? 600 : 400} ${size * PT * PX_PER_MM}px ${CANVAS_FONT}`;
+    const api = { doc, C, W, H, M, CW: W - 2 * M, y: TOP, top: TOP };
+
+    api.setFont = (size, bold = false, color = C.text) => {
+      doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); doc.setTextColor(...color);
+    };
+    api.width = (str, size, bold = false) => {
+      str = clean(str);
+      if (ENCODABLE.test(str)) { api.setFont(size, bold); return doc.getTextWidth(str); }
+      measureCtx.font = canvasFont(size, bold); return measureCtx.measureText(str).width / PX_PER_MM;
+    };
+    // Split into lines that fit maxW. Long single words are broken.
+    api.wrap = (str, size, bold, maxW) => {
+      str = clean(str); if (!str) return [];
+      if (!maxW) return [str];
+      if (ENCODABLE.test(str)) { api.setFont(size, bold); return doc.splitTextToSize(str, maxW); }
+      const out = []; let line = '';
+      for (const word of str.split(' ')) {
+        const next = line ? line + ' ' + word : word;
+        if (api.width(next, size, bold) <= maxW) { line = next; continue; }
+        if (line) out.push(line);
+        line = word;
+        while (api.width(line, size, bold) > maxW && line.length > 1) {
+          let cut = line.length - 1; while (cut > 1 && api.width(line.slice(0, cut), size, bold) > maxW) cut--;
+          out.push(line.slice(0, cut)); line = line.slice(cut);
+        }
+      }
+      if (line) out.push(line);
+      return out;
+    };
+    function drawLine(str, x, y, size, bold, color, align) {
+      if (ENCODABLE.test(str)) { api.setFont(size, bold, color); doc.text(str, x, y, { align }); return; }
+      const fontMm = size * PT, w = api.width(str, size, bold);
+      const cv = document.createElement('canvas');
+      cv.width = Math.ceil(w * PX_PER_MM) + 4; cv.height = Math.ceil(fontMm * 1.5 * PX_PER_MM);
+      const ctx = cv.getContext('2d');
+      ctx.font = canvasFont(size, bold); ctx.fillStyle = `rgb(${color.join(',')})`; ctx.textBaseline = 'alphabetic';
+      ctx.fillText(str, 0, fontMm * 1.1 * PX_PER_MM);
+      const left = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+      doc.addImage(cv.toDataURL('image/png'), 'PNG', left, y - fontMm * 1.1, cv.width / PX_PER_MM, cv.height / PX_PER_MM);
+    }
+    // Draw text with its first baseline at y. Returns the height used.
+    api.text = (str, x, y, { size = 10, bold = false, color = C.text, maxW = null, align = 'left', lh = 1.4, maxLines = 0 } = {}) => {
+      let lines = api.wrap(str, size, bold, maxW);
+      if (maxLines && lines.length > maxLines) {
+        lines = lines.slice(0, maxLines);
+        let last = lines[maxLines - 1];
+        while (last.length > 1 && api.width(last + '…', size, bold) > (maxW || Infinity)) last = last.slice(0, -1);
+        lines[maxLines - 1] = last.replace(/[\s,;·]+$/, '') + '…';
+      }
+      const step = size * PT * lh;
+      lines.forEach((l, i) => drawLine(l, x, y + i * step, size, bold, color, align));
+      return lines.length ? (lines.length - 1) * step + size * PT : 0;
+    };
+    api.textHeight = (str, { size = 10, bold = false, maxW = null, lh = 1.4 } = {}) => {
+      const n = api.wrap(str, size, bold, maxW).length; return n ? (n - 1) * size * PT * lh + size * PT : 0;
+    };
+
+    api.logo = (x, y, s = 7) => {
+      doc.setFillColor(...C.brand); doc.roundedRect(x, y, s, s, s * 0.25, s * 0.25, 'F');
+      doc.setDrawColor(...C.white); doc.setLineWidth(s * 0.1); doc.setLineCap('round');
+      doc.line(x + s / 2, y + s * 0.28, x + s / 2, y + s * 0.72); doc.line(x + s * 0.28, y + s / 2, x + s * 0.72, y + s / 2);
+      doc.setLineCap('butt'); doc.setLineWidth(0.2);
+    };
+    api.rule = (y, color = C.border) => { doc.setDrawColor(...color); doc.setLineWidth(0.2); doc.line(M, y, W - M, y); };
+
+    api.newPage = () => { doc.addPage(); api.y = TOP; header?.(api, false); };
+    api.ensure = need => { if (api.y + need > H - BOTTOM) { api.newPage(); return true; } return false; };
+
+    api.section = title => {
+      api.ensure(22);
+      api.y += 4;
+      api.text(title, M, api.y + 4, { size: 11.5, bold: true });
+      api.y += 7.5;
+    };
+    api.note = str => {
+      api.ensure(8);
+      const h = api.text(str, M, api.y + 3.2, { size: 9.5, color: C.text2, maxW: api.CW });
+      api.y += h + 3;
+    };
+
+    // Simple table: header row, rows separated by hairlines, cells wrap.
+    // cols: [{ label, w (fraction of width), bold }]
+    api.table = (cols, rows, { size = 9.5 } = {}) => {
+      const pad = 2, widths = cols.map(c => c.w * api.CW);
+      const drawHead = () => {
+        let x = M;
+        cols.forEach((c, i) => { api.text(c.label.toUpperCase(), x, api.y + 3, { size: 7, bold: true, color: C.text3 }); x += widths[i]; });
+        api.y += 5; api.rule(api.y);
+      };
+      drawHead();
+      rows.forEach(row => {
+        const hs = row.map((cell, i) => api.textHeight(cell, { size, bold: cols[i].bold, maxW: widths[i] - pad * 2 }));
+        const h = Math.max(...hs) + pad * 2 + 0.6;
+        if (api.ensure(h + 2)) drawHead();
+        let x = M;
+        row.forEach((cell, i) => {
+          api.text(cell, x, api.y + pad + size * PT * 0.9, { size, bold: cols[i].bold, color: cols[i].color || C.text, maxW: widths[i] - pad * 2 });
+          x += widths[i];
+        });
+        api.y += h; api.rule(api.y);
+      });
+      api.y += 2;
+    };
+
+    // Two-column label/value list, empty values skipped.
+    api.facts = (pairs) => {
+      const items = pairs.filter(([, v]) => clean(v));
+      if (!items.length) return;
+      const colW = api.CW / 2;
+      for (let i = 0; i < items.length; i += 2) {
+        const pair = items.slice(i, i + 2);
+        const h = Math.max(...pair.map(([, v]) => api.textHeight(v, { size: 10, maxW: colW - 4 }))) + 5;
+        api.ensure(h + 2);
+        pair.forEach(([label, value], j) => {
+          const x = M + j * colW;
+          api.text(label.toUpperCase(), x, api.y + 2.6, { size: 7, bold: true, color: C.text3 });
+          api.text(value, x, api.y + 7, { size: 10, maxW: colW - 4 });
+        });
+        api.y += h + 3;
+      }
+    };
+
+    // Red box for drug allergies; neutral when there are none.
+    api.allergyBox = (drug, other) => {
+      const has = !!clean(drug);
+      const body = has ? clean(drug) : 'No known drug allergies';
+      const bodyH = api.textHeight(body, { size: has ? 13 : 11, bold: has, maxW: api.CW - 10 });
+      const otherLine = clean(other) ? `Other allergies: ${clean(other)}` : '';
+      const otherH = otherLine ? api.textHeight(otherLine, { size: 9, maxW: api.CW - 10 }) + 2.5 : 0;
+      const h = 9 + bodyH + otherH + 4;
+      api.ensure(h + 4);
+      doc.setFillColor(...(has ? C.dangerSoft : C.soft)); doc.setDrawColor(...(has ? C.danger : C.border)); doc.setLineWidth(has ? 0.5 : 0.2);
+      doc.roundedRect(M, api.y, api.CW, h, 2, 2, 'FD'); doc.setLineWidth(0.2);
+      api.text('DRUG ALLERGIES', M + 5, api.y + 6, { size: 7.5, bold: true, color: has ? C.danger : C.text3 });
+      api.text(body, M + 5, api.y + 11.5, { size: has ? 13 : 11, bold: has, color: has ? C.danger : C.text, maxW: api.CW - 10 });
+      if (otherLine) api.text(otherLine, M + 5, api.y + 11.5 + bodyH + 2.5, { size: 9, color: C.text2, maxW: api.CW - 10 });
+      api.y += h + 5;
+    };
+
+    api.finish = () => {
+      const n = doc.getNumberOfPages();
+      for (let i = 1; i <= n; i++) { doc.setPage(i); footer?.(api, i, n); }
+      return doc;
+    };
+    header?.(api, true);
+    return api;
+  }
+
+  function save(doc, filename) {
+    const blob = doc.output('blob');
+    if (!blob || !blob.size) throw new Error('The generated PDF was empty.');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.rel = 'noopener'; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+  const fileSafe = v => String(v || '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
+
+  return { C, create, save, fmtDate, toDate, ageFrom, clean, fileSafe };
+})();
+</script>
+<script id="pdf-builders">
+/* Emergency card: one A4 page for the fridge or a bag, with a fold-over
+   wallet card to cut out. Drug allergies lead because they change treatment. */
+function buildEmergencyPdf(jsPDF) {
+  const { C, fmtDate, ageFrom, clean } = SwasthPdf;
+  const today = fmtDate(new Date());
+  const pdf = SwasthPdf.create(jsPDF, {
+    header: (api, first) => {
+      const { doc, M, W } = api;
+      if (first) {
+        api.logo(M, 12.5, 8);
+        api.text('SwasthID', M + 11, 16.8, { size: 11, bold: true });
+        api.text('Emergency health card', M + 11, 21, { size: 8.5, color: C.text3 });
+        api.text('In an emergency, call 112', W - M, 18.5, { size: 11, bold: true, color: C.danger, align: 'right' });
+        api.rule(26); api.y = 33;
+      } else { api.y = 20; }
+    },
+    footer: (api, i, n) => {
+      const { M, W, H } = api;
+      api.text(`Made by the patient in SwasthID on ${today}. Not a diagnosis; confirm details when you can.`, M, H - 9, { size: 7.5, color: C.text3 });
+      if (n > 1) api.text(`Page ${i} of ${n}`, W - M, H - 9, { size: 7.5, color: C.text3, align: 'right' });
+    }
+  });
+  const { doc, M, W, H, CW } = pdf;
+
+  const payload = getEmergencyCompactPayload();
+  const contact = getEmergencyContact();
+  const visibility = safeJsonParse(localStorage.getItem('swasth_emergencyVisibility') || '{}', {});
+  const coreShown = visibility.core !== false;
+  const meds = visibility.meds === false ? [] : getEmergencyMedicines();
+  const conditions = Array.isArray(payload.c) ? payload.c : [];
+  const bloodGroup = coreShown && patientData.bloodGroup ? clean(patientData.bloodGroup) : '';
+  const drugAllergies = coreShown ? normalizeAllergies(patientData.allergies).join(', ') : '';
+  const otherAllergies = coreShown ? normalizeNormalAllergies(patientData.normalAllergies).join(', ') : '';
+  const insurance = Array.isArray(payload.ins) ? payload.ins.filter(Boolean).join(' · ') : '';
+  const age = ageFrom(patientData.dob);
+
+  // Name, age and a blood-group tile on the right.
+  const nameW = CW - 40;
+  const nameH = pdf.text(payload.n, M, pdf.y + 7, { size: 22, bold: true, maxW: nameW, lh: 1.2 });
+  const meta = [age != null ? `Age ${age}` : '', patientData.dob ? `Born ${fmtDate(patientData.dob)}` : ''].filter(Boolean).join(' · ');
+  if (meta) pdf.text(meta, M, pdf.y + 7 + nameH + 3, { size: 10.5, color: C.text2 });
+  doc.setFillColor(...C.soft); doc.setDrawColor(...C.border); doc.roundedRect(W - M - 34, pdf.y, 34, 20, 2, 2, 'FD');
+  pdf.text('BLOOD GROUP', W - M - 17, pdf.y + 6, { size: 7, bold: true, color: C.text3, align: 'center' });
+  pdf.text(bloodGroup || 'Not given', W - M - 17, pdf.y + 15, { size: bloodGroup ? 17 : 10, bold: !!bloodGroup, align: 'center' });
+  pdf.y += Math.max(22, 7 + nameH + (meta ? 8 : 0)) + 4;
+
+  if (coreShown) pdf.allergyBox(drugAllergies, otherAllergies);
+
+  // Left column: conditions and medicines. Right column: contact and QR.
+  const top = pdf.y, gap = 8, leftW = CW * 0.58, rightX = M + leftW + gap, rightW = CW - leftW - gap;
+  let ly = top;
+  pdf.text('Ongoing conditions', M, ly + 4, { size: 10.5, bold: true }); ly += 8;
+  if (conditions.length) conditions.forEach(c => { ly += pdf.text(`•  ${c}`, M, ly + 3.2, { size: 10, maxW: leftW }) + 2.2; });
+  else { ly += pdf.text('None recorded', M, ly + 3.2, { size: 10, color: C.text2 }) + 2.2; }
+  ly += 5;
+  pdf.text('Daily medicines', M, ly + 4, { size: 10.5, bold: true }); ly += 8;
+  if (meds.length) {
+    meds.forEach(m => {
+      const name = clean(m.name || m.medicine), detail = [m.dose, m.schedule || m.frequency].map(clean).filter(Boolean).join(' · ');
+      const h1 = pdf.text(name, M, ly + 3.2, { size: 10, bold: true, maxW: leftW * 0.45 });
+      const h2 = detail ? pdf.text(detail, M + leftW * 0.47, ly + 3.2, { size: 10, color: C.text2, maxW: leftW * 0.53 }) : 0;
+      ly += Math.max(h1, h2) + 2.2;
+      doc.setDrawColor(...C.border); doc.line(M, ly, M + leftW, ly); ly += 2;
+    });
+  } else { ly += pdf.text(visibility.meds === false ? 'Not included (privacy setting)' : 'None recorded', M, ly + 3.2, { size: 10, color: C.text2 }) + 2.2; }
+
+  let ry = top;
+  const contactLines = [clean(contact.name), clean(contact.relation)].filter(Boolean);
+  const boxH = 9 + (contactLines[0] ? 6 : 0) + (contactLines[1] ? 5 : 0) + (contact.phone ? 7 : 0) + (contactLines.length || contact.phone ? 0 : 6);
+  doc.setFillColor(...C.soft); doc.setDrawColor(...C.border); doc.roundedRect(rightX, ry, rightW, boxH, 2, 2, 'FD');
+  pdf.text('EMERGENCY CONTACT', rightX + 4, ry + 6, { size: 7, bold: true, color: C.text3 });
+  let cy = ry + 12;
+  if (contactLines[0]) { pdf.text(contactLines[0], rightX + 4, cy, { size: 11, bold: true, maxW: rightW - 8, maxLines: 1 }); cy += 5; }
+  if (contactLines[1]) { pdf.text(contactLines[1], rightX + 4, cy, { size: 9.5, color: C.text2, maxW: rightW - 8, maxLines: 1 }); cy += 6.5; }
+  if (contact.phone) pdf.text(clean(contact.phone), rightX + 4, cy, { size: 12, bold: true, color: C.brand, maxW: rightW - 8, maxLines: 1 });
+  if (!contactLines.length && !contact.phone) pdf.text('Not added', rightX + 4, cy, { size: 10, color: C.text2 });
+  ry += boxH + 5;
+  if (insurance) {
+    pdf.text('HEALTH INSURANCE', rightX, ry + 3, { size: 7, bold: true, color: C.text3 });
+    ry += 5 + pdf.text(insurance, rightX, ry + 7.5, { size: 9.5, maxW: rightW }) + 5;
+  }
+
+  let qrData = null;
+  const qrEl = document.querySelector('#realQrContainer canvas, #realQrContainer img');
+  try {
+    const src = qrEl ? (qrEl.tagName.toLowerCase() === 'canvas' ? qrEl.toDataURL('image/png') : qrEl.src) : '';
+    if (src && src !== 'data:,') qrData = src;
+  } catch (err) { console.warn('QR could not be read for the PDF:', err); }
+  const expiry = Number(localStorage.getItem('swasth_emergencyExpiresAt') || 0);
+  if (qrData) {
+    const s = Math.min(40, rightW - 8);
+    doc.setFillColor(...C.white); doc.setDrawColor(...C.border); doc.roundedRect(rightX, ry, rightW, s + 22, 2, 2, 'FD');
+    doc.addImage(qrData, 'PNG', rightX + (rightW - s) / 2, ry + 4, s, s);
+    pdf.text('Scan for the live, read-only emergency view', rightX + rightW / 2, ry + s + 9, { size: 8, align: 'center', maxW: rightW - 6 });
+    if (expiry > Date.now()) pdf.text(`Works until ${fmtDate(expiry)} unless revoked`, rightX + rightW / 2, ry + s + 17, { size: 7.5, color: C.text3, align: 'center', maxW: rightW - 6 });
+    ry += s + 22 + 4;
+  } else {
+    ry += pdf.text('The QR code was not ready. Open Care > Emergency card in SwasthID to show it.', rightX, ry + 3.2, { size: 8.5, color: C.text3, maxW: rightW }) + 4;
+  }
+  pdf.y = Math.max(ly, ry) + 6;
+
+  // Wallet card: front and back side by side, joined at the fold.
+  const cw = 85.6, ch = 54, x0 = (W - 2 * cw) / 2;
+  let wy = H - 18 - ch - 4;
+  if (pdf.y > wy - 10) { pdf.newPage(); wy = pdf.y + 8; }
+  pdf.text('Wallet card: cut along the dashed line, fold in the middle and keep it with you.', W / 2, wy - 3.5, { size: 8, color: C.text3, align: 'center' });
+  doc.setLineDashPattern([1.6, 1.2], 0); doc.setDrawColor(...C.text3); doc.setLineWidth(0.25);
+  doc.rect(x0, wy, cw * 2, ch);
+  doc.setDrawColor(...C.border); doc.line(x0 + cw, wy, x0 + cw, wy + ch);
+  doc.setLineDashPattern([], 0); doc.setLineWidth(0.2);
+
+  // Front
+  doc.setFillColor(...C.brand); doc.rect(x0 + 0.3, wy + 0.3, cw - 0.6, 9, 'F');
+  pdf.text('SwasthID  ·  Emergency card', x0 + 4, wy + 6, { size: 8, bold: true, color: C.white });
+  pdf.text('Call 112', x0 + cw - 4, wy + 6, { size: 8, bold: true, color: C.white, align: 'right' });
+  pdf.text(payload.n, x0 + 4, wy + 16, { size: 11.5, bold: true, maxW: cw - 30, maxLines: 1 });
+  if (age != null) pdf.text(`Age ${age}`, x0 + 4, wy + 20.5, { size: 8, color: C.text2 });
+  doc.setFillColor(...C.soft); doc.setDrawColor(...C.border); doc.roundedRect(x0 + cw - 22, wy + 12, 18, 12, 1.5, 1.5, 'FD');
+  pdf.text('BLOOD', x0 + cw - 13, wy + 15.8, { size: 5.5, bold: true, color: C.text3, align: 'center' });
+  pdf.text(bloodGroup || '?', x0 + cw - 13, wy + 21.5, { size: 11, bold: true, align: 'center' });
+  pdf.text('DRUG ALLERGIES', x0 + 4, wy + 28.5, { size: 6, bold: true, color: drugAllergies ? C.danger : C.text3 });
+  pdf.text(drugAllergies || 'No known drug allergies', x0 + 4, wy + 32.8, { size: 9, bold: !!drugAllergies, color: drugAllergies ? C.danger : C.text, maxW: cw - 8, maxLines: 2, lh: 1.3 });
+  pdf.text('CONDITIONS', x0 + 4, wy + 43, { size: 6, bold: true, color: C.text3 });
+  pdf.text(conditions.join(', ') || 'None recorded', x0 + 4, wy + 47, { size: 8, maxW: cw - 8, maxLines: 2, lh: 1.3 });
+
+  // Back
+  const x1 = x0 + cw, qs = 22, textW = qrData ? cw - 8 - qs - 3 : cw - 8;
+  pdf.text('EMERGENCY CONTACT', x1 + 4, wy + 6.5, { size: 6, bold: true, color: C.text3 });
+  pdf.text(contactLines[0] || 'Not added', x1 + 4, wy + 11.5, { size: 10, bold: true, maxW: textW, maxLines: 1 });
+  if (contactLines[1]) pdf.text(contactLines[1], x1 + 4, wy + 15.5, { size: 8, color: C.text2, maxW: textW, maxLines: 1 });
+  if (contact.phone) pdf.text(clean(contact.phone), x1 + 4, wy + 21, { size: 10.5, bold: true, color: C.brand, maxW: textW, maxLines: 1 });
+  if (qrData) {
+    doc.addImage(qrData, 'PNG', x1 + cw - 4 - qs, wy + 4, qs, qs);
+    pdf.text('Scan for details', x1 + cw - 4 - qs / 2, wy + 29, { size: 5.5, color: C.text3, align: 'center' });
+  }
+  pdf.text('DAILY MEDICINES', x1 + 4, wy + 34, { size: 6, bold: true, color: C.text3 });
+  const medLine = meds.map(m => [m.name || m.medicine, m.dose].map(clean).filter(Boolean).join(' ')).join(', ');
+  pdf.text(medLine || (visibility.meds === false ? 'Not included' : 'None recorded'), x1 + 4, wy + 38.3, { size: 8, maxW: cw - 8, maxLines: 3, lh: 1.3 });
+
+  pdf.finish();
+  return { doc, qrEmbedded: !!qrData, filename: `SwasthID-Emergency-${SwasthPdf.fileSafe(payload.n) || 'Card'}.pdf` };
+}
+
+/* Health summary for a doctor: the essentials first (allergies, medicines,
+   conditions), then measurements, lab results and visits as tables. */
+function buildHealthSummaryPdf(jsPDF) {
+  const { C, fmtDate, ageFrom, clean, toDate } = SwasthPdf;
+  const p = patientData || {};
+  const today = fmtDate(new Date());
+  const name = clean(p.name) || 'Patient';
+  const pdf = SwasthPdf.create(jsPDF, {
+    header: (api, first) => {
+      const { M, W } = api;
+      if (first) {
+        api.logo(M, 12.5, 8);
+        api.text('SwasthID', M + 11, 16.8, { size: 11, bold: true });
+        api.text('Health summary', M + 11, 21, { size: 8.5, color: C.text3 });
+        api.text(`Prepared ${today}`, W - M, 18.5, { size: 8.5, color: C.text3, align: 'right' });
+        api.rule(26); api.y = 33;
+      } else {
+        api.logo(M, 9.5, 5);
+        api.text(`Health summary · ${name}`, M + 7.5, 13.3, { size: 8.5, color: C.text2, maxW: 120, maxLines: 1 });
+        if (p.dob) api.text(`Born ${fmtDate(p.dob)}`, W - M, 13.3, { size: 8.5, color: C.text3, align: 'right' });
+        api.rule(17); api.y = 23;
+      }
+    },
+    footer: (api, i, n) => {
+      const { M, W, H } = api;
+      api.rule(H - 13);
+      api.text(`Compiled by the patient in SwasthID on ${today}. For information; not a diagnosis.`, M, H - 9, { size: 7.5, color: C.text3 });
+      api.text(`Page ${i} of ${n}`, W - M, H - 9, { size: 7.5, color: C.text3, align: 'right' });
+    }
+  });
+  const { M, CW } = pdf;
+
+  const age = ageFrom(p.dob);
+  pdf.y += pdf.text(name, M, pdf.y + 7, { size: 20, bold: true, maxW: CW, lh: 1.2 }) + 5;
+  const meta = [age != null ? `Age ${age}` : '', p.dob ? `Born ${fmtDate(p.dob)}` : '', p.bloodGroup ? `Blood group ${clean(p.bloodGroup)}` : ''].filter(Boolean).join('  ·  ');
+  if (meta) pdf.y += pdf.text(meta, M, pdf.y + 4, { size: 10.5, color: C.text2 }) + 3;
+  pdf.y += pdf.text('Compiled from information the patient entered or scanned into SwasthID. Please confirm important details with the patient.', M, pdf.y + 3.5, { size: 8.5, color: C.text3, maxW: CW }) + 5;
+
+  pdf.allergyBox(normalizeAllergies(p.allergies).join(', '), normalizeNormalAllergies(p.normalAllergies).join(', '));
+
+  const meds = typeof getCurrentMedicationList === 'function' ? getCurrentMedicationList() : (Array.isArray(p.medications) ? p.medications : []);
+  pdf.section('Current medicines');
+  if (meds.length) pdf.table(
+    [{ label: 'Medicine', w: 0.3, bold: true }, { label: 'Dose', w: 0.16 }, { label: 'When', w: 0.24 }, { label: 'Notes', w: 0.3 }],
+    meds.map(m => [clean(m.name || m.medicine), clean(m.dose), clean(m.frequency || m.schedule) + (Array.isArray(m.times) && m.times.length ? ` (${m.times.join(', ')})` : ''), clean(m.instructions)]));
+  else pdf.note('None recorded.');
+
+  const conditions = Array.isArray(p.conditions) ? p.conditions.filter(c => clean(c.name)) : [];
+  pdf.section('Conditions');
+  if (conditions.length) pdf.table(
+    [{ label: 'Condition', w: 0.34, bold: true }, { label: 'Status', w: 0.16 }, { label: 'Since', w: 0.12 }, { label: 'Notes', w: 0.38 }],
+    conditions.map(c => [clean(c.name), clean(c.status), clean(c.year), clean(c.details || c.note)]));
+  else pdf.note('None recorded.');
+
+  // Latest reading of each vital with a 30-day overview.
+  const V = window.swasthVitals;
+  if (V) {
+    const rows = [];
+    const since = Date.now() - 30 * 864e5;
+    Object.entries(V.TYPES).forEach(([type, t]) => {
+      const list = V.byType(type); if (!list.length) return;
+      const last = list[list.length - 1], a = V.assess(last);
+      const recent = list.filter(r => new Date(r.at).getTime() >= since);
+      let overview = '';
+      if (recent.length > 1) {
+        const avg = f => Math.round(recent.reduce((s, r) => s + Number(r[f]), 0) / recent.length);
+        if (type === 'bp') overview = `Average ${avg('sys')}/${avg('dia')} over ${recent.length} readings`;
+        else if (type === 'glucose') { const v = recent.map(r => Number(r.glucose)); overview = `${Math.min(...v)}–${Math.max(...v)} mg/dL over ${recent.length} readings`; }
+        else if (type === 'weight') { const d = Number(recent[recent.length - 1].weight) - Number(recent[0].weight); overview = Math.abs(d) < 0.05 ? 'No change' : `${d > 0 ? 'Up' : 'Down'} ${Math.abs(d).toFixed(1)} kg`; }
+        else { overview = `Lowest ${Math.min(...recent.map(r => Number(r.spo2)))}% over ${recent.length} readings`; }
+      } else overview = recent.length ? 'One reading' : 'No readings in 30 days';
+      const notes = [a.label && a.level !== 'none' ? a.label : '', type === 'glucose' ? (V.GLUCOSE_CONTEXT[last.context] || '').toLowerCase() : ''].filter(Boolean);
+      const status = notes.length ? ` · ${notes.join(', ')}` : '';
+      rows.push([t.title.replace(/\s*\(SpO₂\)/, ' (SpO2)'), `${V.valueText(last)} ${t.unit}${status}`, fmtDate(last.at), overview]);
+    });
+    if (rows.length) {
+      pdf.section('Latest vitals');
+      pdf.table([{ label: 'Measure', w: 0.22, bold: true }, { label: 'Latest', w: 0.3 }, { label: 'Date', w: 0.16 }, { label: 'Last 30 days', w: 0.32 }], rows);
+    }
+  }
+
+  // Lab results: latest value of each test, compared with the one before.
+  const groups = typeof extractLabTrendPoints === 'function' ? extractLabTrendPoints() : {};
+  const labRows = Object.entries(groups).map(([test, g]) => {
+    const pts = g.points, last = pts[pts.length - 1], prev = pts[pts.length - 2];
+    const unit = g.unit ? ` ${g.unit}` : '';
+    let change = '';
+    if (prev) { const d = last.value - prev.value; const n = Math.abs(d).toFixed(2).replace(/\.?0+$/, ''); change = d === 0 ? 'No change' : `${d > 0 ? 'Up' : 'Down'} ${n}`; }
+    return [test, `${last.value}${unit}`, fmtDate(last.date), prev ? `${prev.value}${unit} on ${fmtDate(prev.date)}` : '', change];
+  });
+  if (labRows.length) {
+    pdf.section('Lab results');
+    pdf.table([{ label: 'Test', w: 0.22, bold: true }, { label: 'Latest', w: 0.18 }, { label: 'Date', w: 0.16 }, { label: 'Previous', w: 0.28 }, { label: 'Change', w: 0.16 }], labRows);
+  }
+
+  // Reports whose values couldn't be read into the table above.
+  const reports = (Array.isArray(p.reports) ? p.reports : []).filter(r => !(Array.isArray(r.values) && r.values.length) && !(typeof parseLabValues === 'function' && parseLabValues(r.result).length));
+  if (reports.length) {
+    pdf.section('Other reports');
+    pdf.table([{ label: 'Date', w: 0.18 }, { label: 'Report', w: 0.3, bold: true }, { label: 'Result', w: 0.52 }],
+      reports.sort((a, b) => (toDate(b.date) || 0) - (toDate(a.date) || 0)).slice(0, 15).map(r => [fmtDate(r.date), clean(r.name), clean(r.result)]));
+  }
+
+  const visits = (Array.isArray(p.visits) ? p.visits : []).slice().sort((a, b) => (toDate(b.date) || 0) - (toDate(a.date) || 0)).slice(0, 10);
+  if (visits.length) {
+    pdf.section('Recent visits');
+    pdf.table([{ label: 'Date', w: 0.18 }, { label: 'Doctor', w: 0.28, bold: true }, { label: 'Specialty', w: 0.24 }, { label: 'Facility', w: 0.3 }],
+      visits.map(v => [fmtDate(v.date), clean(v.doctor || v.provider), clean(v.specialty), clean(v.facility)]));
+  }
+
+  const vit = p.vitals || {}, life = p.lifestyle || {};
+  const body = [['Height', vit.height ? `${clean(vit.height)} cm` : ''], ['Weight', vit.weight ? `${clean(vit.weight)} kg` : ''], ['BMI', clean(vit.bmi)], ['Smoking', clean(life.smoking)], ['Alcohol', clean(life.alcohol)]];
+  if (body.some(([, v]) => v)) { pdf.section('Body and lifestyle'); pdf.facts(body); }
+
+  const ec = p.emergencyContact || {};
+  if (clean(ec.name) || clean(ec.phone)) { pdf.section('Emergency contact'); pdf.facts([['Name', clean(ec.name)], ['Relation', clean(ec.relation)], ['Phone', clean(ec.phone)]]); }
+
+  pdf.finish();
+  return { doc: pdf.doc, filename: `SwasthID-Health-Summary-${SwasthPdf.fileSafe(name) || 'Patient'}.pdf` };
+}
+</script>
 <script id="vitals-log">
 /* Vitals log: blood pressure, blood sugar, weight and SpO2, with reference
    ranges, small-multiple trend charts and Heart Risk pre-fill. */
@@ -7374,6 +7734,7 @@ Hypothyroidism"></textarea><div class="personalization-note">You can leave this 
   };
 
   window.renderVitals = render;
+  window.swasthVitals = { TYPES, GLUCOSE_CONTEXT, byType, assess, valueText };
   document.getElementById('vitalsForm')?.addEventListener('submit', submit);
   document.querySelectorAll('input[name="vitalType"]').forEach(r => r.addEventListener('change', syncFields));
   syncFields(); render();

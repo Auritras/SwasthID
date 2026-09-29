@@ -4,8 +4,8 @@
   "description": "Your health record, medicines and emergency card in one private place.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F6F7F6",
-  "theme_color": "#1D6B53",
+  "background_color": "#E6F0F3",
+  "theme_color": "#05668D",
   "icons": [
     { "src": "/assets/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
     { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
