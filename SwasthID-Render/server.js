@@ -2033,7 +2033,7 @@ const server =
           );
         }
 
-        // Static design assets (stylesheets, icons, social image). Only known
+        // Static assets (stylesheets, scripts, icons, social image). Only known
         // file types inside ./assets are served.
         if (
           (req.method === 'GET' || req.method === 'HEAD') &&
@@ -2041,6 +2041,7 @@ const server =
         ) {
           const types = {
             '.css': 'text/css; charset=utf-8',
+            '.js': 'text/javascript; charset=utf-8',
             '.svg': 'image/svg+xml',
             '.png': 'image/png',
             '.webmanifest': 'application/manifest+json'
