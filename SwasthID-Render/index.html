@@ -22,7 +22,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&display=swap" rel="stylesheet">
 <style>@layer legacy, app;</style>
 <link rel="stylesheet" href="/assets/legacy.css">
 <link rel="stylesheet" href="/assets/app.css">
@@ -209,7 +209,7 @@
  <div class="topbar-right">
   <button id="darkModeToggle" class="btn btn-ghost btn-icon theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg></button>
   <div class="account">
-   <button type="button" class="account-btn" id="accountBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="accountMenu"><span class="initials" id="accountInitials">SI</span><svg class="icon icon-sm" aria-hidden="true"><use href="#i-chevron-down"/></svg><span class="visually-hidden">Account</span></button>
+   <button type="button" class="account-btn" id="accountBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="accountMenu"><span class="avatar" id="accountInitials" data-avatar></span><svg class="icon icon-sm" aria-hidden="true"><use href="#i-chevron-down"/></svg><span class="visually-hidden">Account</span></button>
    <div class="menu" id="accountMenu" role="menu">
     <div class="menu-header"><b id="accountName">SwasthID</b><span id="topHealthId">Signed in</span></div>
     <button type="button" role="menuitem" data-go="profile"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg>Profile</button>
@@ -230,7 +230,7 @@
  <div class="panel active" id="panel-home">
  <div class="content">
   <div class="home-head">
-   <span class="initials" id="heroAvatar" aria-hidden="true">SI</span>
+   <span class="avatar avatar-lg" id="heroAvatar" aria-hidden="true" data-avatar></span>
    <div>
     <h1><span id="heroGreeting">Hello</span>, <span id="dashboardGreetingName">there</span></h1>
     <p id="heroTime"></p>
@@ -751,6 +751,19 @@
    <div><h2 class="section-title">Your profile</h2><p class="section-sub">Used to personalize your dashboard, emergency card and health estimates.</p></div>
    <button type="button" class="btn btn-primary" id="editProfileBtn">Edit profile</button>
   </div>
+  <section class="card profile-photo-card" aria-labelledby="photoTitle">
+   <span class="avatar avatar-xl" aria-hidden="true" data-avatar></span>
+   <div class="profile-photo-main">
+    <h2 class="card-title" id="photoTitle">Profile photo</h2>
+    <p class="card-sub">Shown only to you inside SwasthID. It isn't added to your emergency card or doctor summary.</p>
+    <div class="profile-photo-actions">
+     <button type="button" class="btn btn-sm" id="profilePhotoBtn">Upload photo</button>
+     <button type="button" class="btn btn-sm btn-ghost" id="removeProfilePhotoBtn" hidden>Remove</button>
+     <input type="file" id="profilePhotoInput" accept="image/*" hidden>
+    </div>
+    <p class="field-error" id="profilePhotoError" role="alert"></p>
+   </div>
+  </section>
   <div class="profile-grid">
    <section class="card" aria-labelledby="basicsTitle">
     <h2 class="card-title card-title-spaced" id="basicsTitle">Basics</h2>
@@ -1085,6 +1098,7 @@
      ownerUid: firebaseUser?.uid || '',
      ownerEmail: email || firebaseUser?.email || '',
      occupation: '',
+     photo: '',
      profileCompleted: false,
      dob: '',
      bloodGroup: '',
@@ -1722,8 +1736,7 @@ let profileOnboardingRequired = false;
    const displayName = storedName && storedName !== 'Aditya Sharma' ? storedName : (emailName || 'SwasthID User');
    const greeting = document.getElementById('dashboardGreetingName');
    if (greeting) greeting.textContent = displayName.split(/\s+/)[0] || displayName;
-   const initials = displayName.split(/\s+/).filter(Boolean).slice(0,2).map(x => x[0].toUpperCase()).join('') || 'SI';
-   document.querySelectorAll('#heroAvatar, #accountInitials').forEach(el => { el.textContent = initials; });
+   renderAvatars(ownsProfile ? patientData.photo : '');
    const accountName = document.getElementById('accountName');
    if (accountName) accountName.textContent = displayName;
 
@@ -3939,14 +3952,82 @@ function renderTodayStats() {
   setText('homeWaterStat', water ? `${Number(water.ml || 0).toLocaleString()} ml` : '', '0 ml');
 }
 window.renderTodayStats = renderTodayStats;
+
+/* ---------- Profile photo ----------
+   Photos are cropped to a square and shrunk to 192 px in the browser (about
+   10–20 KB), then saved with the profile in Firestore. No separate storage
+   service is needed. The photo never goes into the emergency card, the
+   doctor summary or exports. */
+function isProfilePhoto(v) { return typeof v === 'string' && v.length < 200000 && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v); }
+function renderAvatars(photo) {
+  const ok = isProfilePhoto(photo);
+  const silhouette = '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="12.5" r="5.5"/><path d="M4.5 32c.8-7 5.3-11 11.5-11s10.7 4 11.5 11z"/></svg>';
+  document.querySelectorAll('[data-avatar]').forEach(el => {
+    el.classList.toggle('has-photo', ok);
+    el.innerHTML = ok ? `<img src="${photo}" alt="">` : silhouette;
+  });
+  const remove = document.getElementById('removeProfilePhotoBtn'); if (remove) remove.hidden = !ok;
+  const upload = document.getElementById('profilePhotoBtn'); if (upload) upload.textContent = ok ? 'Change photo' : 'Upload photo';
+}
+async function shrinkProfilePhoto(file) {
+  if (!file || !/^image\//.test(file.type)) throw new Error('Choose an image file, such as a JPG or PNG.');
+  if (file.size > 20 * 1024 * 1024) throw new Error('That image is over 20 MB. Choose a smaller one.');
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("That image couldn't be opened. Try a JPG or PNG."));
+      i.src = url;
+    });
+    const w = img.naturalWidth, h = img.naturalHeight, side = Math.min(w, h), size = 192;
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, (w - side) / 2, (h - side) / 2, side, side, 0, 0, size, size);
+    let out = canvas.toDataURL('image/webp', 0.82);
+    if (!out.startsWith('data:image/webp')) out = canvas.toDataURL('image/jpeg', 0.85);
+    return out;
+  } finally { URL.revokeObjectURL(url); }
+}
+async function saveProfilePhoto(photo) {
+  patientData.photo = photo;
+  renderAvatars(photo);
+  const synced = await syncProfileToCloud();
+  if (!synced) cacheProfileLocally();
+  return synced || !firebaseUser;
+}
+(function initProfilePhoto() {
+  const input = document.getElementById('profilePhotoInput');
+  const btn = document.getElementById('profilePhotoBtn');
+  const remove = document.getElementById('removeProfilePhotoBtn');
+  const error = document.getElementById('profilePhotoError');
+  renderAvatars(patientData?.photo);
+  btn?.addEventListener('click', () => input?.click());
+  input?.addEventListener('change', async () => {
+    const file = input.files?.[0]; input.value = '';
+    if (!file) return;
+    if (error) error.textContent = '';
+    btn.classList.add('is-loading'); btn.disabled = true;
+    try {
+      const saved = await saveProfilePhoto(await shrinkProfilePhoto(file));
+      showToast('', 'Profile photo updated', saved ? '' : "Saved on this device. It will sync when you're back online.");
+    } catch (e) {
+      if (error) error.textContent = e.message || 'The photo could not be used.';
+    } finally { btn.classList.remove('is-loading'); btn.disabled = false; }
+  });
+  remove?.addEventListener('click', async () => {
+    await saveProfilePhoto('');
+    showToast('', 'Profile photo removed', '');
+  });
+})();
+
 function renderPersonalizedUI() {
   renderCareJourney();
   const email = patientData.email || firebaseUser?.email || localStorage.getItem('swasth_abhaId') || '';
   const name = patientData.name || 'there';
   setText('topHealthId', email, 'Signed in');
   setText('dashboardGreetingName', name.split(' ')[0] || name, 'there');
-  const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(x => x[0].toUpperCase()).join('') || 'SI';
-  document.querySelectorAll('#heroAvatar, #accountInitials').forEach(el => { el.textContent = initials; });
+  renderAvatars(patientData.photo);
   setText('accountName', name === 'there' ? '' : name, 'SwasthID');
   setText('profileEmail', email, 'Not provided');
   setText('profileDob', patientData.dob ? formatRecordDate(patientData.dob) : '', 'Not provided');
@@ -5493,7 +5574,7 @@ function requestNearbyPosition(highAccuracy=false) {
    navigator.geolocation.getCurrentPosition(resolve, reject, {
      enableHighAccuracy: highAccuracy,
      timeout: highAccuracy ? 10000 : 8000,
-     maximumAge: highAccuracy ? 60000 : 300000
+     maximumAge: 60000
    });
  });
 }
@@ -5624,15 +5705,42 @@ function setNearbyStatus(text) {
  if(el) el.textContent = text;
 }
 
+function formatAccuracy(m) {
+ return m < 1000 ? `${Math.max(10, Math.round(m / 10) * 10)} m` : `${(m / 1000).toFixed(1)} km`;
+}
+
+// Watch the position for a few seconds and keep the most accurate fix. The
+// first answer is usually a coarse Wi-Fi or cell-tower estimate; GPS comes a
+// few seconds later. Stops as soon as a fix is within goodEnough metres.
+function requestPrecisePosition({ goodEnough = 50, maxWait = 12000 } = {}) {
+ return new Promise((resolve, reject) => {
+   let best = null, done = false, id = null, timer = null;
+   const finish = (fn, value) => {
+     if(done) return; done = true;
+     if(id != null) navigator.geolocation.clearWatch(id);
+     clearTimeout(timer); fn(value);
+   };
+   id = navigator.geolocation.watchPosition(p => {
+     if(!best || p.coords.accuracy < best.coords.accuracy) best = p;
+     setNearbyStatus(`Finding your exact location… (within about ${formatAccuracy(best.coords.accuracy)} so far)`);
+     if(p.coords.accuracy <= goodEnough) finish(resolve, best);
+   }, err => {
+     // Keep a fix we already have; only give up if there is nothing yet.
+     if(err.code === 1 || !best) finish(reject, err);
+   }, { enableHighAccuracy: true, maximumAge: 0, timeout: maxWait });
+   timer = setTimeout(() => best ? finish(resolve, best) : finish(reject, { code: 3 }), maxWait);
+ });
+}
+
 async function getNearbyPosition() {
  if(!navigator.geolocation) return requestApproximateNetworkPosition();
  try {
-   return await requestNearbyPosition(false);
+   return await requestPrecisePosition();
  } catch(firstErr) {
    if(firstErr?.code === 1) throw firstErr;
  }
  try {
-   return await requestNearbyPosition(true);
+   return await requestNearbyPosition(false);
  } catch(secondErr) {
    if(secondErr?.code === 1) throw secondErr;
    // If GPS/network browser positioning fails, use an approximate IP location
@@ -5655,7 +5763,7 @@ async function loadNearbyHospitals() {
    // location instead of waiting forever.
    const hintTimer = setTimeout(() => setNearbyStatus('Still finding your location. If your browser is asking for location access, allow it (look for a location icon in the address bar).'), 6000);
    let giveUpTimer;
-   const waitTooLong = new Promise((resolve, reject) => { giveUpTimer = setTimeout(() => requestApproximateNetworkPosition().then(resolve, () => reject({ code: 3 })), 25000); });
+   const waitTooLong = new Promise((resolve, reject) => { giveUpTimer = setTimeout(() => requestApproximateNetworkPosition().then(resolve, () => reject({ code: 3 })), 30000); });
    try {
      pos = await Promise.race([getNearbyPosition(), waitTooLong]);
    } catch(err) {
@@ -5673,7 +5781,13 @@ async function loadNearbyHospitals() {
 
    const { latitude, longitude, accuracy } = pos.coords;
    const subtitle = document.getElementById('nearbySubtitle');
-   const approxNote = pos.approximate ? 'Based on your approximate location. ' : '';
+   // Say plainly when the position is coarse, since every distance depends on
+   // it. Phones that were given "approximate" location blur it by 1–3 km.
+   const approxNote = pos.approximate
+     ? 'Based on your internet connection, which only gives your city, so distances may be off. Allow location access for an exact position. '
+     : accuracy > 500
+       ? `Your location is only accurate to about ${formatAccuracy(accuracy)}, so distances may be off. For exact results, turn on precise location for your browser in your phone's location settings, then try again. `
+       : '';
    setNearbyStatus('Searching OpenStreetMap for places near you…');
    let places, cachedAt = null;
    try {
@@ -5693,7 +5807,7 @@ async function loadNearbyHospitals() {
    }
    renderNearbyList(places, latitude, longitude);
    if(subtitle && places.length) {
-     subtitle.title = `Location accuracy: approximately ${Math.round(accuracy || 5000)} m${pos.approximate ? ' (network estimate)' : ''}`;
+     subtitle.title = `Location accuracy: about ${formatAccuracy(accuracy || 5000)}${pos.approximate ? ' (network estimate)' : ''}`;
      const cachedNote = cachedAt ? `Map servers are busy, so these are the places found on ${new Date(cachedAt).toLocaleDateString(undefined, { day:'numeric', month:'short' })}. ` : '';
      subtitle.textContent = cachedNote + approxNote + subtitle.textContent;
    }
@@ -7013,7 +7127,7 @@ const SwasthPdf = (() => {
   const PT = 0.3528;          // mm per point
   const PX_PER_MM = 12;       // canvas resolution for non-Latin text (~300 dpi)
   const ENCODABLE = /^[\x20-\x7E\xA0-\xFF–—‘’“”•…]*$/;
-  const CANVAS_FONT = 'Inter, "Noto Sans", "Noto Sans Devanagari", "Noto Sans Bengali", "Nirmala UI", system-ui, sans-serif';
+  const CANVAS_FONT = '"Lexend", "Noto Sans", "Noto Sans Devanagari", "Noto Sans Bengali", "Nirmala UI", system-ui, sans-serif';
 
   // "2026-08-02" is a calendar date, not midnight UTC, so read it as local.
   function toDate(v) {
