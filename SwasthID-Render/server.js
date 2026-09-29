@@ -983,12 +983,12 @@ function recordSharePage(token) {
 
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Same tokens as assets/app.css: 4 pt spacing, Inter, 8/12 px radii. */
+/* Same tokens as assets/app.css: 4 pt spacing, Lexend, 8/12 px radii. */
 :root{--bg:#E6F0F3;--surface:#F7FBFC;--surface-2:#EEF6F8;--border:#D3E0E5;--text:#0F1E26;--text-2:#3E525C;--text-3:#556A72;--brand:#05668D;--brand-soft:#DDEEF4;--brand-text:#04506F;--danger:#B42318}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:400 14px/20px Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--text);font:400 14px/20px "Lexend",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 .wrap{max-width:880px;margin:0 auto;padding:32px 16px 64px}
 .top{margin-bottom:24px}
 .brand{display:flex;align-items:center;gap:8px;font-size:16px;line-height:24px;font-weight:600;color:var(--text);margin-bottom:24px}

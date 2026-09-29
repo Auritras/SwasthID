@@ -3,7 +3,7 @@
    --------------------------------------------------------------------------
    Rules this file follows (and anything added to it must follow):
    - Spacing: 4 pt scale only (--space-*). No other margin/padding/gap values.
-   - Type: Inter for everything; sizes and line heights come from the ramp.
+   - Type: Lexend for everything; sizes and line heights come from the ramp.
      Weights: 400 body, 500 labels/UI, 600 headings. Nothing lighter or bolder.
    - Colour: neutrals + one brand green + four status colours. Status colours
      are only used to mean their status.
@@ -25,7 +25,9 @@
   --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
   --space-12: 48px; --space-16: 64px;
 
-  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Lexend: designed from reading-fluency research, with open, evenly
+     spaced letters that stay clear at small sizes, doses included. */
+  --font: 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   /* Type ramp: size / line height */
   --text-xs: 12px;   --leading-xs: 16px;
   --text-sm: 14px;   --leading-sm: 20px;
@@ -842,6 +844,13 @@ body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(22
 .vitals-types span { display: inline-flex; align-items: center; height: 32px; padding: 0 var(--space-3); border-radius: var(--radius-inner); font-weight: 500; color: var(--c-text-2); cursor: pointer; white-space: nowrap; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease); }
 .vitals-types input:checked + span { background: var(--c-surface); color: var(--c-text); box-shadow: 0 0 0 1px var(--c-border); }
 .vitals-types input:focus-visible + span { outline: 2px solid var(--c-brand); outline-offset: 2px; }
+/* Small phones: tab bars tighten up, and the four measurement types sit in
+   a 2 x 2 grid instead of scrolling out of view. */
+@media (max-width: 480px) {
+  .segmented button { padding: 0 var(--space-2); }
+  .vitals-types { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .vitals-types span { width: 100%; justify-content: center; }
+}
 .inline-editor-overlay, .profile-modal-overlay, .modal { background: var(--c-scrim); backdrop-filter: none; }
 .inline-editor-overlay { position: fixed; inset: 0; z-index: 11000; display: flex; align-items: center; justify-content: center; padding: var(--space-4); }
 .inline-editor-overlay[hidden] { display: none; }
