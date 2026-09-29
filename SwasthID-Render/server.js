@@ -860,197 +860,39 @@ function recordSharePage(token) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<title>SwasthID — Shared Health Record</title>
+<title>Shared health record · SwasthID</title>
 
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --ink:#1c2b27;
-  --muted:#65736c;
-  --line:#d6e0db;
-  --soft:#f4f8f5;
-  --accent:#2f6956;
-  --accent2:#dff0e8;
-  --danger:#8f2d24
-}
-
-*{
-  box-sizing:border-box
-}
-
-body{
-  margin:0;
-  background:#f7faf8;
-  color:var(--ink);
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-  line-height:1.45
-}
-
-.wrap{
-  max-width:920px;
-  margin:0 auto;
-  padding:28px 18px 50px
-}
-
-.top{
-  background:var(--accent);
-  color:#fff;
-  border-radius:18px;
-  padding:24px 26px;
-  margin-bottom:18px
-}
-
-.brand{
-  font-weight:800;
-  letter-spacing:.08em;
-  font-size:12px
-}
-
-.title{
-  font-size:28px;
-  font-weight:800;
-  margin:7px 0 5px
-}
-
-.sub{
-  opacity:.88;
-  font-size:13px
-}
-
-.notice{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:14px 16px;
-  margin-bottom:18px;
-  color:var(--muted);
-  font-size:13px
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:
-    repeat(
-      2,
-      minmax(0,1fr)
-    );
-  gap:14px
-}
-
-.card{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:17px;
-  min-width:0
-}
-
-.card.full{
-  grid-column:1/-1
-}
-
-.card h2{
-  font-size:16px;
-  margin:0 0 12px
-}
-
-.kv{
-  display:grid;
-  grid-template-columns:
-    150px
-    minmax(0,1fr);
-  gap:8px 12px;
-  font-size:13px
-}
-
-.k{
-  color:var(--muted);
-  font-weight:700
-}
-
-.v{
-  overflow-wrap:anywhere
-}
-
-.item{
-  padding:11px 0;
-  border-top:
-    1px solid #edf1ef
-}
-
-.item:first-child{
-  border-top:0;
-  padding-top:0
-}
-
-.item strong{
-  display:block;
-  font-size:13px
-}
-
-.small{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:3px
-}
-
-.status{
-  text-align:center;
-  padding:45px 18px;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:16px
-}
-
-.expired{
-  color:var(--danger);
-  font-weight:800
-}
-
-.footer{
-  margin-top:18px;
-  color:var(--muted);
-  font-size:11px;
-  text-align:center
-}
-
-.badge{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:999px;
-  background:var(--accent2);
-  color:var(--accent);
-  font-size:11px;
-  font-weight:800
-}
-
-@media(max-width:680px){
-  .grid{
-    grid-template-columns:1fr
-  }
-
-  .card.full{
-    grid-column:auto
-  }
-
-  .kv{
-    grid-template-columns:1fr;
-    gap:2px
-  }
-
-  .k{
-    margin-top:5px
-  }
-
-  .title{
-    font-size:23px
-  }
-}
+/* Same tokens as assets/app.css: 4 pt spacing, Inter, 8/12 px radii. */
+:root{--bg:#F6F7F6;--surface:#fff;--surface-2:#F1F4F2;--border:#E2E7E4;--text:#14201C;--text-2:#4A5752;--text-3:#66736D;--brand:#1D6B53;--brand-soft:#E6F1EC;--brand-text:#16553F;--danger:#B42318}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 14px/20px Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:880px;margin:0 auto;padding:32px 16px 64px}
+.top{margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:8px;font-size:16px;line-height:24px;font-weight:600;color:var(--text);margin-bottom:24px}
+.brand::before{content:"";width:28px;height:28px;border-radius:8px;background:var(--brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 9v14M9 16h14' stroke='white' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E") center/100% no-repeat}
+.title{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em;margin:0}
+.sub{color:var(--text-2);margin-top:4px}
+.notice{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--brand-soft);border-radius:12px;padding:12px 16px;margin-bottom:24px;color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;min-width:0}
+.card.full{grid-column:1/-1}
+.card h2{font-size:16px;line-height:24px;font-weight:600;margin:0 0 16px}
+.kv{display:grid;grid-template-columns:160px minmax(0,1fr);gap:8px 16px}
+.k{color:var(--text-3)}
+.v{font-weight:500;overflow-wrap:anywhere}
+.item{padding:12px 0;border-top:1px solid var(--border)}
+.item:first-child{border-top:0;padding-top:0}
+.item strong{display:block;font-weight:600}
+.small{font-size:12px;line-height:16px;color:var(--text-3);margin-top:4px}
+.status{text-align:center;padding:48px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text-2)}
+.expired{color:var(--danger);font-weight:600}
+.footer{margin-top:24px;color:var(--text-3);font-size:12px;line-height:16px;text-align:center}
+.badge{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:999px;background:var(--surface);color:var(--brand-text);font-size:12px;font-weight:600}
+@media(max-width:680px){.grid{grid-template-columns:1fr}.card.full{grid-column:auto}.card{padding:16px}.kv{grid-template-columns:1fr;gap:0}.k{margin-top:8px}}
 </style>
 </head>
 
@@ -1059,21 +901,10 @@ body{
 <div class="wrap">
 
 <div class="top">
-
-<div class="brand">
-SWASTHID
+<div class="brand">SwasthID</div>
+<h1 class="title">Shared health record</h1>
+<div class="sub">Read-only access shared by the patient for a healthcare professional.</div>
 </div>
-
-<div class="title">
-Shared Health Record
-</div>
-
-<div class="sub">
-Read-only temporary access for a healthcare professional
-</div>
-
-</div>
-
 <div id="app">
 <div class="status">
 Loading the shared health record…
@@ -1081,9 +912,8 @@ Loading the shared health record…
 </div>
 
 <div class="footer">
-SwasthID is an independent prototype, not a government or hospital service.
-This shared record is informational and should be verified with the patient
-and original clinical records.
+SwasthID is an independent personal health record, not a hospital service.
+Please verify this information with the patient and their original clinical records.
 </div>
 
 </div>
@@ -1168,8 +998,8 @@ function render(b){
   ).innerHTML=
 
   '<div class="notice">'+
-  '<span class="badge">READ ONLY</span>'+
-  ' &nbsp; Shared temporarily by the patient. '+
+  '<span class="badge">Read only</span>'+
+  ' Shared temporarily by the patient. '+
   'Access expires <strong>'+
   esc(
     expires.toLocaleString()
@@ -2062,14 +1892,36 @@ const server =
             return res.end();
           }
 
-          return fs
-            .createReadStream(
-              path.join(
-                ROOT,
-                'index.html'
-              )
-            )
-            .pipe(res);
+          // Social previews need absolute URLs; fill in this deployment's origin.
+          const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+          const proto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() || 'https';
+          const origin = /^[a-z0-9.-]+(:\d+)?$/i.test(host) ? `${proto === 'http' ? 'http' : 'https'}://${host}` : '';
+          return res.end(
+            fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').replaceAll('__ORIGIN__', origin)
+          );
+        }
+
+        // Static design assets (stylesheets, icons, social image). Only known
+        // file types inside ./assets are served.
+        if (
+          (req.method === 'GET' || req.method === 'HEAD') &&
+          url.pathname.startsWith('/assets/')
+        ) {
+          const types = {
+            '.css': 'text/css; charset=utf-8',
+            '.svg': 'image/svg+xml',
+            '.png': 'image/png',
+            '.webmanifest': 'application/manifest+json'
+          };
+          const assetsDir = path.join(ROOT, 'assets');
+          const file = path.normalize(path.join(assetsDir, decodeURIComponent(url.pathname.slice('/assets/'.length))));
+          const type = types[path.extname(file).toLowerCase()];
+          if (!type || !file.startsWith(assetsDir + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
+            return json(res, 404, { error: 'Not found' });
+          }
+          res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
+          if (req.method === 'HEAD') return res.end();
+          return fs.createReadStream(file).pipe(res);
         }
 
         if (
