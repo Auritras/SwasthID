@@ -428,8 +428,11 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
 .adherence-head b, .refill-panel > b { font-size: var(--text-md); line-height: var(--leading-md); font-weight: 600; color: var(--c-text); display: block; }
 .adherence-sub { font-size: var(--text-xs); line-height: var(--leading-xs); color: var(--c-text-3); }
 .adherence-stat { font-size: var(--text-xl); line-height: var(--leading-xl); font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
-.adherence-chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2); height: 128px; align-items: end; }
-.adherence-day { display: grid; grid-template-rows: var(--leading-xs) 1fr var(--leading-xs); gap: var(--space-1); height: 100%; text-align: center; }
+/* minmax(0, 1fr): every day's column the same width, however wide its "100%"
+   label. Inside a day, the bar fills the column (legacy.css's flex alignment
+   otherwise shrinks it to the width of the day's name). */
+.adherence-chart { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-2); height: 128px; align-items: end; }
+.adherence-day { min-width: 0; grid-template-columns: minmax(0, 1fr); justify-content: stretch; align-items: stretch; display: grid; grid-template-rows: var(--leading-xs) 1fr var(--leading-xs); gap: var(--space-1); height: 100%; text-align: center; }
 .adherence-day-pct, .adherence-day-label { font-size: var(--text-xs); line-height: var(--leading-xs); color: var(--c-text-3); font-weight: 400; font-variant-numeric: tabular-nums; }
 .adherence-bar-wrap { position: relative; background: var(--c-surface-2); border-radius: var(--radius-inner); overflow: hidden; height: 100%; }
 /* width: auto undoes an old 72%/80% width in legacy.css, which left an empty strip beside the bar. */
@@ -437,6 +440,13 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
 
 /* Refills */
 .adherence-summary { text-align: right; }
+/* In a narrow panel (phones), the figure goes under the title, left-aligned,
+   with its caption beside it, instead of floating right-aligned on a line of its own. */
+.adherence-panel { container-type: inline-size; }
+@container (max-width: 440px) {
+  .adherence-head { flex-direction: column; align-items: stretch; gap: var(--space-2); }
+  .adherence-summary { text-align: left; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 var(--space-2); }
+}
 .refill-panel .adherence-sub { margin-top: var(--space-1); }
 .qr-message { font-size: var(--text-xs); line-height: var(--leading-xs); color: var(--c-text-2); text-align: center; padding: var(--space-4); }
 /* Name on top; count and buttons share the line below (the panel sits in a narrow column). */
