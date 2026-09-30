@@ -28,6 +28,7 @@ async function setUp(page, context, medications) {
   return {
     push: () => cdp.send('ServiceWorker.deliverPushMessage', { origin, registrationId, data: '' }),
     shown: () => page.evaluate(async () => (await (await navigator.serviceWorker.ready).getNotifications()).map(n => ({ title: n.title, body: n.body, tag: n.tag }))),
+    badges: () => page.evaluate(async () => (await (await navigator.serviceWorker.ready).getNotifications()).map(n => new URL(n.badge).pathname)),
     clear: () => page.evaluate(async () => (await (await navigator.serviceWorker.ready).getNotifications()).forEach(n => n.close())),
   };
 }
@@ -46,6 +47,10 @@ test('a push shows the medicines due now, and nothing once they are taken', asyn
   // Only names on the device: the saved copy is for the service worker alone.
   await sw.push();
   await expect.poll(sw.shown).toEqual([{ title: 'Time for 2 medicines', body: 'Metformin 500 mg, Amlodipine 5 mg. Open SwasthID to mark them taken.', tag: `swasth-dose-${time}` }]);
+  // Android draws the small badge as a one-colour silhouette, so it must be a
+  // transparent shape (not the square app icon, which shows as a white block).
+  expect(await sw.badges()).toEqual(['/assets/badge-96.png']);
+  expect((await page.request.get('/assets/badge-96.png')).status()).toBe(200);
   await sw.clear();
 
   // Mark Amlodipine taken: the next push names only Metformin.

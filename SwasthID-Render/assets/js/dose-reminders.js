@@ -43,7 +43,7 @@
     if (!current || !enabled() || takenToday(current.index, current.unit)) return;
     const title = `Time for ${doseLabel(current)}`;
     const body = `${current.count > 1 ? `Dose ${current.unit + 1} of ${current.count} · ` : ''}${formatMedicationTime(current.time)}. Open SwasthID to mark it taken.`;
-    const options = { body, tag: `swasth-dose-${current.index}-${current.unit}`, renotify: true };
+    const options = { body, icon: '/assets/icon-192.png', badge: '/assets/badge-96.png', tag: `swasth-dose-${current.index}-${current.unit}`, renotify: true };
     try {
       const reg = await navigator.serviceWorker?.getRegistration();
       if (reg) return reg.showNotification(title, options);
