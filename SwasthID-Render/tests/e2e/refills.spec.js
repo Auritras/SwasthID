@@ -110,3 +110,14 @@ test('tapping the count sets how many are left right now', async ({ page, errors
   await expect(item(page, 'Paracetamol')).toContainText('~30 days left');
   expect(errors).toEqual([]);
 });
+
+test('a day with every dose taken fills its adherence bar edge to edge', async ({ page }) => {
+  await openApp(page, { medications: [{ name: 'Paracetamol', dose: '1 tablet', schedule: 'Once daily', times: ['08:00'] }] });
+  await markTaken(page, 'Paracetamol');
+  const today = page.locator('.adherence-day').last();
+  await expect(today.locator('.adherence-day-pct')).toHaveText('100%');
+  const bar = await today.locator('.adherence-bar').boundingBox();
+  const track = await today.locator('.adherence-bar-wrap').boundingBox();
+  expect(Math.round(bar.width)).toBe(Math.round(track.width));
+  expect(Math.round(bar.height)).toBe(Math.round(track.height));
+});

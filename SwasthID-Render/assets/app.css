@@ -432,7 +432,8 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
 .adherence-day { display: grid; grid-template-rows: var(--leading-xs) 1fr var(--leading-xs); gap: var(--space-1); height: 100%; text-align: center; }
 .adherence-day-pct, .adherence-day-label { font-size: var(--text-xs); line-height: var(--leading-xs); color: var(--c-text-3); font-weight: 400; font-variant-numeric: tabular-nums; }
 .adherence-bar-wrap { position: relative; background: var(--c-surface-2); border-radius: var(--radius-inner); overflow: hidden; height: 100%; }
-.adherence-bar { position: absolute; left: 0; right: 0; bottom: 0; background: var(--c-brand); border-radius: var(--radius-inner); }
+/* width: auto undoes an old 72%/80% width in legacy.css, which left an empty strip beside the bar. */
+.adherence-bar { position: absolute; left: 0; right: 0; bottom: 0; width: auto; background: var(--c-brand); border-radius: var(--radius-inner); }
 
 /* Refills */
 .adherence-summary { text-align: right; }
