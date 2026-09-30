@@ -788,6 +788,19 @@ body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(22
 .auth-mode-row { display: flex; align-items: center; justify-content: center; gap: var(--space-2); margin-top: var(--space-6); color: var(--c-text-2); }
 .auth-mode-row button { border: 0; background: none; padding: 0; font: 500 var(--text-sm)/var(--leading-sm) var(--font); color: var(--c-brand-text); cursor: pointer; }
 .auth-mode-row button:hover { text-decoration: underline; }
+
+/* ---------- Account email links (/auth/action) ---------- */
+.auth-action-page { min-height: 100vh; background: var(--c-bg); }
+.auth-action { width: 100%; max-width: 440px; margin: 0 auto; padding: var(--space-12) var(--space-4); display: grid; gap: var(--space-6); }
+.auth-action-brand { justify-self: center; font-size: var(--text-lg); line-height: var(--leading-lg); color: var(--c-text); text-decoration: none; }
+.auth-action h1 { font-size: var(--text-xl); line-height: var(--leading-xl); }
+.auth-action .sub { color: var(--c-text-2); margin: var(--space-1) 0 var(--space-6); overflow-wrap: anywhere; }
+.auth-action .btn-block { margin-top: var(--space-6); }
+.auth-action .form-field input { width: 100%; }
+.auth-action-icon { width: 44px; height: 44px; border-radius: var(--radius-pill); display: grid; place-items: center; margin-bottom: var(--space-4); background: var(--c-brand-soft); color: var(--c-brand-text); font-size: var(--text-lg); font-weight: 600; }
+.auth-action-icon.is-error { background: var(--c-danger-soft); color: var(--c-danger); }
+.auth-action-error { margin: var(--space-4) 0 0; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--c-danger); }
+@media (max-width: 560px) { .auth-action { padding-top: var(--space-8); } .auth-action .login-card { padding: var(--space-8) var(--space-5); } }
 .security-note { margin-top: var(--space-8); padding-top: var(--space-4); border-top: 1px solid var(--c-border); color: var(--c-text-3); }
 .security-note small { font-size: var(--text-xs); line-height: var(--leading-xs); }
 

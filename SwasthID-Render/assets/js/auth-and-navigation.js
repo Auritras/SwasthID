@@ -126,12 +126,16 @@ let profileOnboardingRequired = false;
        idInput.focus();
        return;
      }
+     forgotPasswordBtn.disabled = true;
      try {
-       await auth.sendPasswordResetEmail(email);
-       alert('Password reset email sent. Check your inbox and follow the Firebase reset link.');
+       await requestPasswordResetEmail(email);
+       // The same answer whether or not an account exists for the address.
+       alert('If an account exists for that address, a link to reset the password is on its way. Check your inbox and spam folder.');
      } catch (error) {
        console.error('Password reset error:', error);
        alert(firebaseAuthErrorMessage(error));
+     } finally {
+       forgotPasswordBtn.disabled = false;
      }
    });
  }

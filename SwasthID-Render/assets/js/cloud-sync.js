@@ -647,13 +647,52 @@ function clearCloudCacheForUserSwitch() {
    return messages[code] || (error && error.message) || 'Authentication failed. Please try again.';
  }
 
+ // Account emails come from our server (branded, linking to /auth/action).
+ // When it can't send them, Firebase sends its default email instead.
+ function accountEmailApi(path) {
+   return (window.SWASTH_API_BASE || location.origin).replace(/\/$/, '') + path;
+ }
+
+ async function requestPasswordResetEmail(email) {
+   let res = null;
+   try {
+     res = await fetch(accountEmailApi('/api/auth/password-reset'), {
+       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
+     });
+   } catch (_) {}
+   if (res) {
+     if (res.ok) return;
+     const body = await res.json().catch(() => ({}));
+     if (res.status === 429) throw Object.assign(new Error(body.error), { code: 'auth/too-many-requests' });
+     if (res.status === 400) throw Object.assign(new Error(body.error), { code: 'auth/invalid-email' });
+   }
+   // Server unreachable or not set up for email: Firebase sends its default.
+   try {
+     await auth.sendPasswordResetEmail(email);
+   } catch (error) {
+     if (error && error.code === 'auth/user-not-found') return;
+     throw error;
+   }
+ }
+
+ async function sendVerificationEmail(user) {
+   try {
+     const res = await fetch(accountEmailApi('/api/auth/send-verification'), {
+       method: 'POST', headers: { Authorization: `Bearer ${await user.getIdToken()}` }
+     });
+     // 429: one was sent recently, so don't send another through Firebase.
+     if (res.ok || res.status === 429) return;
+   } catch (_) {}
+   await user.sendEmailVerification();
+ }
+
  async function firebaseLogin(email, password) {
    if (!auth) throw new Error('Firebase Authentication is not initialized.');
    const credential = await auth.signInWithEmailAndPassword(email, password);
    firebaseUser = credential.user;
    await credential.user.reload();
    if (!credential.user.emailVerified) {
-     try { await credential.user.sendEmailVerification(); } catch (_) {}
+     try { await sendVerificationEmail(credential.user); } catch (_) {}
      await auth.signOut();
      firebaseUser = null;
      throw Object.assign(new Error('Please verify your email address before signing in. A new verification email has been sent.'), { code: 'auth/email-not-verified' });
@@ -668,7 +707,7 @@ function clearCloudCacheForUserSwitch() {
    if (!auth) throw new Error('Firebase Authentication is not initialized.');
    const credential = await auth.createUserWithEmailAndPassword(email, password);
    firebaseUser = credential.user;
-   try { await credential.user.sendEmailVerification(); } catch (verificationError) { console.warn('Verification email could not be sent:', verificationError); }
+   try { await sendVerificationEmail(credential.user); } catch (verificationError) { console.warn('Verification email could not be sent:', verificationError); }
 
    // A new Firebase account must start with a clean user-owned cache.
    clearCloudCacheForUserSwitch();
