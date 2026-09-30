@@ -24,6 +24,9 @@ module.exports = defineConfig({
     // so they are off except in the offline test.
     serviceWorkers: 'block',
     trace: 'retain-on-failure',
+    // Full Chromium in headless mode: the lighter headless shell always
+    // reports notification permission as denied, even when granted.
+    channel: 'chromium',
     // Point at a local Chromium when the Playwright download isn't available.
     launchOptions: process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {},
   },
