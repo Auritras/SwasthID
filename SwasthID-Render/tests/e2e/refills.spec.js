@@ -111,6 +111,22 @@ test('tapping the count sets how many are left right now', async ({ page, errors
   expect(errors).toEqual([]);
 });
 
+test('on a phone, every day\'s bar is the same width and the figure lines up under the title', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openApp(page, { medications: [{ name: 'Paracetamol', dose: '1 tablet', schedule: 'Once daily', times: ['08:00'] }] });
+  await markTaken(page, 'Paracetamol');
+  await expect(page.locator('.adherence-day').last().locator('.adherence-day-pct')).toHaveText('100%');
+  const widths = await page.locator('.adherence-bar-wrap').evaluateAll(els => els.map(e => Math.round(e.getBoundingClientRect().width)));
+  expect(widths).toHaveLength(7);
+  expect(new Set(widths).size).toBe(1);
+  const left = sel => page.locator(sel).evaluate(e => Math.round(e.getBoundingClientRect().left));
+  expect(await left('.adherence-stat')).toBe(await left('.adherence-head b'));
+  // The caption sits beside the figure, on the same line.
+  const box = sel => page.locator(sel).boundingBox();
+  const [stat, caption] = [await box('.adherence-stat'), await box('.adherence-summary .adherence-sub')];
+  expect(caption.x).toBeGreaterThan(stat.x + stat.width);
+});
+
 test('a day with every dose taken fills its adherence bar edge to edge', async ({ page }) => {
   await openApp(page, { medications: [{ name: 'Paracetamol', dose: '1 tablet', schedule: 'Once daily', times: ['08:00'] }] });
   await markTaken(page, 'Paracetamol');
