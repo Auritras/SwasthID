@@ -182,7 +182,7 @@ function clearCloudCacheForUserSwitch() {
        try { caches.delete('swasth-state'); } catch (_) {}
        navigator.serviceWorker?.getRegistration().then(reg => reg?.pushManager?.getSubscription()).then(sub => sub?.unsubscribe()).catch(() => {});
      }
-     ['swasth_doseReminders', 'swasth_pushReminders', 'swasth_pushSynced', 'swasth_remindersOwner'].forEach(key => localStorage.removeItem(key));
+     ['swasth_doseReminders', 'swasth_pushReminders', 'swasth_pushSynced', 'swasth_pushTakenSent', 'swasth_remindersOwner'].forEach(key => localStorage.removeItem(key));
    }
    localStorage.removeItem('swasth_profileWizardStep');
    localStorage.removeItem('swasth_addedKcal');

@@ -619,6 +619,17 @@ button.list-row:hover { background: var(--c-surface-2); }
 .share-grid section { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .share-option .btn { margin-top: auto; align-self: flex-start; }
 .share-option .card-sub { margin-bottom: var(--space-4); }
+.share-option-actions { margin-top: auto; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.share-option-actions .btn { margin-top: 0; }
+/* Restore from a Health Vault file: what the file holds, then confirm. */
+.restore-panel { margin-top: var(--space-4); }
+.restore-panel[hidden] { display: none; }
+.restore-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--space-2) var(--space-4); margin: 0 0 var(--space-4); }
+.restore-summary div { min-width: 0; }
+.restore-summary dt { color: var(--c-text-3); font-size: 12px; }
+.restore-summary dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.restore-warning { margin: var(--space-3) 0 var(--space-4); }
+.restore-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .share-status { margin: var(--space-4) 0; }
 .share-status:empty { display: none; }
 .is-error { color: var(--c-danger); }

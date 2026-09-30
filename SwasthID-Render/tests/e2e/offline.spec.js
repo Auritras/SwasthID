@@ -27,7 +27,7 @@ test.describe('installable app', () => {
     await openApp(page);
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.evaluate(() => fetch('/health'));
-    const cachedApi = await page.evaluate(async () => (await (await caches.open('swasthid-v1')).keys()).filter(r => /\/(api|health)/.test(new URL(r.url).pathname)).length);
+    const cachedApi = await page.evaluate(async () => (await (await caches.open('swasthid-v1')).keys()).filter(r => /^\/(api\/|health$)/.test(new URL(r.url).pathname)).length);
     expect(cachedApi).toBe(0);
   });
 });

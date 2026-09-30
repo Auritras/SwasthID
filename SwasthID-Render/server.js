@@ -1105,7 +1105,7 @@ async function handlePushSubscribe(req, res) {
   const r = await pushRequest(req, res);
   if (!r) return;
   try {
-    return relayPush(res, await pushWorker('PUT', `/subscriptions/${r.id}`, { uid: r.user.uid, endpoint: r.endpoint, tz: r.body.tz, doses: r.body.doses }));
+    return relayPush(res, await pushWorker('PUT', `/subscriptions/${r.id}`, { uid: r.user.uid, endpoint: r.endpoint, tz: r.body.tz, doses: r.body.doses, keys: r.body.keys }));
   } catch (e) {
     console.error('Push subscribe failed:', e && e.message);
     return json(res, 502, { error: 'The reminder service did not answer.' });
@@ -2037,7 +2037,9 @@ const server =
         }
 
         if (req.method === 'GET' && url.pathname === '/api/push/config') {
-          return json(res, 200, { enabled: PUSH_ENABLED, publicKey: PUSH_ENABLED ? VAPID_PUBLIC_KEY : '' });
+          // workerUrl: the phone reports "taken" and "snooze" straight to the
+          // Worker, so they work while this server is asleep.
+          return json(res, 200, { enabled: PUSH_ENABLED, publicKey: PUSH_ENABLED ? VAPID_PUBLIC_KEY : '', workerUrl: PUSH_ENABLED ? PUSH_WORKER_URL : '' });
         }
 
         if (req.method === 'POST' && url.pathname === '/api/push/subscribe') {

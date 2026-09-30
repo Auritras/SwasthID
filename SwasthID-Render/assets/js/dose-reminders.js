@@ -57,7 +57,10 @@
   // worker then reads which medicines are due from the copy saved here.
   const PUSH_KEY = 'swasth_pushReminders';
   const PUSH_SYNC_KEY = 'swasth_pushSynced';
+  const TAKEN_SENT_KEY = 'swasth_pushTakenSent';
   const STATE_CACHE = 'swasth-state';
+  const DOSES_URL = '/__swasth/doses.json';
+  const QUEUE_URL = '/__swasth/taken-queue.json';
   let pushConfigPromise = null;
   let pushSyncTimer = null;
   let pushUpgradeTried = false;
@@ -90,18 +93,90 @@
     return { days: 127, monthDay: null };
   }
 
-  // Today's schedule for the service worker, with what is already taken.
+  // The schedule for the service worker, with what is already taken today,
+  // how much is left in each pack, and where to send Taken and Snooze.
   async function saveDoseSnapshot(){
     if (!('caches' in window)) return;
     const today = localDateKey(new Date());
-    const doses = doseSchedule().map(d => {
-      const rule = doseRule(d);
-      return rule && { time: d.time, ...rule, label: doseLabel(d), detail: d.count > 1 ? `Dose ${d.unit + 1} of ${d.count}` : '', takenOn: takenToday(d.index, d.unit) ? today : null };
-    }).filter(Boolean);
+    const cfg = localStorage.getItem(PUSH_KEY) === 'on' ? await pushConfig() : {};
     try {
       const cache = await caches.open(STATE_CACHE);
-      await cache.put('/__swasth/doses.json', new Response(JSON.stringify({ doses }), { headers: { 'Content-Type': 'application/json' } }));
+      // Marked Taken on a notification but not recorded yet (see applyNotificationTaken).
+      const queued = await cache.match(QUEUE_URL).then(r => r ? r.json() : []).catch(() => []);
+      const queuedToday = new Set((Array.isArray(queued) ? queued : []).filter(q => q.day === today).flatMap(q => q.times || []));
+      const doses = doseSchedule().map(d => {
+        const rule = doseRule(d);
+        return rule && {
+          time: d.time, ...rule, label: doseLabel(d), detail: d.count > 1 ? `Dose ${d.unit + 1} of ${d.count}` : '',
+          takenOn: takenToday(d.index, d.unit) || queuedToday.has(d.time) ? today : null,
+          refill: medicationIdentityKey(d.m.medicine), units: parseMedicationDoseCount(d.m)
+        };
+      }).filter(Boolean);
+      const refills = window.medicationRefillSnapshot?.() || [];
+      await cache.put(DOSES_URL, new Response(JSON.stringify({ doses, refills, workerUrl: cfg.workerUrl || '' }), { headers: { 'Content-Type': 'application/json' } }));
     } catch (e) { console.warn('Could not save the dose schedule for reminders:', e); }
+  }
+
+  // Doses marked Taken on a notification while SwasthID was closed: the
+  // service worker queues them, and they are recorded here (at the time the
+  // button was tapped) once this account's records have loaded.
+  let applying = null;
+  function takenOnDay(id, day){
+    const history = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {}).history || [];
+    return history.some(e => e?.taken && e.id === id && localDateKey(new Date(e.date)) === day);
+  }
+  function applyNotificationTaken(){
+    return applying ||= (async () => {
+      if (!('caches' in window) || typeof window.recordMedicationTaken !== 'function') return 0;
+      if (signedInUser() && typeof cloudSyncReady !== 'undefined' && !cloudSyncReady) return 0;
+      const schedule = doseSchedule();
+      if (!schedule.length) return 0;
+      const cache = await caches.open(STATE_CACHE);
+      const queue = await cache.match(QUEUE_URL).then(r => r ? r.json() : null).catch(() => null);
+      if (!Array.isArray(queue) || !queue.length) return 0;
+      await cache.delete(QUEUE_URL);
+      let added = 0;
+      for (const entry of queue) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(entry?.day || '') || !Array.isArray(entry.times)) continue;
+        const [y, mo, da] = entry.day.split('-').map(Number);
+        const date = new Date(y, mo - 1, da);
+        schedule.forEach(d => {
+          if (!entry.times.includes(d.time) || !medicationExpectedOnDate(d.m, date)) return;
+          const id = medicationScheduleKey(d.index, d.unit);
+          if (takenOnDay(id, entry.day)) return;
+          // Tapped after midnight for yesterday's dose: file it under that day.
+          let at = new Date(Number(entry.at) || Date.now());
+          if (localDateKey(at) !== entry.day) { const [h, mi] = d.time.split(':').map(Number); at = new Date(y, mo - 1, da, h, mi); }
+          window.recordMedicationTaken(id, d.m.medicine, at);
+          added++;
+        });
+      }
+      if (added) {
+        ['renderTodayMedications', 'renderMedicationInsights', 'renderTodayStats', 'renderRecordMedicationActivity', 'renderRecordTimeline', 'renderCareJourney']
+          .forEach(name => { try { window[name]?.(); } catch (e) { console.warn(e); } });
+        showToast('', 'Doses recorded', `${added} dose${added === 1 ? '' : 's'} marked Taken from a reminder.`);
+      }
+      return added;
+    })().finally(() => { applying = null; });
+  }
+
+  // Tell the reminder service which of today's dose times are fully taken, so
+  // it doesn't nudge about them (on any of this account's devices).
+  async function reportTaken(){
+    const cfg = await pushConfig();
+    if (!pushOn() || !cfg.workerUrl) return;
+    const now = new Date(), day = localDateKey(now);
+    const allTaken = new Map();
+    doseSchedule().forEach(d => {
+      if (medicationExpectedOnDate(d.m, now)) allTaken.set(d.time, (allTaken.get(d.time) ?? true) && takenToday(d.index, d.unit));
+    });
+    const times = [...allTaken].filter(([, taken]) => taken).map(([time]) => time).sort();
+    const signature = `${day}|${times.join(',')}`;
+    if (!times.length || localStorage.getItem(TAKEN_SENT_KEY) === signature) return;
+    const sub = await pushSubscription(cfg.publicKey, { create: false });
+    if (!sub) return;
+    const res = await fetch(cfg.workerUrl + '/taken', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint, day, times }) });
+    if (res.ok) localStorage.setItem(TAKEN_SENT_KEY, signature);
   }
 
   async function pushCall(path, body){
@@ -139,7 +214,10 @@
       const rule = doseRule(d);
       if (rule && !doses.some(x => x.time === d.time && x.days === rule.days && x.monthDay === rule.monthDay)) doses.push({ time: d.time, ...rule });
     });
-    const payload = { endpoint: sub.endpoint, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, doses: doses.slice(0, 48) };
+    // keys: so the reminder service can say which dose a push is about, in a
+    // message only this browser can read.
+    const keys = sub.toJSON?.().keys;
+    const payload = { endpoint: sub.endpoint, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, doses: doses.slice(0, 48), ...(keys ? { keys } : {}) };
     const signature = JSON.stringify([user.uid, payload]);
     if (localStorage.getItem(PUSH_SYNC_KEY) === signature) return;
     await pushCall('/api/push/subscribe', payload);
@@ -172,6 +250,7 @@
     const wasOn = localStorage.getItem(PUSH_KEY) === 'on';
     localStorage.removeItem(PUSH_KEY);
     localStorage.removeItem(PUSH_SYNC_KEY);
+    localStorage.removeItem(TAKEN_SENT_KEY);
     try { await caches?.delete(STATE_CACHE); } catch (_) {}
     if (!wasOn || !pushSupported()) return;
     try {
@@ -200,7 +279,10 @@
   function schedule(){
     timers.forEach(clearTimeout); timers = [];
     if (!enabled()) return;
-    saveDoseSnapshot();
+    applyNotificationTaken().catch(e => console.warn('Could not record doses taken from a reminder:', e)).then(() => {
+      saveDoseSnapshot();
+      if (pushOn()) reportTaken().catch(e => console.warn('Could not tell the reminder service a dose was taken:', e.message));
+    });
     // The push service reminds at dose times, open or closed; timers here
     // would only repeat them.
     if (localStorage.getItem(PUSH_KEY) === 'on') { queuePushSync(); return; }
@@ -357,4 +439,7 @@
   // On log out: this browser must stop getting this account's reminders.
   window.stopPushReminders = stopPush;
   if (localStorage.getItem(PREF_KEY) === 'on' && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  // Taken tapped on a notification while SwasthID is open, or returning to it.
+  navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.type === 'swasth-taken') schedule(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && enabled()) schedule(); });
 })();

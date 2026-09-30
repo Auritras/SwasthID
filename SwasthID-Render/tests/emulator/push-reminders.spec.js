@@ -20,8 +20,11 @@ test.beforeAll(async () => {
     let body = '';
     req.on('data', c => { body += c; });
     req.on('end', () => {
+      // /taken and /snooze are called by the app itself, from another origin.
+      const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
+      if (req.method === 'OPTIONS') { res.writeHead(204, cors); return res.end(); }
       received.push({ method: req.method, path: req.url, auth: req.headers.authorization, body: body ? JSON.parse(body) : null, raw: body });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.writeHead(200, { 'Content-Type': 'application/json', ...cors });
       res.end(JSON.stringify({ ok: true, sent: 1 }));
     });
   });
@@ -42,6 +45,7 @@ test.beforeEach(async ({ context }) => {
     const makeSub = key => ({
       endpoint,
       options: { applicationServerKey: Uint8Array.from(key).buffer },
+      toJSON: () => ({ endpoint, keys: { p256dh: 'test-p256dh-key', auth: 'test-auth-key' } }),
       unsubscribe: async () => { state.sub = null; sessionStorage.removeItem('__fakePushKey'); window.__pushUnsubscribed = true; return true; },
     });
     const state = { sub: saved ? makeSub(JSON.parse(saved)) : null };
@@ -96,6 +100,8 @@ test('turning reminders on sends dose times, never names, and keeps them up to d
       { time: '20:00', days: 127, monthDay: null },
       { time: '09:00', days: (1 << 1) | (1 << 4), monthDay: null },
     ],
+    // So the Worker can encrypt what it sends to this browser.
+    keys: { p256dh: 'test-p256dh-key', auth: 'test-auth-key' },
   });
   expect(put.raw).not.toMatch(/Metformin|Methotrexate|Vitamin/);
   // Once on, the bar gives way to a "Reminders on" chip by the list's title.
@@ -122,6 +128,31 @@ test('turning reminders on sends dose times, never names, and keeps them up to d
   await expect.poll(() => received.some(r => r.method === 'DELETE' && r.path === `/subscriptions/${SUB_ID}`)).toBe(true);
   expect(await page.evaluate(() => window.__pushUnsubscribed)).toBe(true);
   await expect(page.locator('#doseReminderBar')).toContainText('Get a notification at each dose time');
+});
+
+test('once every dose at a time is marked taken, the app tells the Worker (so no nudge comes)', async ({ page }) => {
+  const user = await createUser('push-taken');
+  await logIn(page, user);
+  await setMedications(page, MEDICATIONS);
+  await page.evaluate(() => document.querySelector('[data-reminder-toggle]').click());
+  await expect.poll(() => puts().length).toBe(1);
+  const takenCalls = () => received.filter(r => r.method === 'POST' && r.path === '/taken');
+  // The list is in time order, so the first Metformin is the 08:00 dose.
+  const mark = name => page.locator('.today-med-item', { hasText: name }).first().locator('.med-action').click();
+
+  // Metformin and Vitamin D3 are both at 08:00: one of them isn't enough.
+  await mark('Metformin');
+  await page.waitForTimeout(1500);
+  expect(takenCalls()).toEqual([]);
+  await mark('Vitamin D3');
+  await expect.poll(() => takenCalls().length).toBe(1);
+  const day = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; });
+  // Straight to the Worker (no shared secret: the endpoint is the proof), with no names.
+  expect(takenCalls()[0]).toMatchObject({ auth: undefined, body: { endpoint: ENDPOINT, day, times: ['08:00'] } });
+  // Not sent again while nothing changes.
+  await page.evaluate(() => window.refreshDoseReminders());
+  await page.waitForTimeout(1500);
+  expect(takenCalls().length).toBe(1);
 });
 
 test('logging out stops this browser getting the account\'s reminders', async ({ page }) => {
@@ -172,7 +203,7 @@ test('reminders stay on across reloads, but not for another account on the same 
 test('the push APIs need a signed-in user, and deleting the account removes its reminders', async ({ baseURL }) => {
   const res = await fetch(`${baseURL}/api/push/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: ENDPOINT, tz: 'UTC', doses: [] }) });
   expect(res.status).toBe(401);
-  expect(await (await fetch(`${baseURL}/api/push/config`)).json()).toEqual({ enabled: true, publicKey: expect.stringMatching(/^B[\w-]{86}$/) });
+  expect(await (await fetch(`${baseURL}/api/push/config`)).json()).toEqual({ enabled: true, publicKey: expect.stringMatching(/^B[\w-]{86}$/), workerUrl: `http://127.0.0.1:${WORKER_PORT}` });
 
   const user = await createUser('push-delete');
   const del = await fetch(`${baseURL}/api/account/delete`, { method: 'POST', headers: { Authorization: `Bearer ${await idToken(user)}` } });

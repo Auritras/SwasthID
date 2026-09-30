@@ -328,10 +328,8 @@ function getCurrentMedicationList() {
    for(let i=days.length-1;i>=0;i--){ if(days[i].expected && days[i].taken>=days[i].expected) streak++; else break; }
    panel.innerHTML=`<div class="adherence-head"><div><b>Medication adherence</b><div class="adherence-sub">Based on doses you mark as taken. No new tracking input is required.</div></div><div class="adherence-summary"><div class="adherence-stat">${pct}%</div><div class="adherence-sub">7-day adherence · ${streak}-day streak</div></div></div><div class="adherence-chart">${days.map(x=>`<div class="adherence-day"><div class="adherence-day-pct">${x.pct}%</div><div class="adherence-bar-wrap"><div class="adherence-bar" style="height:${Math.max(3,x.pct)}%"></div></div><div class="adherence-day-label">${x.d.toLocaleDateString([], {weekday:'short'})}</div></div>`).join('')}</div>`;
  }
- function renderMedicationRefills() {
-   const panel=document.getElementById('medRefillPanel');
-   if(!panel) return;
-
+ // Medicines with a pack size, and how much is left of each.
+ function medicationRefillItems() {
    // Refill reminders are based directly on the medicines currently saved in
    // the user's Profile. Pack size is optional; only medicines with a valid
    // user-entered pack size are shown here.
@@ -394,6 +392,24 @@ function getCurrentMedicationList() {
      const days=medicationSupplyDays(m,stock.left);
      items.push({m,days,pack,daily,rawPack,left:stock.left,units:stock.units,when:formatMedicationDays(m)});
    });
+   return items;
+ }
+ // What the service worker needs to warn that a pack is running low while
+ // SwasthID is closed (dose-reminders.js saves it with the dose schedule).
+ window.medicationRefillSnapshot = function() {
+   const refills = readRefills();
+   return medicationRefillItems().map(x => {
+     const key = medicationIdentityKey(x.m.medicine);
+     const days = medicationDays(x.m);
+     const type = medicationFrequencyType(x.m);
+     return { key, name: x.m.medicine, left: x.left, at: refills[key]?.at || '', perDay: x.daily,
+       monthly: type === 'monthly', daysPerWeek: days ? days.length : type === 'weekly' ? 1 : 7 };
+   });
+ };
+ function renderMedicationRefills() {
+   const panel=document.getElementById('medRefillPanel');
+   if(!panel) return;
+   const items=medicationRefillItems();
 
    panel.style.display='block';
    if(!items.length){
@@ -473,11 +489,9 @@ function getCurrentMedicationList() {
    );
  }
  function renderMedicationInsights(){ renderMedicationAdherence(); renderMedicationRefills(); renderMedicationMissedDoses(); }
- window.markMedTaken = function(id, name) {
- const el = document.getElementById(id);
- if(!el) return;
- if(el.classList.contains('taken')) return;
- const now = new Date();
+ // Save a dose as taken at `now`. Used by the Mark taken buttons and for
+ // doses marked Taken on a reminder notification (dose-reminders.js).
+ function recordMedicationTaken(id, name, now = new Date()) {
  const nowStr = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
  const meds = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
  const history = Array.isArray(meds.history) ? meds.history : [];
@@ -501,6 +515,14 @@ function getCurrentMedicationList() {
  meds[id] = { taken: true, time: nowStr, date: now.toISOString() };
  localStorage.setItem('swasth_medStatus', JSON.stringify(meds));
  syncCloudState('swasth_medStatus');
+ return nowStr;
+ }
+ window.recordMedicationTaken = recordMedicationTaken;
+ window.markMedTaken = function(id, name) {
+ const el = document.getElementById(id);
+ if(!el) return;
+ if(el.classList.contains('taken')) return;
+ const nowStr = recordMedicationTaken(id, name);
  el.classList.add('taken');
  const btn = el.querySelector('.med-action');
  if (btn) btn.innerHTML = `Taken ${escapeHtml(nowStr)}`;

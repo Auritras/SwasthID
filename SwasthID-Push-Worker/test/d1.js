@@ -2,9 +2,9 @@
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 
-export function createD1() {
+export function createD1(schema = readFileSync(new URL('../schema.sql', import.meta.url), 'utf8')) {
   const db = new DatabaseSync(':memory:');
-  db.exec(readFileSync(new URL('../schema.sql', import.meta.url), 'utf8'));
+  db.exec(schema);
   const statement = (sql, args = []) => ({
     sql, args,
     bind: (...values) => statement(sql, values),
