@@ -22,7 +22,16 @@ itself up at dose time.
 weekdays, time zones, push addresses and the Firebase user ID, which is used
 to delete everything when an account is deleted.
 
-## Setup (about 10 minutes, all free)
+## Setup in the browser (no installs)
+
+Everything can be done in the Cloudflare dashboard. `dist/worker.js` is the
+whole Worker in one file, ready to paste into the dashboard's code editor
+(`npm run bundle` rebuilds it from `src/`; a test fails if it is out of date).
+In short: create a D1 database `swasthid-push` and run `schema.sql` in its
+console; create a Worker, paste `dist/worker.js`; bind the database as `DB`;
+add the four secrets below; add a cron trigger `* * * * *`.
+
+## Setup with the command line (about 10 minutes, all free)
 
 You need a free Cloudflare account and Node 22.
 
