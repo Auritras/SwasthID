@@ -32,6 +32,13 @@ test.describe('installable app', () => {
   });
 });
 
+test('"Install app" stays out of the account menu until the browser offers installing', async ({ page }) => {
+  await openApp(page);
+  await page.click('#accountBtn');
+  await expect(page.locator('#accountMenu')).toBeVisible();
+  await expect(page.locator('#installAppBtn')).toBeHidden();
+});
+
 test('has a complete web app manifest', async ({ request }) => {
   const manifest = await (await request.get('/assets/site.webmanifest')).json();
   expect(manifest).toMatchObject({ name: 'SwasthID', start_url: '/', display: 'standalone' });
