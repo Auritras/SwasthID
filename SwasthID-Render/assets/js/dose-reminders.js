@@ -43,7 +43,7 @@
     if (!current || !enabled() || takenToday(current.index, current.unit)) return;
     const title = `Time for ${doseLabel(current)}`;
     const body = `${current.count > 1 ? `Dose ${current.unit + 1} of ${current.count} · ` : ''}${formatMedicationTime(current.time)}. Open SwasthID to mark it taken.`;
-    const options = { body, tag: `swasth-dose-${current.index}-${current.unit}`, renotify: true };
+    const options = { body, icon: '/assets/icon-192.png', badge: '/assets/badge-96.png', tag: `swasth-dose-${current.index}-${current.unit}`, renotify: true };
     try {
       const reg = await navigator.serviceWorker?.getRegistration();
       if (reg) return reg.showNotification(title, options);
@@ -284,12 +284,40 @@
     showToast('', 'Calendar file ready', 'Open it to add a repeating reminder for each dose to your calendar.');
   }
 
+  // ---- "Reminders on" chip next to Today's medicines ----
+  // While reminders are off, the bar under the list invites turning them on.
+  // Once on, the bar goes away and this chip holds status and options.
+  function setReminderMenu(open){
+    const chip = document.getElementById('reminderChip'), menu = document.getElementById('reminderMenu');
+    if (!chip || !menu) return;
+    chip.setAttribute('aria-expanded', String(open));
+    menu.classList.toggle('open', open);
+    if (open) menu.querySelector('[role="menuitem"]:not([hidden])')?.focus();
+  }
+  function bindReminderMenu(){
+    const chip = document.getElementById('reminderChip'), menu = document.getElementById('reminderMenu');
+    if (!chip || !menu || chip.dataset.bound) return;
+    chip.dataset.bound = '1';
+    chip.addEventListener('click', e => { e.stopPropagation(); setReminderMenu(chip.getAttribute('aria-expanded') !== 'true'); });
+    document.addEventListener('click', e => { if (!e.target.closest('#reminderStatus')) setReminderMenu(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && chip.getAttribute('aria-expanded') === 'true') { setReminderMenu(false); chip.focus(); } });
+    menu.querySelector('[data-reminder-test]').addEventListener('click', () => { setReminderMenu(false); sendTestPush(); });
+    menu.querySelector('[data-reminder-calendar]').addEventListener('click', () => { setReminderMenu(false); downloadCalendar(); });
+    menu.querySelector('[data-reminder-off]').addEventListener('click', () => { setReminderMenu(false); turnOff(); });
+  }
+
   function render(){
     const bar = document.getElementById('doseReminderBar'); if (!bar) return;
+    const statusEl = document.getElementById('reminderStatus');
     const doses = doseSchedule();
-    if (!doses.length) { bar.innerHTML = ''; bar.style.display = 'none'; return; }
-    bar.style.display = '';
     const on = enabled();
+    if (statusEl) statusEl.hidden = !(on && doses.length);
+    if (!doses.length || on) {
+      bar.innerHTML = ''; bar.style.display = 'none';
+      if (on && doses.length) renderReminderChip();
+      return;
+    }
+    bar.style.display = '';
     const closedToo = pushOn();
     const blocked = supported() && Notification.permission === 'denied';
     // iPhones and iPads get pushes only in the Home Screen app.
@@ -307,6 +335,21 @@
     bar.querySelector('[data-reminder-toggle]')?.addEventListener('click', () => on ? turnOff() : turnOn());
     bar.querySelector('[data-reminder-test]')?.addEventListener('click', sendTestPush);
     bar.querySelector('[data-reminder-calendar]')?.addEventListener('click', downloadCalendar);
+  }
+
+  function renderReminderChip(){
+    bindReminderMenu();
+    const closedToo = pushOn();
+    const iOSTab = !pushSupported() && (/iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)));
+    const chip = document.getElementById('reminderChip');
+    chip.classList.toggle('is-open-only', !closedToo);
+    chip.title = closedToo ? 'Reminders arrive even when SwasthID is closed' : 'Reminders arrive only while SwasthID is open';
+    document.getElementById('reminderMenuStatus').textContent = closedToo
+      ? 'On. You\'ll get a notification at each dose time, even when SwasthID is closed.'
+      : 'On while SwasthID is open.' + (iOSTab
+        ? ' To be reminded when it\'s closed, add SwasthID to your Home Screen (Share, then Add to Home Screen) and turn reminders on there, or add your doses to your calendar.'
+        : ' To be reminded when it\'s closed, add your doses to your calendar.');
+    document.querySelector('#reminderMenu [data-reminder-test]').hidden = !closedToo;
   }
 
   window.refreshDoseReminders = function(){ render(); schedule(); };

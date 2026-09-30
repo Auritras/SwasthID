@@ -147,14 +147,14 @@ async function takeTestNote() {
 async function showDueDoses() {
   if (await takeTestNote()) {
     return self.registration.showNotification('Dose reminders are working', {
-      icon: '/assets/icon-192.png', badge: '/assets/icon-192.png', data: { url: '/' }, tag: 'swasth-push-test',
+      icon: '/assets/icon-192.png', badge: '/assets/badge-96.png', data: { url: '/' }, tag: 'swasth-push-test',
       body: 'You will get a notification like this at each dose time, even when SwasthID is closed.',
     });
   }
   const { due, taken } = dosesAround(await readDoseSnapshot(), new Date());
   // Everything due now is already marked taken: nothing to remind about.
   if (!due.length && taken.length) return;
-  const options = { icon: '/assets/icon-192.png', badge: '/assets/icon-192.png', data: { url: '/' }, renotify: true };
+  const options = { icon: '/assets/icon-192.png', badge: '/assets/badge-96.png', data: { url: '/' }, renotify: true };
   if (!due.length) {
     return self.registration.showNotification('Time for your medicines', { ...options, tag: 'swasth-dose-due', body: 'Open SwasthID to see what is due and mark it taken.' });
   }

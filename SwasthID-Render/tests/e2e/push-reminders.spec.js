@@ -1,6 +1,10 @@
 // What the service worker shows when a dose-reminder push arrives. The push
 // is empty; the medicines come from the schedule the app saved on the device.
 // Pushes are delivered through Chrome DevTools, as a push service would.
+//
+// The test records the notifications the service worker asks for, rather
+// than reading them back from the browser: headless Chrome now and then drops
+// a notification that was shown successfully, which made the old check flaky.
 const { test, expect, openApp } = require('./fixtures');
 
 test.use({ serviceWorkers: 'allow' });
@@ -25,10 +29,23 @@ async function setUp(page, context, medications) {
   await expect.poll(() => registrations.find(r => !r.isDeleted)?.registrationId).toBeTruthy();
   const { registrationId } = registrations.find(r => !r.isDeleted);
   const origin = new URL(page.url()).origin;
+
+  // Record every notification the service worker shows.
+  const worker = context.serviceWorkers().find(w => w.url().endsWith('/sw.js')) || await context.waitForEvent('serviceworker');
+  await worker.evaluate(() => {
+    self.__shown = [];
+    const reg = self.registration;
+    const show = reg.showNotification.bind(reg);
+    reg.showNotification = (title, options = {}) => {
+      self.__shown.push({ title, body: options.body, tag: options.tag, badge: new URL(options.badge, self.location.origin).pathname });
+      return show(title, options);
+    };
+  });
   return {
     push: () => cdp.send('ServiceWorker.deliverPushMessage', { origin, registrationId, data: '' }),
-    shown: () => page.evaluate(async () => (await (await navigator.serviceWorker.ready).getNotifications()).map(n => ({ title: n.title, body: n.body, tag: n.tag }))),
-    clear: () => page.evaluate(async () => (await (await navigator.serviceWorker.ready).getNotifications()).forEach(n => n.close())),
+    shown: () => worker.evaluate(() => self.__shown.map(({ title, body, tag }) => ({ title, body, tag }))),
+    badges: () => worker.evaluate(() => self.__shown.map(n => n.badge)),
+    clear: () => worker.evaluate(async () => { self.__shown = []; (await self.registration.getNotifications()).forEach(n => n.close()); }),
   };
 }
 
@@ -46,6 +63,10 @@ test('a push shows the medicines due now, and nothing once they are taken', asyn
   // Only names on the device: the saved copy is for the service worker alone.
   await sw.push();
   await expect.poll(sw.shown).toEqual([{ title: 'Time for 2 medicines', body: 'Metformin 500 mg, Amlodipine 5 mg. Open SwasthID to mark them taken.', tag: `swasth-dose-${time}` }]);
+  // Android draws the small badge as a one-colour silhouette, so it must be a
+  // transparent shape (not the square app icon, which shows as a white block).
+  expect(await sw.badges()).toEqual(['/assets/badge-96.png']);
+  expect((await page.request.get('/assets/badge-96.png')).status()).toBe(200);
   await sw.clear();
 
   // Mark Amlodipine taken: the next push names only Metformin.
@@ -87,11 +108,25 @@ test('a push with nothing on the schedule still reminds, and a test push says so
   await expect.poll(async () => (await sw.shown()).map(n => n.title)).toEqual(['Dose reminders are working']);
 });
 
-test('the reminder bar offers calendar reminders when the server has no push service', async ({ page, context }) => {
+test('with reminders on, a chip replaces the bar, and says when the server has no push service', async ({ page, context }) => {
   await context.grantPermissions(['notifications']);
   await page.addInitScript(() => localStorage.setItem('swasth_doseReminders', 'on'));
   await openApp(page, { medications: [{ name: 'Metformin', dose: '500 mg', schedule: 'Once daily', times: ['08:00'] }] });
-  await expect(page.locator('#doseReminderBar')).toContainText('while SwasthID is open');
-  await expect(page.locator('#doseReminderBar')).toContainText('add your doses to your calendar');
-  await expect(page.locator('[data-reminder-test]')).toHaveCount(0);
+  // Reminders are on, so the bar is replaced by the chip; its menu explains
+  // they only come while the app is open, and offers the calendar instead.
+  await expect(page.locator('#doseReminderBar')).toBeHidden();
+  await page.click('#reminderChip');
+  await expect(page.locator('#reminderMenu')).toBeVisible();
+  await expect(page.locator('#reminderMenuStatus')).toContainText('On while SwasthID is open');
+  await expect(page.locator('#reminderMenuStatus')).toContainText('add your doses to your calendar');
+  await expect(page.locator('#reminderMenu [data-reminder-test]')).toBeHidden();
+  await expect(page.locator('#reminderMenu [data-reminder-calendar]')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#reminderMenu')).toBeHidden();
+
+  // Turning off brings the bar back as the prompt to turn them on.
+  await page.click('#reminderChip');
+  await page.click('#reminderMenu [data-reminder-off]');
+  await expect(page.locator('#reminderStatus')).toBeHidden();
+  await expect(page.locator('#doseReminderBar [data-reminder-toggle]')).toHaveText('Turn on');
 });

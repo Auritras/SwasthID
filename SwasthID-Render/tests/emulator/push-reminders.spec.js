@@ -98,7 +98,10 @@ test('turning reminders on sends dose times, never names, and keeps them up to d
     ],
   });
   expect(put.raw).not.toMatch(/Metformin|Methotrexate|Vitamin/);
-  await expect(page.locator('#doseReminderBar')).toContainText('even when SwasthID is closed');
+  // Once on, the bar gives way to a "Reminders on" chip by the list's title.
+  await expect(page.locator('#doseReminderBar')).toBeHidden();
+  await expect(page.locator('#reminderChip')).toBeVisible();
+  await expect(page.locator('#reminderMenuStatus')).toContainText('even when SwasthID is closed');
 
   // A changed time is sent again; an unchanged schedule is not.
   await setMedications(page, [{ ...MEDICATIONS[0], times: ['07:30', '20:00'] }]);
@@ -113,8 +116,9 @@ test('turning reminders on sends dose times, never names, and keeps them up to d
   await expect(page.locator('#medToast')).toContainText('A notification should arrive');
   expect(received.some(r => r.method === 'POST' && r.path === `/subscriptions/${SUB_ID}/test`)).toBe(true);
 
-  // Turning off removes this browser from the Worker.
-  await page.evaluate(() => document.querySelector('[data-reminder-toggle]').click());
+  // Turning off (from the chip's menu) removes this browser from the Worker.
+  await page.click('#reminderChip');
+  await page.click('#reminderMenu [data-reminder-off]');
   await expect.poll(() => received.some(r => r.method === 'DELETE' && r.path === `/subscriptions/${SUB_ID}`)).toBe(true);
   expect(await page.evaluate(() => window.__pushUnsubscribed)).toBe(true);
   await expect(page.locator('#doseReminderBar')).toContainText('Get a notification at each dose time');

@@ -331,6 +331,8 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
   font: 400 var(--text-sm)/var(--leading-sm) var(--font); cursor: pointer; text-align: left;
 }
 .menu button:hover, .menu a:hover { background: var(--c-surface-2); }
+/* Menu items set display: flex, which would otherwise override [hidden]. */
+.menu [hidden] { display: none; }
 .menu .icon { color: var(--c-text-3); }
 .menu hr { border: 0; height: 1px; background: var(--c-border); margin: var(--space-2) 0; }
 
@@ -399,6 +401,17 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
 .reminder-bar-text b { font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: 600; color: var(--c-text); }
 .reminder-bar-actions { display: flex; gap: var(--space-2); }
 .reminder-bar-actions .n-btn { height: 32px; padding: 0 var(--space-3); font-size: var(--text-xs); }
+/* The reminder menu hangs from the title row (not the chip) so it stays on screen on phones. */
+.card-title-row { position: relative; display: flex; align-items: center; gap: var(--space-2) var(--space-3); flex-wrap: wrap; }
+.reminder-chip {
+  display: inline-flex; align-items: center; gap: var(--space-1); height: 26px; padding: 0 var(--space-3) 0 var(--space-2);
+  border: 1px solid transparent; border-radius: var(--radius-pill); background: var(--c-brand-soft); color: var(--c-brand-text);
+  font: 500 var(--text-xs)/var(--leading-xs) var(--font); cursor: pointer;
+}
+.reminder-chip:hover, .reminder-chip[aria-expanded="true"] { border-color: var(--c-brand); }
+.reminder-chip.is-open-only { background: var(--c-surface-2); color: var(--c-text-2); }
+.reminder-menu { left: 0; right: auto; width: min(320px, calc(100vw - 2 * var(--space-8))); min-width: 0; }
+.reminder-menu .menu-header span { white-space: normal; }
 
 .med-alert {
   margin: 0; padding: var(--space-4); border: 1px solid transparent; border-radius: var(--radius-control);
