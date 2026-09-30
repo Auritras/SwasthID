@@ -317,3 +317,11 @@ SwasthID uses only free services and libraries:
   what it holds and asks before replacing anything.
 - **Delete my account and data** (Account → Profile) removes your Firestore
   data, your sign-in, your reminders and any active QR or doctor link.
+
+## Licence
+
+[MIT](LICENSE). Anyone may use, change and share the code, including in
+their own projects, as long as they keep the copyright and licence notice.
+The libraries and data SwasthID uses (see
+[Free services it relies on](#free-services-it-relies-on)) keep their own
+licences.
