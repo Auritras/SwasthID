@@ -69,3 +69,44 @@ test('an empty pack says refill due now', async ({ page }) => {
   await expect(item(page, 'Metrogyl')).toContainText('Refill due now');
   await expect(item(page, 'Metrogyl')).toContainText('0 of 2 left');
 });
+
+test('tapping the count sets how many are left right now', async ({ page, errors }) => {
+  await openApp(page, {
+    medications: [{ name: 'Paracetamol', dose: '1 tablet', schedule: 'Twice daily', times: ['08:00', '20:00'], packSize: '30' }],
+  });
+  await expect(item(page, 'Paracetamol')).toContainText('30 of 30 left');
+
+  await item(page, 'Paracetamol').getByRole('button', { name: 'Change how many Paracetamol are left' }).click();
+  const input = item(page, 'Paracetamol').getByLabel('Left now');
+  await expect(input).toBeFocused();
+  await expect(input).toHaveValue('30');
+  await input.fill('12');
+  await input.press('Enter');
+  await expect(item(page, 'Paracetamol')).toContainText('12 of 30 left');
+  await expect(item(page, 'Paracetamol')).toContainText('~6 days left');
+  await expect(page.locator('#medToast')).toContainText('Paracetamol: 12 left');
+
+  // Doses taken afterwards count down from the corrected number.
+  await markTaken(page, 'Paracetamol', 0);
+  await expect(item(page, 'Paracetamol')).toContainText('11 of 30 left');
+
+  // Cancel (or Escape) leaves it unchanged; an invalid number isn't saved.
+  await item(page, 'Paracetamol').getByRole('button', { name: /Change how many/ }).click();
+  await item(page, 'Paracetamol').getByLabel('Left now').fill('5');
+  await item(page, 'Paracetamol').getByRole('button', { name: 'Cancel' }).click();
+  await expect(item(page, 'Paracetamol')).toContainText('11 of 30 left');
+  await item(page, 'Paracetamol').getByRole('button', { name: /Change how many/ }).click();
+  await item(page, 'Paracetamol').getByLabel('Left now').fill('-3');
+  await item(page, 'Paracetamol').getByRole('button', { name: 'Save' }).click();
+  await expect(item(page, 'Paracetamol').getByLabel('Left now')).toBeVisible();
+  await item(page, 'Paracetamol').getByLabel('Left now').press('Escape');
+  await expect(item(page, 'Paracetamol')).toContainText('11 of 30 left');
+
+  // More than one pack on hand (two boxes bought) is fine.
+  await item(page, 'Paracetamol').getByRole('button', { name: /Change how many/ }).click();
+  await item(page, 'Paracetamol').getByLabel('Left now').fill('60');
+  await item(page, 'Paracetamol').getByRole('button', { name: 'Save' }).click();
+  await expect(item(page, 'Paracetamol')).toContainText('60 of 60 left');
+  await expect(item(page, 'Paracetamol')).toContainText('~30 days left');
+  expect(errors).toEqual([]);
+});

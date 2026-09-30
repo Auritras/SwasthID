@@ -446,6 +446,12 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
 .refill-count b { font-weight: 500; color: var(--c-text); }
 .refill-count.is-low b { color: var(--c-warning); }
 .refill-actions { display: flex; gap: var(--space-2); }
+.refill-edit { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0; border: 0; background: none; color: var(--c-text-2); font: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.refill-edit:hover { color: var(--c-brand-text); }
+.refill-edit .icon { width: 12px; height: 12px; }
+.refill-stock-form { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; width: 100%; }
+.refill-stock-form label { font-size: var(--text-xs); color: var(--c-text-2); }
+.refill-stock-form input { width: 5.5em; height: 32px; padding: 0 var(--space-2); font-variant-numeric: tabular-nums; }
 
 /* Today stats (side) */
 .stat-list { display: grid; }
