@@ -146,6 +146,15 @@ test('password reset: bad addresses are refused, and without email set up the ap
   assert.deepEqual(await verify.json(), { fallback: true });
 });
 
+test('push reminders are off until the Worker is set up, and their APIs say so', async () => {
+  assert.deepEqual(await (await fetch(base + '/api/push/config')).json(), { enabled: false, publicKey: '' });
+  assert.equal((await (await fetch(base + '/health')).json()).pushReminders, false);
+  for (const url of ['/api/push/subscribe', '/api/push/unsubscribe', '/api/push/test']) {
+    const res = await fetch(base + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    assert.equal(res.status, 503, url);
+  }
+});
+
 test('/auth/action is served without caching or referrers', async () => {
   const res = await fetch(base + '/auth/action?mode=verifyEmail&oobCode=abc');
   assert.equal(res.status, 200);

@@ -13,8 +13,11 @@ phone or a computer, and everything is stored in your own account.
 ## What it does
 
 - **Today's medicines.** Doses by time of day, "Mark taken", overdue flags,
-  refill reminders, dose notifications and a calendar file for reminders when
-  the app is closed.
+  refill reminders and a calendar file.
+- **Dose reminders, even when the app is closed.** A notification at each
+  dose time, naming the medicines due and skipping any already taken. It
+  works on Android and desktop browsers, and on iPhone from the Home Screen
+  app (see [Reminders when the app is closed](#reminders-when-the-app-is-closed)).
 - **Records.** Conditions, doctor visits, prescriptions and lab reports, with a
   timeline and day-by-day tabs for doses and meals.
 - **Scan prescriptions and lab reports.** Text is read from a photo or PDF in
@@ -57,6 +60,8 @@ Browser ──────────────► SwasthID server (Node, Swa
   │                         ├──► Firebase Admin (emergency QRs, doctor links,
   │                         │     account deletion, account email links)
   │                         ├──► SMTP (password reset and confirmation emails)
+  │                         ├──► Reminder Worker (Cloudflare, SwasthID-Push-Worker/)
+  │                         │     └──► every minute: Web Push to phones with a dose due
   │                         ├──► Risk API (Python, SwasthID-Risk-API/)
   │                         ├──► OpenStreetMap Overpass (nearby care)
   │                         └──► DrugSetu (medicine search, optional)
@@ -78,7 +83,7 @@ SwasthID-Render/            The web app and its Node server
   auth-action.html          Page the email links open (new password, confirm email)
   firebase-config.js        Firebase web config (safe to be public)
   firestore.rules           Firestore security rules
-  sw.js                     Service worker: offline copy of the app, dose notifications
+  sw.js                     Service worker: offline copy of the app, dose reminder pushes
   playwright.config.js      Browser test setup
   tests/                    server/ (API tests), e2e/ (browser), emulator/ (accounts)
   assets/
@@ -104,13 +109,17 @@ SwasthID-Render/            The web app and its Node server
       profile-editor.js       Profile dialog
       nutrition-extras.js     Weekly trends, food interactions, barcodes
       profile-wizard.js       Step-by-step profile setup
-      dose-reminders.js       Notifications and calendar export
+      dose-reminders.js       Reminders (push or in-app) and calendar export
       pdf-kit.js              Shared PDF drawing helpers
       pdf-builders.js         Emergency card and health summary PDFs
       vitals.js               Vitals log and charts
       pwa.js                  Offline service worker and "Install app"
       auth-action.js          Script for auth-action.html (not part of the app page)
     favicon.svg, icon-*.png, og-image.png, site.webmanifest
+SwasthID-Push-Worker/       Cloudflare Worker that sends dose reminders (own README)
+  src/index.js              API for the server, and the every-minute check
+  src/webpush.js            Signed (VAPID) pushes
+  schema.sql                D1 database tables
 SwasthID-Risk-API/          FastAPI service for the PREVENT equations
   test_api.py               Its tests
 .github/workflows/ci.yml    Runs every test on each pull request
@@ -165,6 +174,9 @@ npm run test:e2e         # the app in a browser, in demo mode
 npm run test:emulator    # accounts, sync, security rules and deletion
                          # (needs Java; starts the Firebase emulators itself)
 
+cd ../SwasthID-Push-Worker
+npm test                 # reminder Worker (Node 22.13+)
+
 cd ../SwasthID-Risk-API
 pip install -r requirements-dev.txt
 pytest                   # heart risk API
@@ -189,6 +201,7 @@ start it.
 | `DRUGSETU_API_KEY` | Key for live medicine search. Without it, Find medicines uses the built-in reference catalogue. |
 | `PUBLIC_BASE_URL` | The site's public address, used in share and QR links. Defaults to the address of the request. Links in account emails use it, or Render's `RENDER_EXTERNAL_URL`, and never the request's address. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Mail account that sends password reset and confirmation emails (see [Account emails](#account-emails)). Without them, Firebase sends its default emails. `SMTP_PORT` defaults to 587; `SMTP_SECURE=1` forces TLS from the start (port 465 does this by itself). |
+| `PUSH_WORKER_URL`, `PUSH_WORKER_SECRET`, `VAPID_PUBLIC_KEY` | The reminder Worker's address, its shared secret and the public VAPID key (see [Reminders when the app is closed](#reminders-when-the-app-is-closed)). Without them, reminders come only while SwasthID is open. |
 | `ALLOWED_ORIGIN` | CORS origin for the API. Default `*`. |
 | `OVERPASS_URLS` | Comma-separated Overpass servers for Nearby care, if you want to override the defaults. |
 | `PORT` | Port to listen on. Default 10000; Render sets this for you. |
@@ -237,6 +250,22 @@ people can always reset their password. Resets are limited to 3 an hour per
 address and 10 per 15 minutes per visitor, and the reply is the same whether
 or not an account exists.
 
+## Reminders when the app is closed
+
+A free Render server sleeps when idle, so it can't send a reminder at 8:00.
+A small Cloudflare Worker on the free plan (`SwasthID-Push-Worker/`) does
+instead. It wakes every minute and sends a Web Push to each phone with a dose
+due. The Worker is given only dose times, weekdays and the time zone. The
+notification's medicine names come from a copy of the schedule kept on the
+phone, and doses already marked taken are left out.
+
+Setup takes about 10 minutes: follow
+[SwasthID-Push-Worker/README.md](SwasthID-Push-Worker/README.md), then set
+`PUSH_WORKER_URL`, `PUSH_WORKER_SECRET` and `VAPID_PUBLIC_KEY` on the Node
+service. Anyone who already had reminders on switches over the next time they
+open SwasthID while logged in. Without the Worker, reminders still work while
+SwasthID is open, and the calendar file covers the rest.
+
 ## Deploying on Render
 
 Create two **Web Services** from this repository:
@@ -266,6 +295,9 @@ SwasthID uses only free services and libraries:
 - **Lexend** from Google Fonts
 - **Gmail** (app password) or **Brevo**'s free plan for account emails, if you
   set one up
+- **Cloudflare Workers** and **D1** (free plan) for reminders when the app is
+  closed, and the browsers' own push services (Google, Mozilla, Apple), which
+  are free
 
 ## Privacy and security
 
@@ -275,5 +307,8 @@ SwasthID uses only free services and libraries:
 - Doctor links are read-only, expire within 24 hours and can be revoked.
 - Scanning, OCR and SwasthAI run in the browser; images and questions are not
   uploaded.
+- The reminder Worker stores dose times, weekdays and the time zone, never
+  medicine names. Turning reminders off, logging out or deleting the account
+  removes them.
 - **Delete my account and data** (Account → Profile) removes your Firestore
-  data, your sign-in and any active QR or doctor link.
+  data, your sign-in, your reminders and any active QR or doctor link.

@@ -446,5 +446,6 @@ function getCurrentMedicationList() {
  const btn = el.querySelector('.med-action');
  if (btn) btn.innerHTML = `Taken ${escapeHtml(nowStr)}`;
  renderRecordMedicationActivity(); renderRecordTimeline(); renderMedicationInsights(); renderCareJourney(); renderTodayStats();
+ window.refreshDoseReminders?.(); // a taken dose is left out of its reminder
  showToast('', 'Medication Tracked', `${name} logged successfully.`);
  };
