@@ -15,7 +15,9 @@ phone or a computer, and everything is stored in your own account.
 - **Today's medicines.** Doses by time of day, "Mark taken", overdue flags,
   refill reminders and a calendar file.
 - **Dose reminders, even when the app is closed.** A notification at each
-  dose time, naming the medicines due and skipping any already taken. It
+  dose time, naming the medicines due and skipping any already taken, with
+  **Taken** and **Snooze 10 min** buttons. A dose still not taken 30 minutes
+  later gets one more reminder, and a pack running low gets a warning. It
   works on Android and desktop browsers, and on iPhone from the Home Screen
   app (see [Reminders when the app is closed](#reminders-when-the-app-is-closed)).
 - **Records.** Conditions, doctor visits, prescriptions and lab reports, with a
@@ -40,6 +42,9 @@ phone or a computer, and everything is stored in your own account.
   Download it as a PDF with a cut-out wallet card.
 - **Share with a doctor.** A read-only link to your health summary that
   expires within 24 hours, with an access log, or a printable summary PDF.
+- **Health Vault file.** Your whole record in one JSON file (profile, records,
+  vitals, doses taken, food log, family, pack counts), and **Restore from
+  file** to bring it back, after showing what the file holds.
 - **Family.** Keep track of people you look after.
 - **SwasthAI.** An optional assistant that runs entirely in your browser
   (WebLLM); nothing you ask it leaves your device.
@@ -252,7 +257,11 @@ A small Cloudflare Worker on the free plan (`SwasthID-Push-Worker/`) does
 instead. It wakes every minute and sends a Web Push to each phone with a dose
 due. The Worker is given only dose times, weekdays and the time zone. The
 notification's medicine names come from a copy of the schedule kept on the
-phone, and doses already marked taken are left out.
+phone, and doses already marked taken are left out. **Taken** and **Snooze**
+on the notification go straight to the Worker, so they work while the Render
+server sleeps. To update a Worker set up before these buttons existed, paste
+in the new `SwasthID-Push-Worker/dist/worker.js`; it updates its database
+itself.
 
 Setup takes about 10 minutes: follow
 [SwasthID-Push-Worker/README.md](SwasthID-Push-Worker/README.md), then set
@@ -300,8 +309,11 @@ SwasthID uses only free services and libraries:
 - Doctor links are read-only, expire within 24 hours and can be revoked.
 - Scanning, OCR and SwasthAI run in the browser; images and questions are not
   uploaded.
-- The reminder Worker stores dose times, weekdays and the time zone, never
-  medicine names. Turning reminders off, logging out or deleting the account
-  removes them.
+- The reminder Worker stores dose times, weekdays, the time zone and which
+  dose times were taken, never medicine names. What it sends is encrypted for
+  the one browser it is for. Turning reminders off, logging out or deleting
+  the account removes them.
+- A Health Vault file is made and read on your device. Restoring one shows
+  what it holds and asks before replacing anything.
 - **Delete my account and data** (Account → Profile) removes your Firestore
   data, your sign-in, your reminders and any active QR or doctor link.

@@ -147,7 +147,7 @@ test('password reset: bad addresses are refused, and without email set up the ap
 });
 
 test('push reminders are off until the Worker is set up, and their APIs say so', async () => {
-  assert.deepEqual(await (await fetch(base + '/api/push/config')).json(), { enabled: false, publicKey: '' });
+  assert.deepEqual(await (await fetch(base + '/api/push/config')).json(), { enabled: false, publicKey: '', workerUrl: '' });
   assert.equal((await (await fetch(base + '/health')).json()).pushReminders, false);
   for (const url of ['/api/push/subscribe', '/api/push/unsubscribe', '/api/push/test']) {
     const res = await fetch(base + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });

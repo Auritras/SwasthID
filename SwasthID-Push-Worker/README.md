@@ -12,15 +12,34 @@ itself up at dose time.
    passes this Worker the subscription's address, their time zone, and their
    dose times and weekdays.
 2. Every minute, a cron trigger looks up which doses are due at that minute
-   in each time zone and sends each of those browsers an empty push, signed
-   with the VAPID key.
+   in each time zone and sends each of those browsers a push, signed with
+   the VAPID key. The push carries a short message, encrypted so only that
+   browser can read it (RFC 8291): what kind of reminder it is and the dose
+   time, e.g. `{ "kind": "dose", "day": "2026-09-30", "times": ["08:00"] }`.
 3. On the phone, SwasthID's service worker receives the push. It reads which
-   medicines are due from the schedule the app saved on the device, and
-   leaves out any already marked taken. Then it shows the notification.
+   medicines are due at that time from the schedule the app saved on the
+   device, and leaves out any already marked taken. Then it shows the
+   notification, with **Taken** and **Snooze 10 min** buttons.
+4. **Taken** records the dose (the app saves it the next time it opens) and
+   tells this Worker (`POST /taken`). **Snooze** asks this Worker to send the
+   reminder again in 10 minutes (`POST /snooze`). These two come straight
+   from the phone, so they work while the SwasthID server is asleep.
+5. 30 minutes after a dose time, any dose not marked taken gets one more
+   reminder ("Did you take…?"). Doses marked taken in the app, on any of the
+   account's devices, are reported here too, so they get no reminder.
 
 **Medicine names are never sent here.** The database holds only times,
-weekdays, time zones, push addresses and the Firebase user ID, which is used
-to delete everything when an account is deleted.
+weekdays, time zones, push addresses and their encryption keys, which dose
+times were taken (kept for three days), pending snoozes, and the Firebase
+user ID, which is used to delete everything when an account is deleted.
+
+## Updating an existing Worker
+
+Paste the new `dist/worker.js` into the dashboard's code editor (or run
+`npx wrangler@4 deploy`). Nothing else: the Worker adds the new database
+columns and tables by itself the first time it runs. Each browser starts
+getting Taken and Snooze buttons once SwasthID has been opened on it after
+the update (that is when it sends its encryption keys).
 
 ## Setup in the browser (no installs)
 
@@ -84,10 +103,12 @@ VAPID keys, browsers re-subscribe the next time SwasthID is opened.
 
 - The cron runs 1,440 times a day, well within the Workers free plan's
   100,000 requests a day.
-- Each run reads one row per time zone in use, plus one per dose due at that
-  minute. D1's free plan allows 5 million rows read a day.
-- Each run has 10 ms of CPU time. Signing a push takes well under a
-  millisecond, so hundreds of reminders a minute fit.
+- Each run reads one row per time zone in use, plus a few per dose due at
+  that minute or 30 minutes earlier. D1's free plan allows 5 million rows
+  read and 100,000 written a day; writes happen only for Taken, Snooze and
+  schedule changes.
+- Each run has 10 ms of CPU time. Signing and encrypting a push takes well
+  under a millisecond, so hundreds of reminders a minute fit.
 
 ## Tests
 
@@ -95,16 +116,28 @@ VAPID keys, browsers re-subscribe the next time SwasthID is opened.
 npm test     # Node 22.13+; uses Node's built-in SQLite in place of D1
 ```
 
-## API (called only by the SwasthID server)
+## API
+
+### Called by the SwasthID server
 
 Every request needs `Authorization: Bearer <SHARED_SECRET>`.
 
 | Request | What it does |
 | --- | --- |
-| `PUT /subscriptions/:id` | Save a browser's endpoint, time zone and doses (`[{ time: "08:00", days: 127, monthDay?: 15 }]`). `:id` is the SHA-256 of the endpoint. Replaces what was there. |
+| `PUT /subscriptions/:id` | Save a browser's endpoint, time zone, doses (`[{ time: "08:00", days: 127, monthDay?: 15 }]`) and, optionally, its encryption keys (`keys: { p256dh, auth }`). `:id` is the SHA-256 of the endpoint. Replaces what was there. |
 | `DELETE /subscriptions/:id` | Forget a browser. |
 | `POST /subscriptions/:id/test` | Send a push now. |
 | `DELETE /users/:uid` | Forget every browser of an account. |
 | `GET /health` | No secret needed. |
 
 `days` is a bit mask of weekdays: bit 0 is Sunday, and 127 means every day.
+
+### Called by the phone
+
+No secret: the body's push `endpoint`, which only that browser and this
+Worker know, shows which browser is asking. Both allow cross-origin calls.
+
+| Request | What it does |
+| --- | --- |
+| `POST /taken` | `{ endpoint, day: "2026-09-30", times: ["08:00"], replace? }`: these dose times were taken that day, so no reminder or nudge is sent for them (to any of the account's browsers). With `replace: true` they are the only ones taken that day. |
+| `POST /snooze` | `{ endpoint, day, times, minutes? }`: send the reminder again in `minutes` (default 10, at most 60). Up to 10 pending per browser. |

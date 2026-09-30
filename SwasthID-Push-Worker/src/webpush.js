@@ -1,6 +1,7 @@
-// Web Push without a payload: a POST to the browser's push endpoint, signed
-// with our VAPID key (RFC 8292). With no payload there is nothing to
-// encrypt; the phone's service worker works out which medicines are due.
+// Web Push: a POST to the browser's push endpoint, signed with our VAPID key
+// (RFC 8292). The message, when there is one, is encrypted for that browser
+// alone (RFC 8291). It only says what kind of reminder this is and at which
+// dose times; the phone's service worker looks up which medicines those are.
 
 const enc = new TextEncoder();
 
@@ -68,9 +69,44 @@ export async function vapidToken({ audience, subject, publicKey, privateKey, now
   return jwt;
 }
 
-// Send one push. Returns the push service's HTTP status (201 = accepted;
-// 404 or 410 = the browser unsubscribed, so forget this endpoint).
-export async function sendPush(endpoint, env, { ttl = 1800, fetchImpl = fetch } = {}) {
+function concat(...parts) {
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  for (const p of parts) { out.set(p, at); at += p.length; }
+  return out;
+}
+
+async function hkdf(salt, ikm, info, bits) {
+  const key = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits']);
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info }, key, bits));
+}
+
+// Encrypt `plaintext` for one browser (RFC 8291, "aes128gcm"). p256dh and
+// auth are the keys from the browser's push subscription.
+export async function encryptPayload({ p256dh, auth }, plaintext, { salt = crypto.getRandomValues(new Uint8Array(16)) } = {}) {
+  const uaPublic = base64urlDecode(p256dh);
+  const authSecret = base64urlDecode(auth);
+  if (uaPublic.length !== 65 || uaPublic[0] !== 4 || authSecret.length !== 16) throw new Error('Bad subscription keys.');
+  const local = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+  const asPublic = new Uint8Array(await crypto.subtle.exportKey('raw', local.publicKey));
+  const uaKey = await crypto.subtle.importKey('raw', uaPublic, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+  const shared = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: uaKey }, local.privateKey, 256));
+
+  const ikm = await hkdf(authSecret, shared, concat(enc.encode('WebPush: info\0'), uaPublic, asPublic), 256);
+  const cek = await hkdf(salt, ikm, enc.encode('Content-Encoding: aes128gcm\0'), 128);
+  const nonce = await hkdf(salt, ikm, enc.encode('Content-Encoding: nonce\0'), 96);
+  const key = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['encrypt']);
+  // One record: the message, then the 0x02 "last record" delimiter.
+  const record = concat(enc.encode(plaintext), new Uint8Array([2]));
+  const cipher = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, key, record));
+  // Header: salt, record size (4096), key id length, our public key.
+  return concat(salt, new Uint8Array([0, 0, 16, 0, 65]), asPublic, cipher);
+}
+
+// Send one push, with an encrypted `message` when the browser's keys are
+// known. Returns the push service's HTTP status (201 = accepted; 404 or
+// 410 = the browser unsubscribed, so forget this endpoint).
+export async function sendPush(endpoint, env, { ttl = 1800, fetchImpl = fetch, keys = null, message = null } = {}) {
   if (!isPushEndpoint(endpoint)) return 400;
   const jwt = await vapidToken({
     audience: new URL(endpoint).origin,
@@ -78,15 +114,15 @@ export async function sendPush(endpoint, env, { ttl = 1800, fetchImpl = fetch } 
     publicKey: env.VAPID_PUBLIC_KEY,
     privateKey: env.VAPID_PRIVATE_KEY,
   });
-  const res = await fetchImpl(endpoint, {
-    method: 'POST',
-    headers: {
-      Authorization: `vapid t=${jwt}, k=${env.VAPID_PUBLIC_KEY}`,
-      // A dose reminder that arrives more than 30 minutes late is no use.
-      TTL: String(ttl),
-      Urgency: 'high',
-      'Content-Length': '0',
-    },
-  });
+  const body = message != null && keys?.p256dh && keys?.auth ? await encryptPayload(keys, JSON.stringify(message)) : null;
+  const headers = {
+    Authorization: `vapid t=${jwt}, k=${env.VAPID_PUBLIC_KEY}`,
+    // A dose reminder that arrives more than 30 minutes late is no use.
+    TTL: String(ttl),
+    Urgency: 'high',
+    'Content-Length': String(body ? body.length : 0),
+  };
+  if (body) Object.assign(headers, { 'Content-Encoding': 'aes128gcm', 'Content-Type': 'application/octet-stream' });
+  const res = await fetchImpl(endpoint, { method: 'POST', headers, body: body || undefined });
   return res.status;
 }

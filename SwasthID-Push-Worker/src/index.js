@@ -1,20 +1,35 @@
 // SwasthID dose reminders: a Cloudflare Worker (free plan) with a D1 database.
 //
 // - The SwasthID server saves each browser's dose times here (PUT
-//   /subscriptions/:id), authenticated with a shared secret. Browsers never
-//   call this Worker directly.
+//   /subscriptions/:id), authenticated with a shared secret.
 // - Every minute a cron trigger finds the doses due now in each time zone and
-//   sends an empty push to those browsers. The service worker on the phone
-//   then shows which medicines are due.
+//   sends a push to those browsers. The service worker on the phone then
+//   shows which medicines are due. 30 minutes later, doses not yet marked
+//   taken get one more push (a "nudge").
+// - Two calls come straight from the phone, so they work while the SwasthID
+//   server is asleep: POST /taken (a dose was taken, so no nudge) and POST
+//   /snooze (remind again in 10 minutes). Both are made by the browser that
+//   owns the push subscription, and its endpoint URL, which only that
+//   browser and this Worker know, is what proves it.
 
-import { sendPush, isPushEndpoint } from './webpush.js';
+import { sendPush, isPushEndpoint, base64urlDecode } from './webpush.js';
 
 const WEEKDAYS = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 const MAX_DOSES = 48;
 const SEND_CONCURRENCY = 6;
+const NUDGE_AFTER_MINUTES = 30;
+const MAX_SNOOZES = 10; // pending snoozes per browser
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+const DAY = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400',
+};
 
-function json(status, body) {
-  return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+function json(status, body, headers = {}) {
+  return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...headers } });
 }
 
 function validTimeZone(tz) {
@@ -22,12 +37,37 @@ function validTimeZone(tz) {
   try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); return true; } catch { return false; }
 }
 
-// Weekday, day of month and HH:MM at `date` in time zone `tz`.
+// Weekday, date (YYYY-MM-DD), day of month and HH:MM at `date` in time zone `tz`.
 export function localTime(date, tz) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
-    timeZone: tz, weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    timeZone: tz, weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
   }).formatToParts(date).map(p => [p.type, p.value]));
-  return { weekday: WEEKDAYS[parts.weekday], monthDay: Number(parts.day), time: `${parts.hour}:${parts.minute}` };
+  return {
+    weekday: WEEKDAYS[parts.weekday], day: `${parts.year}-${parts.month}-${parts.day}`,
+    monthDay: Number(parts.day), time: `${parts.hour}:${parts.minute}`,
+  };
+}
+
+// Databases made before Taken/Snooze get the new columns and tables the first
+// time this version runs, so pasting in the new code is the whole upgrade.
+const NEW_TABLES = [
+  `CREATE TABLE IF NOT EXISTS taken (uid TEXT NOT NULL, day TEXT NOT NULL, time TEXT NOT NULL, created_at INTEGER NOT NULL,
+    PRIMARY KEY (uid, day, time))`,
+  'CREATE TABLE IF NOT EXISTS snoozes (sub_id TEXT NOT NULL, due INTEGER NOT NULL, day TEXT NOT NULL, times TEXT NOT NULL)',
+  'CREATE INDEX IF NOT EXISTS snoozes_due ON snoozes (due)',
+];
+const upToDate = new WeakSet();
+export async function ensureSchema(env) {
+  if (upToDate.has(env.DB)) return;
+  try {
+    await env.DB.prepare('SELECT s.p256dh, s.auth, t.day, n.due FROM subscriptions s, taken t, snoozes n LIMIT 0').all();
+  } catch {
+    for (const column of ['p256dh', 'auth']) {
+      await env.DB.prepare(`ALTER TABLE subscriptions ADD COLUMN ${column} TEXT`).run().catch(() => {}); // already there
+    }
+    for (const sql of NEW_TABLES) await env.DB.prepare(sql).run();
+  }
+  upToDate.add(env.DB);
 }
 
 // Constant-time comparison of the shared secret.
@@ -50,7 +90,7 @@ function parseDoses(list) {
     const time = String(d?.time || '');
     const days = Number(d?.days);
     const monthDay = d?.monthDay == null ? null : Number(d.monthDay);
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return null;
+    if (!TIME.test(time)) return null;
     if (!Number.isInteger(days) || days < 1 || days > 127) return null;
     if (monthDay !== null && !(Number.isInteger(monthDay) && monthDay >= 1 && monthDay <= 31)) return null;
     const key = `${time}|${days}|${monthDay}`;
@@ -59,11 +99,35 @@ function parseDoses(list) {
   return out;
 }
 
+function parseTimes(list, { allowEmpty = false } = {}) {
+  if (!Array.isArray(list) || list.length > MAX_DOSES || (!list.length && !allowEmpty)) return null;
+  const times = [...new Set(list.map(String))];
+  return times.every(t => TIME.test(t)) ? times : null;
+}
+
+// The browser's encryption keys, from its push subscription. Optional: without
+// them pushes are sent empty, as before.
+function parseKeys(keys) {
+  if (keys == null) return { p256dh: null, auth: null };
+  try {
+    const p256dh = String(keys.p256dh || ''), auth = String(keys.auth || '');
+    const pub = base64urlDecode(p256dh), secret = base64urlDecode(auth);
+    if (p256dh.length < 200 && pub.length === 65 && pub[0] === 4 && secret.length === 16) return { p256dh, auth };
+  } catch { /* not base64url */ }
+  return null;
+}
+
+async function subscriptionId(endpoint) {
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(endpoint)));
+  return [...hash].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function removeSubscriptions(env, where, value) {
   const ids = (await env.DB.prepare(`SELECT id FROM subscriptions WHERE ${where} = ?`).bind(value).all()).results.map(r => r.id);
   if (!ids.length) return 0;
   await env.DB.batch(ids.flatMap(id => [
     env.DB.prepare('DELETE FROM doses WHERE sub_id = ?').bind(id),
+    env.DB.prepare('DELETE FROM snoozes WHERE sub_id = ?').bind(id),
     env.DB.prepare('DELETE FROM subscriptions WHERE id = ?').bind(id),
   ]));
   await env.DB.prepare('DELETE FROM zones WHERE tz NOT IN (SELECT DISTINCT tz FROM doses)').run();
@@ -75,17 +139,20 @@ async function saveSubscription(env, id, body) {
   const endpoint = String(body?.endpoint || '');
   const tz = body?.tz;
   const doses = parseDoses(body?.doses);
+  const keys = parseKeys(body?.keys);
   if (!uid || uid.length > 128) return json(400, { error: 'uid is required.' });
   if (!isPushEndpoint(endpoint) || endpoint.length > 1024) return json(400, { error: 'Not a supported push endpoint.' });
   if (!validTimeZone(tz)) return json(400, { error: 'Unknown time zone.' });
   if (!doses) return json(400, { error: 'doses must be up to 48 entries of { time: "HH:MM", days: 1-127, monthDay? }.' });
+  if (!keys) return json(400, { error: 'keys must be the subscription\'s { p256dh, auth }.' });
 
   // Replace everything stored for this browser in one transaction.
   await env.DB.batch([
     env.DB.prepare('DELETE FROM doses WHERE sub_id = ?').bind(id),
-    env.DB.prepare(`INSERT INTO subscriptions (id, uid, endpoint, tz, updated_at) VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT (id) DO UPDATE SET uid = excluded.uid, endpoint = excluded.endpoint, tz = excluded.tz, updated_at = excluded.updated_at`)
-      .bind(id, uid, endpoint, tz, Date.now()),
+    env.DB.prepare(`INSERT INTO subscriptions (id, uid, endpoint, tz, updated_at, p256dh, auth) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (id) DO UPDATE SET uid = excluded.uid, endpoint = excluded.endpoint, tz = excluded.tz, updated_at = excluded.updated_at,
+        p256dh = excluded.p256dh, auth = excluded.auth`)
+      .bind(id, uid, endpoint, tz, Date.now(), keys.p256dh, keys.auth),
     ...doses.map(d => env.DB.prepare('INSERT INTO doses (sub_id, tz, time, days, month_day) VALUES (?, ?, ?, ?, ?)').bind(id, tz, d.time, d.days, d.monthDay)),
     env.DB.prepare('INSERT INTO zones (tz) VALUES (?) ON CONFLICT (tz) DO NOTHING').bind(tz),
   ]);
@@ -93,18 +160,61 @@ async function saveSubscription(env, id, body) {
   return json(200, { ok: true, doses: doses.length });
 }
 
-async function sendAll(env, targets, fetchImpl) {
+// ---- calls from the phone ----
+
+async function subscriptionFor(env, endpoint) {
+  if (!isPushEndpoint(endpoint) || endpoint.length > 1024) return null;
+  const row = await env.DB.prepare('SELECT id, uid, endpoint FROM subscriptions WHERE id = ?').bind(await subscriptionId(endpoint)).first();
+  return row && row.endpoint === endpoint ? row : null;
+}
+
+// { endpoint, day, times, replace? }: these dose times were taken on `day`.
+// With replace, they are the only ones taken that day (the app sends this
+// when a dose is un-ticked).
+async function recordTaken(env, body) {
+  const sub = await subscriptionFor(env, String(body?.endpoint || ''));
+  if (!sub) return json(404, { error: 'Not subscribed.' }, CORS);
+  const day = String(body?.day || '');
+  const times = parseTimes(body?.times, { allowEmpty: body?.replace === true });
+  if (!DAY.test(day) || !times) return json(400, { error: 'day (YYYY-MM-DD) and times (HH:MM) are required.' }, CORS);
+  const now = Date.now();
+  await env.DB.batch([
+    ...(body.replace === true ? [env.DB.prepare('DELETE FROM taken WHERE uid = ? AND day = ?').bind(sub.uid, day)] : []),
+    ...times.map(t => env.DB.prepare('INSERT INTO taken (uid, day, time, created_at) VALUES (?, ?, ?, ?) ON CONFLICT (uid, day, time) DO NOTHING')
+      .bind(sub.uid, day, t, now)),
+  ]);
+  return json(200, { ok: true }, CORS);
+}
+
+// { endpoint, day, times, minutes? }: remind about these doses again later.
+async function recordSnooze(env, body, now = Date.now()) {
+  const sub = await subscriptionFor(env, String(body?.endpoint || ''));
+  if (!sub) return json(404, { error: 'Not subscribed.' }, CORS);
+  const day = String(body?.day || '');
+  const times = parseTimes(body?.times);
+  if (!DAY.test(day) || !times) return json(400, { error: 'day (YYYY-MM-DD) and times (HH:MM) are required.' }, CORS);
+  const minutes = Math.min(60, Math.max(1, Math.round(Number(body?.minutes) || 10)));
+  const pending = await env.DB.prepare('SELECT COUNT(*) AS n FROM snoozes WHERE sub_id = ?').bind(sub.id).first();
+  if (pending.n >= MAX_SNOOZES) return json(429, { error: 'Too many snoozes.' }, CORS);
+  const due = Math.round(now / 60000) + minutes;
+  await env.DB.prepare('INSERT INTO snoozes (sub_id, due, day, times) VALUES (?, ?, ?, ?)').bind(sub.id, due, day, JSON.stringify(times)).run();
+  return json(200, { ok: true, at: due * 60000 }, CORS);
+}
+
+// ---- sending ----
+
+async function sendAll(env, pushes, fetchImpl) {
   const results = { sent: 0, gone: 0, failed: 0 };
-  const queue = [...targets];
+  const queue = [...pushes];
   async function worker() {
-    for (let t = queue.shift(); t; t = queue.shift()) {
+    for (let p = queue.shift(); p; p = queue.shift()) {
       try {
-        const status = await sendPush(t.endpoint, env, { fetchImpl });
+        const status = await sendPush(p.sub.endpoint, env, { fetchImpl, keys: p.sub, message: p.message });
         if (status === 404 || status === 410) {
           results.gone++;
-          await removeSubscriptions(env, 'id', t.id);
+          await removeSubscriptions(env, 'id', p.sub.id);
         } else if (status >= 200 && status < 300) results.sent++;
-        else { results.failed++; console.warn(`Push to ${new URL(t.endpoint).host} answered ${status}`); }
+        else { results.failed++; console.warn(`Push to ${new URL(p.sub.endpoint).host} answered ${status}`); }
       } catch (e) {
         results.failed++;
         console.warn('Push failed:', e.message);
@@ -115,39 +225,82 @@ async function sendAll(env, targets, fetchImpl) {
   return results;
 }
 
-// Send a push to every browser with a dose due at `when` (to the minute).
+// Browsers with a dose at local time `t` that isn't marked taken yet.
+async function dueAt(env, tz, t, { needKeys = false } = {}) {
+  return (await env.DB.prepare(`SELECT DISTINCT s.id, s.uid, s.endpoint, s.p256dh, s.auth, d.time FROM doses d JOIN subscriptions s ON s.id = d.sub_id
+    WHERE d.tz = ? AND d.time = ? AND (d.days & ?) != 0 AND (d.month_day IS NULL OR d.month_day = ?)
+      AND NOT EXISTS (SELECT 1 FROM taken k WHERE k.uid = s.uid AND k.day = ? AND k.time = d.time)
+      ${needKeys ? 'AND s.p256dh IS NOT NULL' : ''}`)
+    .bind(tz, t.time, 1 << t.weekday, t.monthDay, t.day).all()).results;
+}
+
+// Everything to send at `when` (to the minute): doses due now, nudges for
+// doses due 30 minutes ago and still not taken, and snoozes that are up.
 export async function sendDueReminders(env, when = new Date(), fetchImpl = fetch) {
+  await ensureSchema(env);
+  const minute = Math.floor(when.getTime() / 60000);
+  const pushes = new Map();
   const zones = (await env.DB.prepare('SELECT tz FROM zones').all()).results.map(r => r.tz);
-  const targets = new Map();
   for (const tz of zones) {
     if (!validTimeZone(tz)) continue;
     const now = localTime(when, tz);
-    const rows = (await env.DB.prepare(`SELECT DISTINCT s.id, s.endpoint FROM doses d JOIN subscriptions s ON s.id = d.sub_id
-      WHERE d.tz = ? AND d.time = ? AND (d.days & ?) != 0 AND (d.month_day IS NULL OR d.month_day = ?)`)
-      .bind(tz, now.time, 1 << now.weekday, now.monthDay).all()).results;
-    for (const r of rows) targets.set(r.id, r);
+    for (const r of await dueAt(env, tz, now)) {
+      pushes.set(`dose|${r.id}`, { sub: r, message: { kind: 'dose', day: now.day, times: [r.time] } });
+    }
+    // A nudge needs the message: without it the phone can't tell which dose it is about.
+    const earlier = localTime(new Date(when.getTime() - NUDGE_AFTER_MINUTES * 60000), tz);
+    for (const r of await dueAt(env, tz, earlier, { needKeys: true })) {
+      pushes.set(`nudge|${r.id}`, { sub: r, message: { kind: 'nudge', day: earlier.day, times: [r.time] } });
+    }
   }
-  return sendAll(env, [...targets.values()], fetchImpl);
+
+  const snoozed = (await env.DB.prepare(`SELECT n.due, n.day, n.times, s.id, s.uid, s.endpoint, s.p256dh, s.auth
+    FROM snoozes n JOIN subscriptions s ON s.id = n.sub_id WHERE n.due <= ?`).bind(minute).all()).results;
+  if (snoozed.length) await env.DB.prepare('DELETE FROM snoozes WHERE due <= ?').bind(minute).run();
+  for (const [i, r] of snoozed.entries()) {
+    if (r.due < minute - NUDGE_AFTER_MINUTES) continue; // missed (the cron was down): too late now
+    const taken = new Set((await env.DB.prepare('SELECT time FROM taken WHERE uid = ? AND day = ?').bind(r.uid, r.day).all()).results.map(x => x.time));
+    const times = JSON.parse(r.times).filter(t => !taken.has(t));
+    if (times.length) pushes.set(`snooze|${r.id}|${i}`, { sub: r, message: { kind: 'snooze', day: r.day, times } });
+  }
+
+  // Once an hour, forget taken doses older than three days.
+  if (minute % 60 === 0) await env.DB.prepare('DELETE FROM taken WHERE created_at < ?').bind(when.getTime() - 3 * 86400000).run();
+  return sendAll(env, [...pushes.values()], fetchImpl);
 }
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/health') return json(200, { ok: true, service: 'swasthid-push' });
-    if (!(await authorized(request, env))) return json(401, { error: 'Unauthorized.' });
-
-    const sub = /^\/subscriptions\/([a-f0-9]{64})(\/test)?$/.exec(url.pathname);
-    const user = /^\/users\/([^/]{1,128})$/.exec(url.pathname);
     try {
+      // From the phone: no shared secret, the push endpoint is the proof.
+      if (url.pathname === '/taken' || url.pathname === '/snooze') {
+        if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+        if (request.method !== 'POST') return json(405, { error: 'Use POST.' }, CORS);
+        await ensureSchema(env);
+        const body = await request.json().catch(() => null);
+        return url.pathname === '/taken' ? await recordTaken(env, body) : await recordSnooze(env, body);
+      }
+
+      if (!(await authorized(request, env))) return json(401, { error: 'Unauthorized.' });
+      await ensureSchema(env);
+      const sub = /^\/subscriptions\/([a-f0-9]{64})(\/test)?$/.exec(url.pathname);
+      const user = /^\/users\/([^/]{1,128})$/.exec(url.pathname);
       if (sub && !sub[2] && request.method === 'PUT') return await saveSubscription(env, sub[1], await request.json().catch(() => null));
       if (sub && !sub[2] && request.method === 'DELETE') return json(200, { ok: true, removed: await removeSubscriptions(env, 'id', sub[1]) });
       if (sub && sub[2] && request.method === 'POST') {
-        const row = await env.DB.prepare('SELECT id, endpoint FROM subscriptions WHERE id = ?').bind(sub[1]).first();
+        const row = await env.DB.prepare('SELECT id, endpoint, p256dh, auth FROM subscriptions WHERE id = ?').bind(sub[1]).first();
         if (!row) return json(404, { error: 'Not subscribed.' });
-        const result = await sendAll(env, [row], fetch);
+        const result = await sendAll(env, [{ sub: row, message: { kind: 'test' } }], fetch);
         return json(result.sent ? 200 : 502, result);
       }
-      if (user && request.method === 'DELETE') return json(200, { ok: true, removed: await removeSubscriptions(env, 'uid', decodeURIComponent(user[1])) });
+      if (user && request.method === 'DELETE') {
+        const uid = decodeURIComponent(user[1]);
+        const removed = await removeSubscriptions(env, 'uid', uid);
+        await env.DB.prepare('DELETE FROM taken WHERE uid = ?').bind(uid).run();
+        return json(200, { ok: true, removed });
+      }
     } catch (e) {
       console.error('Request failed:', e);
       return json(500, { error: 'Server error.' });

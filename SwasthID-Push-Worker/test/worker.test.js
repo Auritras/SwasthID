@@ -1,9 +1,9 @@
 // Worker tests: `npm test` (Node 22.13+, for the built-in SQLite).
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { createVerify, createPublicKey } from 'node:crypto';
+import { createVerify, createPublicKey, createECDH, createDecipheriv, createHash, hkdfSync, randomBytes } from 'node:crypto';
 import worker, { sendDueReminders, localTime } from '../src/index.js';
-import { vapidToken, base64urlDecode, base64urlEncode, isPushEndpoint } from '../src/webpush.js';
+import { vapidToken, base64urlDecode, base64urlEncode, isPushEndpoint, encryptPayload } from '../src/webpush.js';
 import { createD1 } from './d1.js';
 
 const SECRET = 'test-shared-secret-0123456789';
@@ -22,6 +22,7 @@ beforeEach(async () => {
 
 const id = n => String(n).repeat(64).slice(0, 64);
 const endpoint = n => `https://fcm.googleapis.com/fcm/send/device-${n}`;
+const sha256 = async text => createHash('sha256').update(text).digest('hex');
 
 function call(method, path, body, secret = SECRET) {
   const headers = { Authorization: `Bearer ${secret}` };
@@ -36,9 +37,9 @@ function fakePushService(statusFor = () => 201) {
 
 test('local time follows the time zone, including the weekday and day of month', () => {
   const when = new Date('2026-09-30T18:45:00Z'); // a Wednesday
-  assert.deepEqual(localTime(when, 'Asia/Kolkata'), { weekday: 4, monthDay: 1, time: '00:15' });
-  assert.deepEqual(localTime(when, 'UTC'), { weekday: 3, monthDay: 30, time: '18:45' });
-  assert.deepEqual(localTime(when, 'America/New_York'), { weekday: 3, monthDay: 30, time: '14:45' });
+  assert.deepEqual(localTime(when, 'Asia/Kolkata'), { weekday: 4, day: '2026-10-01', monthDay: 1, time: '00:15' });
+  assert.deepEqual(localTime(when, 'UTC'), { weekday: 3, day: '2026-09-30', monthDay: 30, time: '18:45' });
+  assert.deepEqual(localTime(when, 'America/New_York'), { weekday: 3, day: '2026-09-30', monthDay: 30, time: '14:45' });
 });
 
 test('requests need the shared secret', async () => {
@@ -163,6 +164,164 @@ test('the one-file version for the Cloudflare dashboard is up to date and works'
     await Promise.all(waits);
   } finally { globalThis.fetch = realFetch; }
   assert.deepEqual(sent, [endpoint(1)]);
+});
+
+// A browser's push keys, and how that browser decrypts a message (RFC 8291),
+// written with node:crypto rather than the Worker's WebCrypto code.
+function makeBrowser(n) {
+  const ecdh = createECDH('prime256v1');
+  ecdh.generateKeys();
+  const auth = randomBytes(16);
+  return {
+    endpoint: endpoint(n),
+    keys: { p256dh: ecdh.getPublicKey().toString('base64url'), auth: auth.toString('base64url') },
+    decrypt(body) {
+      const buf = Buffer.from(body);
+      const salt = buf.subarray(0, 16);
+      assert.equal(buf.readUInt32BE(16), 4096);
+      const idlen = buf[20];
+      const asPublic = buf.subarray(21, 21 + idlen);
+      const cipher = buf.subarray(21 + idlen);
+      const shared = ecdh.computeSecret(asPublic);
+      const info = Buffer.concat([Buffer.from('WebPush: info\0'), ecdh.getPublicKey(), asPublic]);
+      const ikm = Buffer.from(hkdfSync('sha256', shared, auth, info, 32));
+      const cek = Buffer.from(hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: aes128gcm\0'), 16));
+      const nonce = Buffer.from(hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: nonce\0'), 12));
+      const decipher = createDecipheriv('aes-128-gcm', cek, nonce);
+      decipher.setAuthTag(cipher.subarray(cipher.length - 16));
+      const plain = Buffer.concat([decipher.update(cipher.subarray(0, cipher.length - 16)), decipher.final()]);
+      assert.equal(plain[plain.length - 1], 2, 'last-record delimiter');
+      return JSON.parse(plain.subarray(0, plain.length - 1).toString());
+    },
+  };
+}
+
+function phoneCall(path, body, method = 'POST') {
+  return worker.fetch(new Request(`https://push.example${path}`, { method, headers: { 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) }), env);
+}
+
+test('with the browser\'s keys, the push carries an encrypted message only that browser can read', async () => {
+  const phone = makeBrowser(1);
+  await call('PUT', `/subscriptions/${await sha256(phone.endpoint)}`, { uid: 'a', endpoint: phone.endpoint, tz: 'UTC', keys: phone.keys, doses: [{ time: '09:00', days: 127 }] });
+  const push = fakePushService();
+  await sendDueReminders(env, new Date('2026-09-30T09:00:00Z'), push.fetchImpl);
+  assert.equal(push.calls.length, 1);
+  const { headers, body } = push.calls[0].init;
+  assert.equal(headers['Content-Encoding'], 'aes128gcm');
+  assert.equal(headers['Content-Length'], String(body.length));
+  assert.deepEqual(phone.decrypt(body), { kind: 'dose', day: '2026-09-30', times: ['09:00'] });
+  // A fresh key and salt each time: the same message never looks the same.
+  const again = await encryptPayload(phone.keys, 'same');
+  assert.notDeepEqual(await encryptPayload(phone.keys, 'same'), again);
+  assert.throws(() => makeBrowser(2).decrypt(body));
+
+  for (const bad of [{ p256dh: 'short', auth: phone.keys.auth }, { p256dh: phone.keys.p256dh, auth: 'x' }, 'text']) {
+    assert.equal((await call('PUT', `/subscriptions/${await sha256(phone.endpoint)}`, { uid: 'a', endpoint: phone.endpoint, tz: 'UTC', keys: bad, doses: [] })).status, 400);
+  }
+});
+
+test('a dose not marked taken gets a nudge 30 minutes later; a taken one does not', async () => {
+  const phone = makeBrowser(1), laptop = makeBrowser(2), old = makeBrowser(3);
+  for (const b of [phone, laptop]) await call('PUT', `/subscriptions/${await sha256(b.endpoint)}`, { uid: 'a', endpoint: b.endpoint, tz: 'Asia/Kolkata', keys: b.keys, doses: [{ time: '08:00', days: 127 }, { time: '20:00', days: 127 }] });
+  // Saved before this version: no keys, so no nudge (it couldn't say which dose).
+  await call('PUT', `/subscriptions/${await sha256(old.endpoint)}`, { uid: 'b', endpoint: old.endpoint, tz: 'Asia/Kolkata', doses: [{ time: '08:00', days: 127 }] });
+
+  // 08:30 in Kolkata = 03:00 UTC.
+  const nudge = fakePushService();
+  await sendDueReminders(env, new Date('2026-09-30T03:00:00Z'), nudge.fetchImpl);
+  assert.deepEqual(nudge.calls.map(c => c.url).sort(), [phone.endpoint, laptop.endpoint]);
+  assert.deepEqual(phone.decrypt(nudge.calls.find(c => c.url === phone.endpoint).init.body), { kind: 'nudge', day: '2026-09-30', times: ['08:00'] });
+
+  // Taken on the phone: neither device is nudged about it, but the evening dose still comes.
+  assert.equal((await phoneCall('/taken', { endpoint: phone.endpoint, day: '2026-09-30', times: ['08:00'] })).status, 200);
+  const after = fakePushService();
+  await sendDueReminders(env, new Date('2026-09-30T03:00:00Z'), after.fetchImpl);
+  assert.equal(after.calls.length, 0);
+  // Taken early (before 20:00): no reminder at 20:00 either.
+  await phoneCall('/taken', { endpoint: laptop.endpoint, day: '2026-09-30', times: ['20:00'] });
+  const evening = fakePushService();
+  await sendDueReminders(env, new Date('2026-09-30T14:30:00Z'), evening.fetchImpl);
+  assert.equal(evening.calls.length, 0);
+  // Un-ticked in the app: the app sends the full list for the day, and the nudge is back.
+  await phoneCall('/taken', { endpoint: phone.endpoint, day: '2026-09-30', times: [], replace: true });
+  const back = fakePushService();
+  await sendDueReminders(env, new Date('2026-09-30T03:00:00Z'), back.fetchImpl);
+  assert.equal(back.calls.length, 2);
+  // The next day starts fresh.
+  const tomorrow = fakePushService();
+  await phoneCall('/taken', { endpoint: phone.endpoint, day: '2026-09-30', times: ['08:00'] });
+  await sendDueReminders(env, new Date('2026-10-01T02:30:00Z'), tomorrow.fetchImpl);
+  assert.equal(tomorrow.calls.length, 3);
+});
+
+test('snooze reminds again after 10 minutes, unless the dose is taken first', async () => {
+  const phone = makeBrowser(1);
+  await call('PUT', `/subscriptions/${await sha256(phone.endpoint)}`, { uid: 'a', endpoint: phone.endpoint, tz: 'UTC', keys: phone.keys, doses: [{ time: '09:00', days: 127 }] });
+  const tapped = Date.parse('2026-09-30T09:01:10Z');
+  const realNow = Date.now;
+  Date.now = () => tapped;
+  try {
+    const res = await phoneCall('/snooze', { endpoint: phone.endpoint, day: '2026-09-30', times: ['09:00'] });
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
+    assert.equal((await res.json()).at, Date.parse('2026-09-30T09:11:00Z'));
+  } finally { Date.now = realNow; }
+
+  const early = fakePushService();
+  await sendDueReminders(env, new Date('2026-09-30T09:10:00Z'), early.fetchImpl);
+  assert.equal(early.calls.length, 0);
+  const due = fakePushService();
+  await sendDueReminders(env, new Date('2026-09-30T09:11:00Z'), due.fetchImpl);
+  assert.deepEqual(phone.decrypt(due.calls[0].init.body), { kind: 'snooze', day: '2026-09-30', times: ['09:00'] });
+  // Sent once only.
+  const later = fakePushService();
+  await sendDueReminders(env, new Date('2026-09-30T09:12:00Z'), later.fetchImpl);
+  assert.equal(later.calls.length, 0);
+
+  // Snoozed, then taken: the snooze is dropped.
+  await phoneCall('/snooze', { endpoint: phone.endpoint, day: '2026-09-30', times: ['09:00'], minutes: 1 });
+  await phoneCall('/taken', { endpoint: phone.endpoint, day: '2026-09-30', times: ['09:00'] });
+  const dropped = fakePushService();
+  await sendDueReminders(env, new Date(Date.now() + 5 * 60000), dropped.fetchImpl);
+  assert.equal(dropped.calls.length, 0);
+});
+
+test('the phone\'s calls need a real subscription and valid times', async () => {
+  const phone = makeBrowser(1);
+  await call('PUT', `/subscriptions/${await sha256(phone.endpoint)}`, { uid: 'a', endpoint: phone.endpoint, tz: 'UTC', keys: phone.keys, doses: [{ time: '09:00', days: 127 }] });
+  const preflight = await phoneCall('/snooze', undefined, 'OPTIONS');
+  assert.equal(preflight.status, 204);
+  assert.match(preflight.headers.get('Access-Control-Allow-Headers'), /Content-Type/);
+  assert.equal((await phoneCall('/taken', { endpoint: endpoint(9), day: '2026-09-30', times: ['09:00'] })).status, 404);
+  assert.equal((await phoneCall('/taken', { endpoint: 'https://evil.example/x', day: '2026-09-30', times: ['09:00'] })).status, 404);
+  for (const bad of [{ day: '30-09-2026', times: ['09:00'] }, { day: '2026-09-30', times: ['9am'] }, { day: '2026-09-30', times: [] }, { day: '2026-09-30' }]) {
+    assert.equal((await phoneCall('/snooze', { endpoint: phone.endpoint, ...bad })).status, 400, JSON.stringify(bad));
+  }
+  for (let i = 0; i < 10; i++) await phoneCall('/snooze', { endpoint: phone.endpoint, day: '2026-09-30', times: ['09:00'] });
+  assert.equal((await phoneCall('/snooze', { endpoint: phone.endpoint, day: '2026-09-30', times: ['09:00'] })).status, 429);
+  // Deleting the account forgets its snoozes and taken doses too.
+  await phoneCall('/taken', { endpoint: phone.endpoint, day: '2026-09-30', times: ['09:00'] });
+  await call('DELETE', '/users/a');
+  assert.equal(env.DB.raw.prepare('SELECT COUNT(*) AS n FROM snoozes').get().n, 0);
+  assert.equal(env.DB.raw.prepare('SELECT COUNT(*) AS n FROM taken').get().n, 0);
+});
+
+test('a database made by the previous version is upgraded on first use', async () => {
+  const oldSchema = `CREATE TABLE subscriptions (id TEXT PRIMARY KEY, uid TEXT NOT NULL, endpoint TEXT NOT NULL, tz TEXT NOT NULL, updated_at INTEGER NOT NULL);
+    CREATE TABLE doses (sub_id TEXT NOT NULL, tz TEXT NOT NULL, time TEXT NOT NULL, days INTEGER NOT NULL, month_day INTEGER);
+    CREATE TABLE zones (tz TEXT PRIMARY KEY);
+    INSERT INTO subscriptions VALUES ('${id(7)}', 'a', '${endpoint(7)}', 'UTC', 0);
+    INSERT INTO doses VALUES ('${id(7)}', 'UTC', '09:00', 127, NULL);
+    INSERT INTO zones VALUES ('UTC');`;
+  env.DB = createD1(oldSchema);
+  const push = fakePushService();
+  await sendDueReminders(env, new Date('2026-09-30T09:00:00Z'), push.fetchImpl);
+  assert.deepEqual(push.calls.map(c => c.url), [endpoint(7)]);
+  assert.equal(push.calls[0].init.body, undefined); // no keys yet: an empty push, as before
+
+  const phone = makeBrowser(1);
+  assert.equal((await call('PUT', `/subscriptions/${await sha256(phone.endpoint)}`, { uid: 'a', endpoint: phone.endpoint, tz: 'UTC', keys: phone.keys, doses: [{ time: '09:00', days: 127 }] })).status, 200);
+  assert.equal((await phoneCall('/taken', { endpoint: phone.endpoint, day: '2026-09-30', times: ['09:00'] })).status, 200);
 });
 
 test('only known push services are accepted as endpoints', () => {

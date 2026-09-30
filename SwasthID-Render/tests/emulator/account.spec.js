@@ -65,6 +65,35 @@ test('what is left in a pack is the same on every device', async ({ page, browse
   await other.close();
 });
 
+test('a record restored from a Health Vault file is saved to the account', async ({ page, browser }) => {
+  const user = await createUser('restore');
+  await logIn(page, user);
+  await page.evaluate(() => { window.closeProfileModal?.(); showTab('share'); });
+  const file = {
+    resourceType: 'Bundle', type: 'collection', generatedAt: '2026-09-01T10:00:00.000Z', meta: { profile: 'SwasthID Health Summary' },
+    vitalsLog: [{ id: 'v1', type: 'bp', sys: 131, dia: 84, at: '2026-09-01T08:00:00.000Z' }],
+    doseHistory: [], foodLog: [], refills: {},
+    family: [{ id: 'd1', name: 'Asha Sen', relation: 'Mother', ownerUid: 'someone-else' }],
+    swasthid: { version: 1, profile: { name: 'Restored Person', bloodGroup: 'A+', profileCompleted: true, ownerUid: 'someone-else' } },
+  };
+  await page.setInputFiles('#restoreHealthJsonInput', { name: 'vault.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(file)) });
+  await page.getByRole('button', { name: 'Replace my record' }).click();
+  await expect(page.locator('#healthShareStatus')).toHaveText('Record restored from the file.');
+  await expect.poll(async () => JSON.stringify(await listEntries(user.uid)), { timeout: 15_000 }).toContain('131');
+
+  const other = await browser.newContext();
+  await prepareContext(other);
+  const phone = await other.newPage();
+  await logIn(phone, user);
+  await phone.evaluate(() => { window.closeProfileModal?.(); showTab('vitals'); });
+  await expect(phone.locator('#vitalsLatest')).toContainText('131/84');
+  await expect(phone.locator('#dashboardGreetingName')).toHaveText('Restored');
+  // Family members from the file belong to this account now.
+  expect(await phone.evaluate(() => getDependents().map(d => d.name))).toEqual(['Asha Sen']);
+  expect(await phone.evaluate(() => [patientData.ownerUid === firebaseUser.uid, patientData.bloodGroup])).toEqual([true, 'A+']);
+  await other.close();
+});
+
 test('another account can\'t read my record', async ({ page }) => {
   const me = await createUser('owner');
   const someoneElse = await createUser('intruder');

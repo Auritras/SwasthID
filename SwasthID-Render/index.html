@@ -631,10 +631,15 @@
    </section>
    <section class="card share-option">
     <h3 class="card-title">Health Vault file</h3>
-    <p class="card-sub">Your full record as a JSON file you can keep as a backup.</p>
-    <button class="btn" type="button" id="exportHealthJsonBtn">Download file</button>
+    <p class="card-sub">Your full record as a JSON file you can keep as a backup, and bring back later.</p>
+    <div class="share-option-actions">
+     <button class="btn" type="button" id="exportHealthJsonBtn">Download file</button>
+     <button class="btn" type="button" id="restoreHealthJsonBtn">Restore from file</button>
+     <input type="file" id="restoreHealthJsonInput" accept=".json,application/json" hidden>
+    </div>
    </section>
   </div>
+  <div id="restoreHealthPanel" class="card restore-panel" hidden aria-live="polite"></div>
   <p class="t-meta share-status" id="healthShareStatus" aria-live="polite"></p>
   <div id="activeDoctorSharePanel" class="status-banner" data-state="ready" style="display:none;">
    <div><b>Active doctor link</b><span id="activeDoctorShareMeta"></span></div>
@@ -942,6 +947,7 @@
 <script src="/assets/js/prescription-scan.js"></script>
 <script src="/assets/js/personalized-ui.js"></script>
 <script src="/assets/js/records.js"></script>
+<script src="/assets/js/health-vault.js"></script>
 <script src="/assets/js/medicine-search.js"></script>
 <script src="/assets/js/nearby.js"></script>
 <script src="/assets/js/emergency.js"></script>

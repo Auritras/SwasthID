@@ -232,9 +232,31 @@
      vitals:profile.vitals||{},
      lifestyle:profile.lifestyle||{},
      nutrition:profile.nutrition||{},
-     labs
+     labs,
+     ...healthVaultLogs()
    };
+   // Everything else SwasthID needs to restore this record exactly
+   // (Share → Health Vault file → Restore from file, in health-vault.js).
+   const {ownerUid,ownerEmail,...ownProfile}=profile;
+   bundle.swasthid={version:1,profile:ownProfile,...healthVaultSettings()};
    return bundle;
+ }
+ // Logs kept on the device and synced: readable sections of the file.
+ const HEALTH_VAULT_LOGS={vitalsLog:'swasth_vitals',foodLog:'swasth_foodLogs',family:'swasth_dependents',refills:'swasth_refills'};
+ const HEALTH_VAULT_SETTINGS={prescriptions:'swasth_prescriptions',medicationList:'swasth_profile_medications',emergencyContact:'swasth_emergencyContact',emergencyCardSettings:'swasth_emergencyVisibility',calorieTarget:'swasth_calorieTarget',riskInputs:'swasth_riskInputs',riskResult:'swasth_clinicalRiskResult'};
+ function storedValue(key){const raw=localStorage.getItem(key);return raw===null?null:safeJsonParse(raw,raw);}
+ function healthVaultLogs(){
+   const out={};
+   Object.entries(HEALTH_VAULT_LOGS).forEach(([name,key])=>{const v=storedValue(key);out[name]=v??(name==='refills'?{}:[]);});
+   out.family=(Array.isArray(out.family)?out.family:[]).map(({ownerUid,...person})=>person);
+   // Every dose marked taken: { medicine, dose, time, date }.
+   out.doseHistory=getMedicationHistory().filter(e=>e?.taken);
+   return out;
+ }
+ function healthVaultSettings(){
+   const out={};
+   Object.entries(HEALTH_VAULT_SETTINGS).forEach(([name,key])=>{out[name]=storedValue(key);});
+   return out;
  }
  function downloadTextFile(filename,text,mime='application/json'){
    const blob=new Blob([text],{type:mime}); const url=URL.createObjectURL(blob); const a=document.createElement('a');
@@ -580,7 +602,8 @@ async function shareHealthRecordWithDoctor(){
   if(!firebaseUser)throw new Error('Sign in before sharing health records.');
   const idToken=await firebaseUser.getIdToken(true);
   const full=buildSwasthHealthBundle();
-  const bundle={...full,emergencyContact:undefined,nutrition:undefined,meta:{...(full.meta||{}),shareScope:'doctor-clinical-summary'}};
+  // The clinical summary only: no backup-only sections (family, food log, settings...).
+  const bundle={...full,emergencyContact:undefined,nutrition:undefined,swasthid:undefined,vitalsLog:undefined,doseHistory:undefined,foodLog:undefined,family:undefined,refills:undefined,meta:{...(full.meta||{}),shareScope:'doctor-clinical-summary'}};
   const res=await fetch(apiBase+'/api/record-share/create',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':`Bearer ${idToken}`},body:JSON.stringify({record:bundle,expiresInHours:24,scope:'clinical-summary'})});
   const body=await res.json().catch(()=>({}));if(!res.ok||!body.url)throw new Error(body.error||`Share service returned HTTP ${res.status}`);
   const shareId=body.shareId||body.id||'';if(shareId){localStorage.setItem('swasth_activeDoctorShare',JSON.stringify({id:shareId,expiresAt:body.expiresAt||null}));syncCloudState('swasth_activeDoctorShare');}
