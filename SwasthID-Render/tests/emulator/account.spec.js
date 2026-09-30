@@ -39,6 +39,32 @@ test('a reading saved on one device appears on another', async ({ page, browser,
   expect(errors).toEqual([]);
 });
 
+test('what is left in a pack is the same on every device', async ({ page, browser }) => {
+  const user = await createUser('refill');
+  await logIn(page, user);
+  await page.evaluate(async () => {
+    Object.assign(patientData, { name: 'Refill Test', profileCompleted: true, medications: [{ name: 'Paracetamol', dose: '1 tablet', schedule: 'Twice daily', times: ['08:00', '20:00'], packSize: '30' }] });
+    localStorage.setItem('swasth_profile_medications', JSON.stringify(patientData.medications));
+    await syncProfileToCloud();
+    window.closeProfileModal?.();
+    renderPersonalizedUI();
+  });
+  const refill = p => p.locator('.refill-item', { hasText: 'Paracetamol' });
+  await expect(refill(page)).toContainText('30 of 30 left');
+  await page.locator('.today-med-item', { hasText: 'Paracetamol' }).first().locator('.med-action').click();
+  await expect(refill(page)).toContainText('29 of 30 left');
+  // Wait until the taken dose is stored in the account.
+  await expect.poll(async () => JSON.stringify(await listEntries(user.uid)), { timeout: 15_000 }).toContain('Paracetamol');
+
+  const other = await browser.newContext();
+  await prepareContext(other);
+  const phone = await other.newPage();
+  await logIn(phone, user);
+  await phone.evaluate(() => { window.closeProfileModal?.(); renderPersonalizedUI(); });
+  await expect(refill(phone)).toContainText('29 of 30 left');
+  await other.close();
+});
+
 test('another account can\'t read my record', async ({ page }) => {
   const me = await createUser('owner');
   const someoneElse = await createUser('intruder');

@@ -268,6 +268,37 @@ function getCurrentMedicationList() {
    if (type === 'monthly') return Math.max(0, Math.floor(pack / perDay) * 30);
    return Math.max(0, Math.floor(pack / perDay / daysPerWeek * 7));
  }
+ // ---- What is left in the pack ----
+ // A pack counts as full from when its size was entered (or "Refilled" was
+ // tapped); each dose marked taken since then uses up its units. Stored per
+ // medicine in swasth_refills: { at, units, label } (label = pack size text,
+ // so editing the pack size starts a new pack).
+ function readRefills() { return safeJsonParse(localStorage.getItem('swasth_refills') || '{}', {}) || {}; }
+ function saveRefills(refills) {
+   localStorage.setItem('swasth_refills', JSON.stringify(refills));
+   if (typeof syncCloudState === 'function') syncCloudState('swasth_refills');
+ }
+ // Only start a pack once the account's own records have loaded, so a
+ // half-loaded device can't replace the count kept on another one.
+ function canStartPacks() { return typeof firebaseUser === 'undefined' || !firebaseUser || cloudSyncReady; }
+ function medicationStock(m, pack, label) {
+   const key = medicationIdentityKey(m.medicine);
+   const refills = readRefills();
+   let rec = refills[key];
+   if (!rec || rec.label !== label) {
+     rec = { at: new Date().toISOString(), units: pack, label };
+     if (canStartPacks()) { refills[key] = rec; saveRefills(refills); }
+   }
+   const since = new Date(rec.at).getTime();
+   const history = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {}).history || [];
+   const taken = history.filter(e => e?.taken && medicationIdentityKey(e.medicine) === key && new Date(e.date).getTime() >= since).length;
+   return { left: Math.max(0, rec.units - taken * parseMedicationDoseCount(m)), units: rec.units };
+ }
+ function markMedicationRefilled(name, pack, label) {
+   const refills = readRefills();
+   refills[medicationIdentityKey(name)] = { at: new Date().toISOString(), units: pack, label };
+   saveRefills(refills);
+ }
  function medicationIsCritical(m) {
    return /\b(insulin|levothyroxine|thyroxine|euthyrox|insulin pen)\b/i.test(`${m?.medicine||''} ${m?.dose||''}`);
  }
@@ -357,8 +388,9 @@ function getCurrentMedicationList() {
      const pack=extractPack(rawPack);
      if(!rawPack || pack===null) return;
      const daily=medicationDailyUnits(m);
-     const days=medicationSupplyDays(m,pack);
-     items.push({m,days,pack,daily,when:formatMedicationDays(m)});
+     const stock=medicationStock(m,pack,rawPack);
+     const days=medicationSupplyDays(m,stock.left);
+     items.push({m,days,pack,daily,rawPack,left:stock.left,units:stock.units,when:formatMedicationDays(m)});
    });
 
    panel.style.display='block';
@@ -366,7 +398,12 @@ function getCurrentMedicationList() {
      panel.innerHTML='<b>Refill reminders</b><div class="adherence-sub">Add a pack size to a medicine in your profile to see when it will run out.</div>';
      return;
    }
-   panel.innerHTML=`<b>Refill reminders</b><div class="adherence-sub">Medicines with a pack size in your profile.</div>${items.map(x=>`<div class="refill-item"><div><b>${escapeHtml(x.m.medicine||'Medication')}</b><div class="adherence-sub">${escapeHtml(x.m.packSize)} · ${x.daily} unit${x.daily===1?'':'s'} ${x.when?`on ${escapeHtml(x.when)}`:'per day'}</div></div><div class="refill-warn">${x.days===0?'Refill due now':`~${x.days} day${x.days===1?'':'s'} left`} <button type="button" class="btn btn-sm" data-refill-med="${escapeHtml(x.m.medicine||'')}">Reorder</button></div></div>`).join('')}`;
+   panel.innerHTML=`<b>Refill reminders</b><div class="adherence-sub">Counts down as you mark doses taken. Tap Refilled when you open a new pack.</div>${items.map(x=>`<div class="refill-item"><div><b>${escapeHtml(x.m.medicine||'Medication')}</b><div class="adherence-sub">${escapeHtml(x.m.packSize)} · ${x.daily} unit${x.daily===1?'':'s'} ${x.when?`on ${escapeHtml(x.when)}`:'per day'}</div></div><div class="refill-side"><div class="refill-count${x.days<=7?' is-low':''}"><b>${x.left===0||x.days===0?'Refill due now':`~${x.days} day${x.days===1?'':'s'} left`}</b><span>${x.left} of ${x.units} left</span></div><div class="refill-actions"><button type="button" class="btn btn-sm" data-refilled-med="${escapeHtml(x.m.medicine||'')}" data-pack="${x.pack}" data-label="${escapeHtml(x.rawPack)}">Refilled</button><button type="button" class="btn btn-sm" data-refill-med="${escapeHtml(x.m.medicine||'')}">Reorder</button></div></div></div>`).join('')}`;
+   panel.querySelectorAll('[data-refilled-med]').forEach(btn=>btn.addEventListener('click',()=>{
+     markMedicationRefilled(btn.dataset.refilledMed, Number(btn.dataset.pack), btn.dataset.label);
+     renderMedicationRefills();
+     showToast('', 'Pack refilled', `${btn.dataset.refilledMed}: ${btn.dataset.pack} left. Each dose you mark taken counts down from here.`);
+   }));
    panel.querySelectorAll('[data-refill-med]').forEach(btn=>btn.addEventListener('click',()=>{
      const q=btn.dataset.refillMed||'';
      showTab('order');
