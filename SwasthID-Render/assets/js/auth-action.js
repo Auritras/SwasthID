@@ -1,4 +1,6 @@
-// /auth/action: where the links in SwasthID's account emails land.
+// /auth/action: where the links in SwasthID's account emails land, whether
+// our server sent them or Firebase did (with this page set as the action URL
+// in the Firebase console).
 // ?mode=resetPassword&oobCode=... shows a new-password form;
 // ?mode=verifyEmail&oobCode=... confirms the address.
 (function () {
@@ -7,6 +9,12 @@
   const code = params.get('oobCode');
   // Keep the one-time code out of the address bar and history.
   history.replaceState(null, '', location.pathname);
+
+  // "Log in" goes back to where the email was asked for, but only on this site.
+  try {
+    const back = new URL(params.get('continueUrl') || '/', location.origin);
+    if (back.origin === location.origin) document.querySelectorAll('[data-state] a.btn').forEach(a => { a.href = back.pathname + back.search; });
+  } catch (_) {}
 
   function show(state) {
     document.querySelectorAll('[data-state]').forEach(el => { el.hidden = el.dataset.state !== state; });

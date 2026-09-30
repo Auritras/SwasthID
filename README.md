@@ -47,9 +47,9 @@ phone or a computer, and everything is stored in your own account.
   without a connection and shows what is saved on the device. Install it from
   the account menu (**Install app**), or on an iPhone with Share → Add to Home
   Screen.
-- **Account emails in SwasthID's own style.** Password reset and email
-  confirmation emails are sent by the server and open a SwasthID page to set
-  the new password or confirm the address (see [Account emails](#account-emails)).
+- **Account emails in SwasthID's style.** Password reset and email
+  confirmation links open a SwasthID page to set the new password or confirm
+  the address (see [Account emails](#account-emails)).
 - Light and dark mode, and layouts for phones and desktops.
 
 ## How it is built
@@ -200,7 +200,7 @@ start it.
 | `RISK_API_URL` | Base URL of the Risk API, e.g. `https://swasthid-risk.onrender.com`. Heart risk is off without it. |
 | `DRUGSETU_API_KEY` | Key for live medicine search. Without it, Find medicines uses the built-in reference catalogue. |
 | `PUBLIC_BASE_URL` | The site's public address, used in share and QR links. Defaults to the address of the request. Links in account emails use it, or Render's `RENDER_EXTERNAL_URL`, and never the request's address. |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Mail account that sends password reset and confirmation emails (see [Account emails](#account-emails)). Without them, Firebase sends its default emails. `SMTP_PORT` defaults to 587; `SMTP_SECURE=1` forces TLS from the start (port 465 does this by itself). |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Optional mail account for fully custom account emails, on hosts that allow SMTP. **Leave unset on Render's free plan**, which blocks SMTP (see [Account emails](#account-emails)). Without them, Firebase sends the emails. `SMTP_PORT` defaults to 587; `SMTP_SECURE=1` forces TLS from the start (port 465 does this by itself). |
 | `PUSH_WORKER_URL`, `PUSH_WORKER_SECRET`, `VAPID_PUBLIC_KEY` | The reminder Worker's address, its shared secret and the public VAPID key (see [Reminders when the app is closed](#reminders-when-the-app-is-closed)). Without them, reminders come only while SwasthID is open. |
 | `ALLOWED_ORIGIN` | CORS origin for the API. Default `*`. |
 | `OVERPASS_URLS` | Comma-separated Overpass servers for Nearby care, if you want to override the defaults. |
@@ -228,27 +228,22 @@ shrunk to a few KB and stored in Firestore, so Firebase Storage is not needed.
 
 ## Account emails
 
-Firebase's own reset and confirmation emails can't be restyled, so the server
-sends its own. Firebase still makes the one-time codes and checks them; the
-email links open `/auth/action` on your site, where the user picks a new
-password or sees their address confirmed. Any free SMTP account works:
+Password reset and verification emails are sent by Firebase. A few settings
+in the Firebase console give them SwasthID's name, subject lines and a
+branded password reset message. Their links then open SwasthID's own
+`/auth/action` page, where people choose a new password or see their address
+confirmed. It's free and needs no code or extra accounts:
+**[docs/firebase-email-templates.md](docs/firebase-email-templates.md)** has
+the steps and a ready-to-paste message.
 
-- **Gmail.** Turn on 2-Step Verification for the Google account, then create
-  an app password at <https://myaccount.google.com/apppasswords>. Set
-  `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER` to the Gmail
-  address, `SMTP_PASS` to the 16-letter app password, and
-  `MAIL_FROM="SwasthID <that address>"`. Gmail allows about 500 emails a day.
-- **Brevo** (free plan, 300 emails a day). Add and confirm a sender address,
-  then under **SMTP & API** create an SMTP key. Set `SMTP_HOST=smtp-relay.brevo.com`,
-  `SMTP_PORT=587`, `SMTP_USER` to the login shown there, `SMTP_PASS` to the
-  key, and `MAIL_FROM` to the confirmed sender.
-
-On Render, `RENDER_EXTERNAL_URL` gives the links your site's address; on any
-other host set `PUBLIC_BASE_URL`. `/health` shows `accountEmails: true` once
-SMTP is set. If sending ever fails, the app falls back to Firebase's email, so
-people can always reset their password. Resets are limited to 3 an hour per
-address and 10 per 15 minutes per visitor, and the reply is the same whether
-or not an account exists.
+The server can also send fully custom emails itself, through an SMTP account
+(`SMTP_*` and `MAIL_FROM`). This does **not** work on Render's free plan,
+which blocks outgoing SMTP (ports 25, 465 and 587). It needs a host that
+allows SMTP, such as a paid Render instance. Without SMTP settings, or when
+sending fails, the app uses Firebase's email. With SMTP set, links use
+`PUBLIC_BASE_URL` or Render's `RENDER_EXTERNAL_URL`. Resets are limited to 3
+an hour per address and 10 per 15 minutes per visitor, and the reply is the
+same whether or not an account exists.
 
 ## Reminders when the app is closed
 
@@ -293,8 +288,6 @@ SwasthID uses only free services and libraries:
 - **Tesseract.js**, **pdf.js**, **jsPDF**, **qrcodejs**, **ZXing** and
   **WebLLM**, loaded from public CDNs only when a feature needs them
 - **Lexend** from Google Fonts
-- **Gmail** (app password) or **Brevo**'s free plan for account emails, if you
-  set one up
 - **Cloudflare Workers** and **D1** (free plan) for reminders when the app is
   closed, and the browsers' own push services (Google, Mozilla, Apple), which
   are free

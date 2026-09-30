@@ -121,6 +121,44 @@ test('logging in unverified sends our verification email, and its link confirms 
   expect((await res.json()).users[0].emailVerified).toBe(true);
 });
 
+test('when Firebase sends the email, its link still opens our page and leads back to the app', async ({ page }) => {
+  const user = await createUser('firebase-reset');
+  // As on Render's free plan: the server can't send email.
+  await page.route('**/api/auth/password-reset', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{"fallback":true}' }));
+  await page.goto('/');
+  await page.fill('#healthId', user.email);
+  await page.click('.forgot-link');
+  await expect(page.locator('#medToast')).toContainText('If an account exists for that address');
+
+  // The link Firebase would email, with the way back to the app attached.
+  const project = process.env.GCLOUD_PROJECT || 'demo-swasthid';
+  let code;
+  await expect.poll(async () => {
+    const res = await fetch(`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/emulator/v1/projects/${project}/oobCodes`);
+    code = (await res.json()).oobCodes.find(c => c.email === user.email && c.requestType === 'PASSWORD_RESET');
+    return !!code;
+  }).toBe(true);
+  const sent = new URL(code.oobLink);
+  const origin = new URL(page.url()).origin;
+  expect(sent.searchParams.get('continueUrl')).toBe(`${origin}/`);
+
+  // With the action URL set in the Firebase console, the link opens our page.
+  await page.goto(`/auth/action?mode=resetPassword&oobCode=${code.oobCode}&apiKey=demo-key&continueUrl=${encodeURIComponent(`${origin}/`)}&lang=en`);
+  await expect(page.getByRole('heading', { name: 'Choose a new password' })).toBeVisible();
+  await page.fill('#newPassword', 'fbpass1');
+  await page.fill('#confirmNewPassword', 'fbpass1');
+  await page.click('#resetSubmit');
+  await expect(page.getByRole('heading', { name: 'Password changed' })).toBeVisible();
+  await expect(page.locator('[data-state="reset-done"] a')).toHaveAttribute('href', '/');
+  expect(await idToken({ email: user.email, password: 'fbpass1' })).toBeTruthy();
+});
+
+test('a way back to another site is ignored', async ({ page }) => {
+  await page.goto('/auth/action?mode=verifyEmail&oobCode=bad&continueUrl=https%3A%2F%2Fevil.example%2Fphish');
+  await expect(page.getByRole('heading', { name: 'This link has expired' })).toBeVisible();
+  await expect(page.locator('[data-state="invalid"] a')).toHaveAttribute('href', '/');
+});
+
 test('a broken link explains itself', async ({ page }) => {
   await page.goto('/auth/action?mode=resetPassword&oobCode=not-a-real-code');
   await expect(page.getByRole('heading', { name: 'This link has expired' })).toBeVisible();

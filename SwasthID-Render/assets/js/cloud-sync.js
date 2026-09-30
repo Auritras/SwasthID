@@ -677,12 +677,23 @@ function clearCloudCacheForUserSwitch() {
      if (res.status === 429) throw Object.assign(new Error(body.error), { code: 'auth/too-many-requests' });
      if (res.status === 400) throw Object.assign(new Error(body.error), { code: 'auth/invalid-email' });
    }
-   // Server unreachable or not set up for email: Firebase sends its default.
+   // Server unreachable or not set up for email: Firebase sends its own.
    try {
-     await auth.sendPasswordResetEmail(email);
+     await withContinueUrl(settings => auth.sendPasswordResetEmail(email, settings));
    } catch (error) {
      if (error && error.code === 'auth/user-not-found') return;
      throw error;
+   }
+ }
+
+ // Firebase's emails: after the link is used, offer a way back to this site.
+ // If the site isn't in Firebase's authorised domains, send without it.
+ async function withContinueUrl(send) {
+   try {
+     return await send({ url: location.origin + '/' });
+   } catch (error) {
+     if (!/continue-uri|unauthorized-domain/.test(error?.code || '')) throw error;
+     return send(undefined);
    }
  }
 
@@ -694,7 +705,7 @@ function clearCloudCacheForUserSwitch() {
      // 429: one was sent recently, so don't send another through Firebase.
      if (res.ok || res.status === 429) return;
    } catch (_) {}
-   await user.sendEmailVerification();
+   await withContinueUrl(settings => user.sendEmailVerification(settings));
  }
 
  async function firebaseLogin(email, password) {

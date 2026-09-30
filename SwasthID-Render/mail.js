@@ -39,6 +39,12 @@ async function send({ to, subject, html, text }) {
   return getTransport().sendMail({ from: MAIL_FROM, to, subject, html, text });
 }
 
+// Render's free plan blocks these ports: each email would wait for the
+// connection to time out before the app falls back to Firebase's email.
+if (configured() && process.env.RENDER && [25, 465, 587].includes(SMTP_PORT)) {
+  console.warn(`WARNING: SMTP port ${SMTP_PORT} is blocked on Render's free plan. Unless this is a paid instance, remove the SMTP_* settings; Firebase will send the account emails.`);
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
