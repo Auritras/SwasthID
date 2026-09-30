@@ -142,6 +142,29 @@ test('the VAPID token is a valid ES256 JWT for the push service', async () => {
   assert.ok(verifier.verify({ key: createPublicKey({ key: pub, format: 'jwk' }), dsaEncoding: 'ieee-p1363' }, Buffer.from(signature, 'base64url')));
 });
 
+test('the one-file version for the Cloudflare dashboard is up to date and works', async () => {
+  const { bundle } = await import('../scripts/bundle.js');
+  const { readFileSync } = await import('node:fs');
+  const file = new URL('../dist/worker.js', import.meta.url);
+  assert.equal(readFileSync(file, 'utf8'), bundle(), 'dist/worker.js is out of date: run `npm run bundle`');
+  assert.doesNotMatch(readFileSync(file, 'utf8'), /^(import |export (?!default))/m);
+
+  const { default: single } = await import(file.href);
+  const req = (method, path, body) => new Request(`https://push.example${path}`, { method, headers: { Authorization: `Bearer ${SECRET}` }, body: body && JSON.stringify(body) });
+  assert.equal((await single.fetch(req('PUT', `/subscriptions/${id(1)}`, { uid: 'a', endpoint: endpoint(1), tz: 'UTC', doses: [{ time: '09:00', days: 127 }] }), env)).status, 200);
+
+  // The cron handler sends to the due browser.
+  const sent = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async url => { sent.push(url); return new Response(null, { status: 201 }); };
+  try {
+    const waits = [];
+    await single.scheduled({ scheduledTime: Date.parse('2026-09-30T09:00:00Z') }, env, { waitUntil: p => waits.push(p) });
+    await Promise.all(waits);
+  } finally { globalThis.fetch = realFetch; }
+  assert.deepEqual(sent, [endpoint(1)]);
+});
+
 test('only known push services are accepted as endpoints', () => {
   assert.ok(isPushEndpoint('https://fcm.googleapis.com/fcm/send/abc'));
   assert.ok(isPushEndpoint('https://updates.push.services.mozilla.com/wpush/v2/abc'));
