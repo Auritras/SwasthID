@@ -39,6 +39,61 @@ test('"Install app" stays out of the account menu until the browser offers insta
   await expect(page.locator('#installAppBtn')).toBeHidden();
 });
 
+// What the browser does when it would let the user install SwasthID.
+const offerInstall = (page, outcome = 'accepted') => page.evaluate(outcome => {
+  const event = new Event('beforeinstallprompt', { cancelable: true });
+  event.prompt = () => { window.__prompted = true; };
+  event.userChoice = Promise.resolve({ outcome });
+  window.dispatchEvent(event);
+}, outcome);
+
+test('"Install app" is offered, and goes away for good once installed', async ({ page }) => {
+  await openApp(page);
+  await offerInstall(page);
+  await page.click('#accountBtn');
+  await expect(page.locator('#installAppBtn')).toBeVisible();
+  await page.click('#installAppBtn');
+  expect(await page.evaluate(() => window.__prompted)).toBe(true);
+  await expect(page.locator('#installAppBtn')).toBeHidden();
+
+  // Back in a browser tab later, even if the browser offers installing again.
+  await openApp(page);
+  await offerInstall(page);
+  await page.click('#accountBtn');
+  await expect(page.locator('#accountMenu')).toBeVisible();
+  await expect(page.locator('#installAppBtn')).toBeHidden();
+});
+
+test('"Install app" stays hidden if the install is dismissed and then made from the browser menu', async ({ page }) => {
+  await openApp(page);
+  await offerInstall(page, 'dismissed');
+  await page.click('#accountBtn');
+  await page.click('#installAppBtn');
+  // Dismissed: still offered.
+  await offerInstall(page);
+  await page.click('#accountBtn');
+  await expect(page.locator('#installAppBtn')).toBeVisible();
+  // Installed another way (the browser's own menu).
+  await page.evaluate(() => window.dispatchEvent(new Event('appinstalled')));
+  await expect(page.locator('#medToast')).toContainText('SwasthID installed');
+  await expect(page.locator('#installAppBtn')).toBeHidden();
+  expect(await page.evaluate(() => localStorage.getItem('swasthid:installed'))).toBe('1');
+});
+
+test('inside the installed app, "Install app" never shows', async ({ page }) => {
+  // Opened from the home screen: the page runs in the app's own window.
+  await page.addInitScript(() => {
+    const real = window.matchMedia.bind(window);
+    window.matchMedia = query => query === '(display-mode: standalone)' ? { matches: true, media: query, addEventListener() {}, removeEventListener() {} } : real(query);
+  });
+  await openApp(page);
+  await offerInstall(page);
+  await page.click('#accountBtn');
+  await expect(page.locator('#accountMenu')).toBeVisible();
+  await expect(page.locator('#installAppBtn')).toBeHidden();
+  expect(await page.evaluate(() => localStorage.getItem('swasthid:installed'))).toBe('1');
+});
+
 test('has a complete web app manifest', async ({ request }) => {
   const manifest = await (await request.get('/assets/site.webmanifest')).json();
   expect(manifest).toMatchObject({ name: 'SwasthID', start_url: '/', display: 'standalone' });
