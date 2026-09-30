@@ -438,8 +438,14 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
 .adherence-summary { text-align: right; }
 .refill-panel .adherence-sub { margin-top: var(--space-1); }
 .qr-message { font-size: var(--text-xs); line-height: var(--leading-xs); color: var(--c-text-2); text-align: center; padding: var(--space-4); }
-.refill-item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) 0; border-top: 1px solid var(--c-border); }
+/* Name on top; count and buttons share the line below (the panel sits in a narrow column). */
+.refill-item { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-2); padding: var(--space-3) 0; border-top: 1px solid var(--c-border); }
 .refill-warn { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); line-height: var(--leading-xs); color: var(--c-warning); font-weight: 500; }
+.refill-side { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.refill-count { display: grid; text-align: left; font-size: var(--text-xs); line-height: var(--leading-xs); color: var(--c-text-2); font-variant-numeric: tabular-nums; }
+.refill-count b { font-weight: 500; color: var(--c-text); }
+.refill-count.is-low b { color: var(--c-warning); }
+.refill-actions { display: flex; gap: var(--space-2); }
 
 /* Today stats (side) */
 .stat-list { display: grid; }
@@ -1047,7 +1053,6 @@ body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(22
   .info-list > div { grid-template-columns: 1fr; gap: 0; }
   .status-banner { flex-direction: column; align-items: stretch; }
   .dose-summary { width: 100%; }
-  .refill-item { flex-direction: row; align-items: center; }
   .section-head, .places-head { flex-direction: column; align-items: stretch; }
   .place-row { grid-template-columns: 56px minmax(0, 1fr); }
   .place-actions { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }

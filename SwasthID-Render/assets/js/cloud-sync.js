@@ -29,7 +29,8 @@
    'swasth_profile_medications',
    'swasth_emergencyManageToken', 'swasth_emergencyTokenId', 'swasth_emergencyExpiresAt', 'swasth_emergencyQrCache',
    'swasth_emergencyVisibility', 'swasth_dependents', 'swasth_activeDoctorShare',
-   'swasth_vitals'
+   'swasth_vitals',
+   'swasth_refills'
  ];
 
  function cloudDoc() {
