@@ -44,6 +44,9 @@ phone or a computer, and everything is stored in your own account.
   without a connection and shows what is saved on the device. Install it from
   the account menu (**Install app**), or on an iPhone with Share → Add to Home
   Screen.
+- **Account emails in SwasthID's own style.** Password reset and email
+  confirmation emails are sent by the server and open a SwasthID page to set
+  the new password or confirm the address (see [Account emails](#account-emails)).
 - Light and dark mode, and layouts for phones and desktops.
 
 ## How it is built
@@ -52,7 +55,8 @@ phone or a computer, and everything is stored in your own account.
 Browser ──────────────► SwasthID server (Node, SwasthID-Render/)
   │  HTML, CSS, JS          │  serves the app and small JSON APIs
   │                         ├──► Firebase Admin (emergency QRs, doctor links,
-  │                         │     account deletion)
+  │                         │     account deletion, account email links)
+  │                         ├──► SMTP (password reset and confirmation emails)
   │                         ├──► Risk API (Python, SwasthID-Risk-API/)
   │                         ├──► OpenStreetMap Overpass (nearby care)
   │                         └──► DrugSetu (medicine search, optional)
@@ -70,6 +74,8 @@ JavaScript, served as-is.
 SwasthID-Render/            The web app and its Node server
   index.html                Page markup (screens, dialogs, icon sprite)
   server.js                 HTTP server: static files and /api/* routes
+  mail.js                   Account emails: SMTP sending and the two templates
+  auth-action.html          Page the email links open (new password, confirm email)
   firebase-config.js        Firebase web config (safe to be public)
   firestore.rules           Firestore security rules
   sw.js                     Service worker: offline copy of the app, dose notifications
@@ -103,6 +109,7 @@ SwasthID-Render/            The web app and its Node server
       pdf-builders.js         Emergency card and health summary PDFs
       vitals.js               Vitals log and charts
       pwa.js                  Offline service worker and "Install app"
+      auth-action.js          Script for auth-action.html (not part of the app page)
     favicon.svg, icon-*.png, og-image.png, site.webmanifest
 SwasthID-Risk-API/          FastAPI service for the PREVENT equations
   test_api.py               Its tests
@@ -115,7 +122,7 @@ file.
 
 ## Running it locally
 
-You need Node 18 or newer.
+You need Node 20 or newer.
 
 ```bash
 cd SwasthID-Render
@@ -180,7 +187,8 @@ start it.
 | `EMERGENCY_TTL_DAYS` | How long an emergency QR stays valid. Default 180, maximum 730. |
 | `RISK_API_URL` | Base URL of the Risk API, e.g. `https://swasthid-risk.onrender.com`. Heart risk is off without it. |
 | `DRUGSETU_API_KEY` | Key for live medicine search. Without it, Find medicines uses the built-in reference catalogue. |
-| `PUBLIC_BASE_URL` | The site's public address, used in share and QR links. Defaults to the address of the request. |
+| `PUBLIC_BASE_URL` | The site's public address, used in share and QR links. Defaults to the address of the request. Links in account emails use it, or Render's `RENDER_EXTERNAL_URL`, and never the request's address. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Mail account that sends password reset and confirmation emails (see [Account emails](#account-emails)). Without them, Firebase sends its default emails. `SMTP_PORT` defaults to 587; `SMTP_SECURE=1` forces TLS from the start (port 465 does this by itself). |
 | `ALLOWED_ORIGIN` | CORS origin for the API. Default `*`. |
 | `OVERPASS_URLS` | Comma-separated Overpass servers for Nearby care, if you want to override the defaults. |
 | `PORT` | Port to listen on. Default 10000; Render sets this for you. |
@@ -204,6 +212,30 @@ start it.
 
 Everything above works on Firebase's free Spark plan. Profile photos are
 shrunk to a few KB and stored in Firestore, so Firebase Storage is not needed.
+
+## Account emails
+
+Firebase's own reset and confirmation emails can't be restyled, so the server
+sends its own. Firebase still makes the one-time codes and checks them; the
+email links open `/auth/action` on your site, where the user picks a new
+password or sees their address confirmed. Any free SMTP account works:
+
+- **Gmail.** Turn on 2-Step Verification for the Google account, then create
+  an app password at <https://myaccount.google.com/apppasswords>. Set
+  `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER` to the Gmail
+  address, `SMTP_PASS` to the 16-letter app password, and
+  `MAIL_FROM="SwasthID <that address>"`. Gmail allows about 500 emails a day.
+- **Brevo** (free plan, 300 emails a day). Add and confirm a sender address,
+  then under **SMTP & API** create an SMTP key. Set `SMTP_HOST=smtp-relay.brevo.com`,
+  `SMTP_PORT=587`, `SMTP_USER` to the login shown there, `SMTP_PASS` to the
+  key, and `MAIL_FROM` to the confirmed sender.
+
+On Render, `RENDER_EXTERNAL_URL` gives the links your site's address; on any
+other host set `PUBLIC_BASE_URL`. `/health` shows `accountEmails: true` once
+SMTP is set. If sending ever fails, the app falls back to Firebase's email, so
+people can always reset their password. Resets are limited to 3 an hour per
+address and 10 per 15 minutes per visitor, and the reply is the same whether
+or not an account exists.
 
 ## Deploying on Render
 
@@ -232,6 +264,8 @@ SwasthID uses only free services and libraries:
 - **Tesseract.js**, **pdf.js**, **jsPDF**, **qrcodejs**, **ZXing** and
   **WebLLM**, loaded from public CDNs only when a feature needs them
 - **Lexend** from Google Fonts
+- **Gmail** (app password) or **Brevo**'s free plan for account emails, if you
+  set one up
 
 ## Privacy and security
 

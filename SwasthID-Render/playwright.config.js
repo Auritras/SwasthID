@@ -41,7 +41,11 @@ module.exports = defineConfig({
     ...(EMULATORS ? [{
       command: 'node server.js',
       url: `http://127.0.0.1:${EMU_PORT}/health`,
-      env: { ...SERVER_ENV, PORT: String(EMU_PORT), FIREBASE_PROJECT_ID: process.env.GCLOUD_PROJECT || 'demo-swasthid' },
+      env: {
+        ...SERVER_ENV, PORT: String(EMU_PORT), FIREBASE_PROJECT_ID: process.env.GCLOUD_PROJECT || 'demo-swasthid',
+        // Account emails go to the catcher in tests/emulator/account-emails.spec.js.
+        SMTP_HOST: '127.0.0.1', SMTP_PORT: '2525', SMTP_USER: 'test', SMTP_PASS: 'test', MAIL_FROM: 'SwasthID <no-reply@example.com>',
+      },
       reuseExistingServer: !CI,
     }] : []),
   ],

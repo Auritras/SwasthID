@@ -77,7 +77,7 @@ self.addEventListener('fetch', event => {
 
   if (url.origin === self.location.origin) {
     // Live data and share pages are never served from the cache.
-    if (url.pathname.startsWith('/api/') || url.pathname === '/record-share' || url.pathname === '/health') return;
+    if (url.pathname.startsWith('/api/') || url.pathname === '/record-share' || url.pathname === '/health' || url.pathname === '/auth/action') return;
     if (request.mode === 'navigate') {
       // A QR scan (/?emergency=...) needs the network to decrypt the card.
       if (url.searchParams.has('emergency')) return;

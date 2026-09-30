@@ -133,6 +133,41 @@ test('/api/nearby limits each client to 30 searches in 10 minutes', async () => 
   } finally { child.kill(); }
 });
 
+test('password reset: bad addresses are refused, and without email set up the app is told to use Firebase', async () => {
+  const post = body => fetch(base + '/api/auth/password-reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+  for (const body of ['{}', '{"email":"not-an-email"}', 'not json']) {
+    assert.equal((await post(body)).status, 400, body);
+  }
+  const res = await post('{"email":"someone@example.com"}');
+  assert.equal(res.status, 503);
+  assert.deepEqual(await res.json(), { fallback: true });
+  const verify = await fetch(base + '/api/auth/send-verification', { method: 'POST' });
+  assert.equal(verify.status, 503);
+  assert.deepEqual(await verify.json(), { fallback: true });
+});
+
+test('/auth/action is served without caching or referrers', async () => {
+  const res = await fetch(base + '/auth/action?mode=verifyEmail&oobCode=abc');
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('cache-control'), 'no-store');
+  assert.equal(res.headers.get('referrer-policy'), 'no-referrer');
+  assert.ok((await res.text()).includes('/assets/js/auth-action.js'));
+});
+
+test('account email templates escape the address and include a plain-text link', () => {
+  const mail = require('../../mail');
+  const url = 'https://app.example/auth/action?mode=resetPassword&oobCode=x&lang=en';
+  const reset = mail.passwordResetEmail({ email: '<b>x</b>@example.com', url, origin: 'https://app.example' });
+  assert.ok(reset.html.includes('&lt;b&gt;x&lt;/b&gt;@example.com'));
+  assert.ok(!reset.html.includes('<b>x</b>'));
+  assert.ok(reset.html.includes('href="https://app.example/auth/action?mode=resetPassword&amp;oobCode=x&amp;lang=en"'));
+  assert.ok(reset.html.includes('src="https://app.example/assets/icon-192.png"'));
+  assert.ok(reset.text.includes(url));
+  const verify = mail.verificationEmail({ email: 'a@example.com', url, origin: 'https://app.example' });
+  assert.equal(verify.subject, 'Confirm your email for SwasthID');
+  assert.ok(verify.text.includes(url));
+});
+
 test('APIs that change an account refuse requests without a user or token', async () => {
   // Doctor links and account deletion need a signed-in user (503 here, as
   // this server has no Firebase Admin); revoking a QR needs its revoke token.

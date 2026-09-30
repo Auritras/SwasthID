@@ -11,12 +11,14 @@
     "test:emulator": "npx --yes firebase-tools@15 emulators:exec --only auth,firestore --project demo-swasthid \"npx playwright test --project=emulator\""
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
-    "firebase-admin": "^13.0.0"
+    "firebase-admin": "^13.0.0",
+    "nodemailer": "^10.0.13"
   },
   "devDependencies": {
-    "@playwright/test": "1.56.1"
+    "@playwright/test": "1.56.1",
+    "smtp-server": "^3.19.16"
   }
 }

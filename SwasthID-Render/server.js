@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const mail = require('./mail');
 
 const PORT = Number(process.env.PORT || 10000);
 const HOST = '0.0.0.0';
@@ -326,14 +327,12 @@ function readBody(req) {
     req.on('end', () => {
       if (settled) return;
 
+      // Parse first: fail() does nothing once `settled` is set, so a bad
+      // body would otherwise leave the request hanging.
       try {
+        const parsed = body ? JSON.parse(body) : {};
         settled = true;
-
-        resolve(
-          body
-            ? JSON.parse(body)
-            : {}
-        );
+        resolve(parsed);
       } catch {
         fail(
           new Error('Invalid JSON')
@@ -949,6 +948,108 @@ function getRequestOrigin(req) {
       .trim();
 
   return `${proto}://${host}`;
+}
+
+// ---- Account emails (password reset, email verification) ----
+// Firebase makes the one-time code; we put it in a link to our own
+// /auth/action page and send our own email. When this server can't send
+// (no SMTP settings, no Firebase Admin), it answers { fallback: true } and the
+// app asks Firebase to send its default email instead.
+
+const authMailHits = new Map();
+
+// true when `key` has been used `max` times within `windowMs`.
+function authMailLimited(key, max, windowMs) {
+  const now = Date.now();
+  const recent = (authMailHits.get(key) || []).filter(t => now - t < windowMs);
+  if (recent.length >= max) return true;
+  recent.push(now);
+  authMailHits.set(key, recent);
+  if (authMailHits.size > 5000) authMailHits.clear();
+  return false;
+}
+
+// Links in emails must point at this app, never at whatever Host header a
+// request carried (that would let anyone send real reset codes to their own
+// site). Render sets RENDER_EXTERNAL_URL; locally, localhost is accepted.
+function trustedAppOrigin(req) {
+  const configured = PUBLIC_BASE_URL || String(process.env.RENDER_EXTERNAL_URL || '').replace(/\/$/, '');
+  if (configured) return configured;
+  const origin = getRequestOrigin(req);
+  return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ? origin : '';
+}
+
+// Turn Firebase's action link into one for our /auth/action page.
+function appActionLink(firebaseLink, origin) {
+  const source = new URL(firebaseLink);
+  const target = new URL('/auth/action', origin);
+  for (const key of ['mode', 'oobCode', 'lang']) {
+    const value = source.searchParams.get(key);
+    if (value) target.searchParams.set(key, value);
+  }
+  return target.toString();
+}
+
+function clientIp(req) {
+  return String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+}
+
+async function handlePasswordResetEmail(req, res) {
+  let body;
+  try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid request.' }); }
+  const email = String(body.email || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    return json(res, 400, { error: 'Enter a valid email address.' });
+  }
+
+  const origin = trustedAppOrigin(req);
+  if (!firebaseAdmin || !mail.configured() || !origin) return json(res, 503, { fallback: true });
+
+  if (authMailLimited(`ip:${clientIp(req)}`, 10, 15 * 60000) || authMailLimited(`reset:${email}`, 3, 60 * 60000)) {
+    return json(res, 429, { error: 'Too many reset requests. Please wait a while and try again.' });
+  }
+
+  let link;
+  try {
+    link = await firebaseAdmin.auth().generatePasswordResetLink(email);
+  } catch (e) {
+    // Same answer whether or not the account exists.
+    if (e && (e.code === 'auth/email-not-found' || e.code === 'auth/user-not-found')) return json(res, 200, { ok: true });
+    console.error('Password reset link failed:', e && e.message);
+    return json(res, 502, { fallback: true });
+  }
+
+  try {
+    await mail.send({ to: email, ...mail.passwordResetEmail({ email, url: appActionLink(link, origin), origin }) });
+  } catch (e) {
+    console.error('Password reset email failed:', e && e.message);
+    return json(res, 502, { fallback: true });
+  }
+  return json(res, 200, { ok: true });
+}
+
+async function handleVerificationEmail(req, res) {
+  const origin = trustedAppOrigin(req);
+  if (!firebaseAdmin || !mail.configured() || !origin) return json(res, 503, { fallback: true });
+
+  const user = await requireFirebaseUser(req, res);
+  if (!user) return;
+  if (!user.email) return json(res, 400, { error: 'This account has no email address.' });
+
+  if (authMailLimited(`verify:${user.uid}`, 3, 60 * 60000)) {
+    return json(res, 429, { error: 'A verification email was sent recently. Check your inbox and spam folder.' });
+  }
+
+  try {
+    const record = await firebaseAdmin.auth().getUser(user.uid);
+    if (record.emailVerified) return json(res, 200, { ok: true, alreadyVerified: true });
+    const link = await firebaseAdmin.auth().generateEmailVerificationLink(record.email);
+    await mail.send({ to: record.email, ...mail.verificationEmail({ email: record.email, url: appActionLink(link, origin), origin }) });
+  } catch (e) {
+    console.error('Verification email failed:', e && e.message);
+    return json(res, 502, { fallback: true });
+  }
+  return json(res, 200, { ok: true });
 }
 
 function createRecordShareToken() {
@@ -1840,9 +1941,31 @@ const server =
               version:
                 String(process.env.RENDER_GIT_COMMIT || 'local').slice(0, 7),
 
-              nearby: true
+              nearby: true,
+
+              accountEmails: mail.configured()
             }
           );
+        }
+
+        if (req.method === 'POST' && url.pathname === '/api/auth/password-reset') {
+          return await handlePasswordResetEmail(req, res);
+        }
+
+        if (req.method === 'POST' && url.pathname === '/api/auth/send-verification') {
+          return await handleVerificationEmail(req, res);
+        }
+
+        // Where the links in account emails land.
+        if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname === '/auth/action') {
+          res.writeHead(200, {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'Referrer-Policy': 'no-referrer',
+            'X-Robots-Tag': 'noindex, nofollow'
+          });
+          if (req.method === 'HEAD') return res.end();
+          return fs.createReadStream(path.join(ROOT, 'auth-action.html')).pipe(res);
         }
 
         if (
@@ -2173,6 +2296,11 @@ const server =
         );
 
       } catch (e) {
+
+        // From readBody: the client sent a bad or oversized body.
+        if (e && (e.message === 'Invalid JSON' || e.message === 'Request too large')) {
+          return json(res, 400, { error: e.message });
+        }
 
         console.error(
           'Unhandled server error:',

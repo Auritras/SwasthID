@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<!-- The link's one-time code must not leak to other sites. -->
+<meta name="referrer" content="no-referrer">
+<title>SwasthID account</title>
+<meta name="theme-color" content="#05668D">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&display=swap" rel="stylesheet">
+<style>@layer legacy, app;</style>
+<link rel="stylesheet" href="/assets/legacy.css">
+<link rel="stylesheet" href="/assets/app.css">
+<script src="/firebase-config.js"></script>
+<script src="/assets/js/loader.js"></script>
+<script src="/assets/js/firebase-config-fallback.js"></script>
+</head>
+<body class="auth-action-page">
+<script>try { if (localStorage.getItem('swasth_darkMode') === 'true') { document.documentElement.classList.add('dark-mode'); document.body.classList.add('dark-mode'); } } catch (_) {}</script>
+<main class="auth-action">
+ <a class="brand auth-action-brand" href="/"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#05668D"/><path d="M16 9v14M9 16h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/></svg><span>SwasthID</span></a>
+
+ <div class="login-card" aria-live="polite">
+  <section data-state="loading">
+   <h1>Checking your link…</h1>
+   <p class="sub">This takes a moment.</p>
+  </section>
+
+  <section data-state="reset" hidden>
+   <h1>Choose a new password</h1>
+   <p class="sub">For <b id="resetEmail"></b></p>
+   <form id="resetForm" novalidate>
+    <div class="form-field">
+     <label for="newPassword">New password</label>
+     <input type="password" id="newPassword" autocomplete="new-password" minlength="6" placeholder="At least 6 characters">
+    </div>
+    <div class="form-field form-field-spaced">
+     <label for="confirmNewPassword">Confirm new password</label>
+     <input type="password" id="confirmNewPassword" autocomplete="new-password" placeholder="Type it again">
+    </div>
+    <p class="auth-action-error" id="resetError" role="alert" hidden></p>
+    <button type="submit" class="btn btn-primary btn-block" id="resetSubmit">Save new password</button>
+   </form>
+  </section>
+
+  <section data-state="reset-done" hidden>
+   <div class="auth-action-icon" aria-hidden="true">✓</div>
+   <h1>Password changed</h1>
+   <p class="sub">Log in with your new password.</p>
+   <a class="btn btn-primary btn-block" href="/">Log in</a>
+  </section>
+
+  <section data-state="verified" hidden>
+   <div class="auth-action-icon" aria-hidden="true">✓</div>
+   <h1>Email address confirmed</h1>
+   <p class="sub">Your account is ready. Log in to start your health record.</p>
+   <a class="btn btn-primary btn-block" href="/">Log in</a>
+  </section>
+
+  <section data-state="invalid" hidden>
+   <div class="auth-action-icon is-error" aria-hidden="true">!</div>
+   <h1 id="invalidTitle">This link has expired</h1>
+   <p class="sub" id="invalidText">Links work once and only for a limited time. Ask for a new one from the log-in page.</p>
+   <a class="btn btn-primary btn-block" href="/">Back to log in</a>
+  </section>
+ </div>
+</main>
+<script src="/assets/js/auth-action.js"></script>
+</body>
+</html>
