@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Cloudflare Worker that sends SwasthID dose reminders with Web Push",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "test": "node --test test/worker.test.js",
