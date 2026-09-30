@@ -77,6 +77,21 @@ jobs:
             SwasthID-Render/test-results/
           retention-days: 7
 
+  push-worker:
+    name: Reminder push Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: SwasthID-Push-Worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # 22 for the built-in SQLite that stands in for Cloudflare D1.
+          node-version: 22
+      - run: npm test
+
   risk-api:
     name: Heart risk API
     runs-on: ubuntu-latest

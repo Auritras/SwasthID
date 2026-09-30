@@ -171,7 +171,18 @@ function clearCloudCacheForUserSwitch() {
    CLOUD_KEYS.forEach(key => localStorage.removeItem(key));
    // An unfinished profile draft belongs to whoever typed it.
    localStorage.removeItem('swasth_profileWizardDraft');
-   localStorage.removeItem('swasth_doseReminders');
+   // Reminder settings belong to this browser and the account that turned
+   // them on: kept when that account loads again, dropped for anyone else.
+   if (!firebaseUser || localStorage.getItem('swasth_remindersOwner') !== firebaseUser.uid) {
+     if (localStorage.getItem('swasth_pushReminders') === 'on') {
+       // The previous account's pushes and saved schedule must not reach the
+       // next person. Ending the subscription also makes the push service
+       // tell the Worker to forget it.
+       try { caches.delete('swasth-state'); } catch (_) {}
+       navigator.serviceWorker?.getRegistration().then(reg => reg?.pushManager?.getSubscription()).then(sub => sub?.unsubscribe()).catch(() => {});
+     }
+     ['swasth_doseReminders', 'swasth_pushReminders', 'swasth_pushSynced', 'swasth_remindersOwner'].forEach(key => localStorage.removeItem(key));
+   }
    localStorage.removeItem('swasth_profileWizardStep');
    localStorage.removeItem('swasth_addedKcal');
    localStorage.removeItem('swasth_stepsToday');
@@ -736,6 +747,8 @@ function clearCloudCacheForUserSwitch() {
 
  async function firebaseLogout() {
    authLoadSequence++;
+   // Needs the session to tell the server, so before signing out.
+   try { await window.stopPushReminders?.(); } catch (_) {}
    if (auth) await auth.signOut();
    firebaseUser = null;
    cloudSyncReady = false;

@@ -1052,6 +1052,86 @@ async function handleVerificationEmail(req, res) {
   return json(res, 200, { ok: true });
 }
 
+// ---- Dose reminders when the app is closed (Web Push) ----
+// A Cloudflare Worker (SwasthID-Push-Worker/) keeps each browser's dose times
+// and sends the pushes, because this server may be asleep at dose time. This
+// server only checks who is signed in and passes their times on.
+
+const PUSH_WORKER_URL = (process.env.PUSH_WORKER_URL || '').replace(/\/$/, '');
+const PUSH_WORKER_SECRET = process.env.PUSH_WORKER_SECRET || '';
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+const PUSH_ENABLED = Boolean(PUSH_WORKER_URL && PUSH_WORKER_SECRET && VAPID_PUBLIC_KEY);
+const pushHits = new Map();
+
+async function pushWorker(method, pathname, body) {
+  const res = await fetch(PUSH_WORKER_URL + pathname, {
+    method,
+    headers: { Authorization: `Bearer ${PUSH_WORKER_SECRET}`, 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal: AbortSignal.timeout(10000)
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+
+function pushSubscriptionId(endpoint) {
+  return crypto.createHash('sha256').update(endpoint).digest('hex');
+}
+
+// Signed-in user and push endpoint for the /api/push/* calls.
+async function pushRequest(req, res) {
+  if (!PUSH_ENABLED) { json(res, 503, { error: 'Reminders when the app is closed are not set up on this server.' }); return null; }
+  let body;
+  try { body = await readBody(req); } catch { json(res, 400, { error: 'Invalid request.' }); return null; }
+  const user = await requireFirebaseUser(req, res);
+  if (!user) return null;
+  const endpoint = String(body.endpoint || '');
+  if (!/^https:\/\//.test(endpoint) || endpoint.length > 1024) { json(res, 400, { error: 'A push endpoint is required.' }); return null; }
+  const now = Date.now();
+  const recent = (pushHits.get(user.uid) || []).filter(t => now - t < 10 * 60000);
+  if (recent.length >= 30) { json(res, 429, { error: 'Too many changes. Try again in a few minutes.' }); return null; }
+  recent.push(now);
+  pushHits.set(user.uid, recent);
+  if (pushHits.size > 5000) pushHits.clear();
+  return { user, body, id: pushSubscriptionId(endpoint), endpoint };
+}
+
+// Pass the Worker's answer on to the app.
+function relayPush(res, result) {
+  return json(res, result.ok ? 200 : result.status === 400 ? 400 : 502, result.ok ? { ok: true } : { error: result.data.error || 'The reminder service did not answer.' });
+}
+
+async function handlePushSubscribe(req, res) {
+  const r = await pushRequest(req, res);
+  if (!r) return;
+  try {
+    return relayPush(res, await pushWorker('PUT', `/subscriptions/${r.id}`, { uid: r.user.uid, endpoint: r.endpoint, tz: r.body.tz, doses: r.body.doses }));
+  } catch (e) {
+    console.error('Push subscribe failed:', e && e.message);
+    return json(res, 502, { error: 'The reminder service did not answer.' });
+  }
+}
+
+async function handlePushUnsubscribe(req, res) {
+  const r = await pushRequest(req, res);
+  if (!r) return;
+  try {
+    return relayPush(res, await pushWorker('DELETE', `/subscriptions/${r.id}`));
+  } catch (e) {
+    return json(res, 502, { error: 'The reminder service did not answer.' });
+  }
+}
+
+async function handlePushTest(req, res) {
+  const r = await pushRequest(req, res);
+  if (!r) return;
+  try {
+    return relayPush(res, await pushWorker('POST', `/subscriptions/${r.id}/test`));
+  } catch (e) {
+    return json(res, 502, { error: 'The reminder service did not answer.' });
+  }
+}
+
 function createRecordShareToken() {
   return base64url(
     crypto.randomBytes(32)
@@ -1813,6 +1893,12 @@ async function handleAccountDelete(
       user.uid
     );
 
+    // Stop dose-reminder pushes to every browser of this account.
+    if (PUSH_ENABLED) {
+      const removed = await pushWorker('DELETE', `/users/${encodeURIComponent(user.uid)}`).catch(e => e);
+      if (removed instanceof Error || !removed.ok) console.warn('Could not remove push reminders for a deleted account.');
+    }
+
     for (
       const collectionName of
       collectionsToDelete
@@ -1943,9 +2029,27 @@ const server =
 
               nearby: true,
 
-              accountEmails: mail.configured()
+              accountEmails: mail.configured(),
+
+              pushReminders: PUSH_ENABLED
             }
           );
+        }
+
+        if (req.method === 'GET' && url.pathname === '/api/push/config') {
+          return json(res, 200, { enabled: PUSH_ENABLED, publicKey: PUSH_ENABLED ? VAPID_PUBLIC_KEY : '' });
+        }
+
+        if (req.method === 'POST' && url.pathname === '/api/push/subscribe') {
+          return await handlePushSubscribe(req, res);
+        }
+
+        if (req.method === 'POST' && url.pathname === '/api/push/unsubscribe') {
+          return await handlePushUnsubscribe(req, res);
+        }
+
+        if (req.method === 'POST' && url.pathname === '/api/push/test') {
+          return await handlePushTest(req, res);
         }
 
         if (req.method === 'POST' && url.pathname === '/api/auth/password-reset') {

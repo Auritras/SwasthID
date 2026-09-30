@@ -1,0 +1,15 @@
+{
+  "name": "swasthid-push-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker that sends SwasthID dose reminders with Web Push",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/worker.test.js",
+    "keys": "node scripts/generate-vapid-keys.js",
+    "deploy": "npx --yes wrangler@4 deploy"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

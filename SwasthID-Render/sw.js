@@ -91,6 +91,85 @@ self.addEventListener('fetch', event => {
   if (CDN_HOSTS.includes(url.hostname)) event.respondWith(cacheFirst(request));
 });
 
+// ---- Dose reminders pushed while the app is closed ----
+// The push itself is empty: it only says "a dose is due now". Which medicines
+// are due comes from the copy of today's schedule the app keeps here
+// (dose-reminders.js), so medicine names never leave the device.
+const STATE_CACHE = 'swasth-state'; // not removed when the app cache is updated
+const DOSES_URL = '/__swasth/doses.json';
+const DUE_WINDOW_BEFORE = 20; // minutes a dose can be late and still count as "now"
+const DUE_WINDOW_AFTER = 5;
+
+function localDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+async function readDoseSnapshot() {
+  try {
+    const res = await (await caches.open(STATE_CACHE)).match(DOSES_URL);
+    return res ? await res.json() : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Doses scheduled around `now`, split into those still to take and those
+// already marked taken today.
+function dosesAround(snapshot, now) {
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const today = localDateKey(now);
+  const around = (snapshot?.doses || []).filter(d => {
+    const [h, m] = String(d.time).split(':').map(Number);
+    const diff = minutes - (h * 60 + m);
+    return diff >= -DUE_WINDOW_AFTER && diff <= DUE_WINDOW_BEFORE
+      && (d.days & (1 << now.getDay())) !== 0
+      && (d.monthDay == null || d.monthDay === now.getDate());
+  });
+  return { due: around.filter(d => d.takenOn !== today), taken: around.filter(d => d.takenOn === today) };
+}
+
+const TEST_URL = '/__swasth/push-test';
+
+// The app's "Send a test" button leaves a note here just before asking for a
+// test push, so that push isn't mistaken for a dose.
+async function takeTestNote() {
+  try {
+    const cache = await caches.open(STATE_CACHE);
+    const note = await cache.match(TEST_URL);
+    if (!note) return false;
+    await cache.delete(TEST_URL);
+    return Date.now() - Number(await note.text()) < 5 * 60 * 1000;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function showDueDoses() {
+  if (await takeTestNote()) {
+    return self.registration.showNotification('Dose reminders are working', {
+      icon: '/assets/icon-192.png', badge: '/assets/icon-192.png', data: { url: '/' }, tag: 'swasth-push-test',
+      body: 'You will get a notification like this at each dose time, even when SwasthID is closed.',
+    });
+  }
+  const { due, taken } = dosesAround(await readDoseSnapshot(), new Date());
+  // Everything due now is already marked taken: nothing to remind about.
+  if (!due.length && taken.length) return;
+  const options = { icon: '/assets/icon-192.png', badge: '/assets/icon-192.png', data: { url: '/' }, renotify: true };
+  if (!due.length) {
+    return self.registration.showNotification('Time for your medicines', { ...options, tag: 'swasth-dose-due', body: 'Open SwasthID to see what is due and mark it taken.' });
+  }
+  const time = due[0].time;
+  const title = due.length === 1 ? `Time for ${due[0].label}` : `Time for ${due.length} medicines`;
+  const body = due.length === 1
+    ? `${due[0].detail ? due[0].detail + ' · ' : ''}Open SwasthID to mark it taken.`
+    : `${due.map(d => d.label).join(', ')}. Open SwasthID to mark them taken.`;
+  return self.registration.showNotification(title, { ...options, tag: `swasth-dose-${time}`, body });
+}
+
+self.addEventListener('push', event => {
+  event.waitUntil(showDueDoses());
+});
+
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil((async () => {

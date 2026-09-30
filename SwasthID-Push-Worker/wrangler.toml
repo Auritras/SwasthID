@@ -1,0 +1,15 @@
+# Cloudflare Worker that sends SwasthID dose reminders (free Workers plan).
+# See README.md in this folder for setup.
+name = "swasthid-push"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Check for due doses every minute.
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "swasthid-push"
+# Replace with the id printed by `npx wrangler d1 create swasthid-push`.
+database_id = "00000000-0000-0000-0000-000000000000"
