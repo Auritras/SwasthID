@@ -299,6 +299,8 @@ function getCurrentMedicationList() {
    refills[medicationIdentityKey(name)] = { at: new Date().toISOString(), units: pack, label };
    saveRefills(refills);
  }
+ // "I have 12 left right now": the count restarts from that number.
+ function setMedicationStock(name, left, label) { markMedicationRefilled(name, left, label); }
  function medicationIsCritical(m) {
    return /\b(insulin|levothyroxine|thyroxine|euthyrox|insulin pen)\b/i.test(`${m?.medicine||''} ${m?.dose||''}`);
  }
@@ -398,7 +400,27 @@ function getCurrentMedicationList() {
      panel.innerHTML='<b>Refill reminders</b><div class="adherence-sub">Add a pack size to a medicine in your profile to see when it will run out.</div>';
      return;
    }
-   panel.innerHTML=`<b>Refill reminders</b><div class="adherence-sub">Counts down as you mark doses taken. Tap Refilled when you open a new pack.</div>${items.map(x=>`<div class="refill-item"><div><b>${escapeHtml(x.m.medicine||'Medication')}</b><div class="adherence-sub">${escapeHtml(x.m.packSize)} · ${x.daily} unit${x.daily===1?'':'s'} ${x.when?`on ${escapeHtml(x.when)}`:'per day'}</div></div><div class="refill-side"><div class="refill-count${x.days<=7?' is-low':''}"><b>${x.left===0||x.days===0?'Refill due now':`~${x.days} day${x.days===1?'':'s'} left`}</b><span>${x.left} of ${x.units} left</span></div><div class="refill-actions"><button type="button" class="btn btn-sm" data-refilled-med="${escapeHtml(x.m.medicine||'')}" data-pack="${x.pack}" data-label="${escapeHtml(x.rawPack)}">Refilled</button><button type="button" class="btn btn-sm" data-refill-med="${escapeHtml(x.m.medicine||'')}">Reorder</button></div></div></div>`).join('')}`;
+   panel.innerHTML=`<b>Refill reminders</b><div class="adherence-sub">Counts down as you mark doses taken. Tap the count to correct it, or Refilled when you open a new pack.</div>${items.map(x=>`<div class="refill-item"><div><b>${escapeHtml(x.m.medicine||'Medication')}</b><div class="adherence-sub">${escapeHtml(x.m.packSize)} · ${x.daily} unit${x.daily===1?'':'s'} ${x.when?`on ${escapeHtml(x.when)}`:'per day'}</div></div><div class="refill-side"><div class="refill-count${x.days<=7?' is-low':''}"><b>${x.left===0||x.days===0?'Refill due now':`~${x.days} day${x.days===1?'':'s'} left`}</b><button type="button" class="refill-edit" data-edit-stock="${escapeHtml(x.m.medicine||'')}" data-left="${x.left}" data-label="${escapeHtml(x.rawPack)}" aria-label="Change how many ${escapeHtml(x.m.medicine||'')} are left">${x.left} of ${Math.max(x.pack, x.units)} left <svg class="icon icon-sm" aria-hidden="true"><use href="#i-edit"/></svg></button></div><div class="refill-actions"><button type="button" class="btn btn-sm" data-refilled-med="${escapeHtml(x.m.medicine||'')}" data-pack="${x.pack}" data-label="${escapeHtml(x.rawPack)}">Refilled</button><button type="button" class="btn btn-sm" data-refill-med="${escapeHtml(x.m.medicine||'')}">Reorder</button></div></div></div>`).join('')}`;
+   // Tap the count to type how many are left right now.
+   panel.querySelectorAll('[data-edit-stock]').forEach(btn=>btn.addEventListener('click',()=>{
+     const side=btn.closest('.refill-side');
+     const name=btn.dataset.editStock, label=btn.dataset.label;
+     const id=`stock-${medicationIdentityKey(name).replace(/\s+/g,'-')}`;
+     side.innerHTML=`<form class="refill-stock-form"><label for="${id}">Left now</label><input id="${id}" type="number" inputmode="numeric" min="0" max="9999" step="1" value="${Number(btn.dataset.left)}" required><button type="submit" class="btn btn-sm btn-primary">Save</button><button type="button" class="btn btn-sm" data-cancel>Cancel</button></form>`;
+     const form=side.querySelector('form'), input=form.querySelector('input');
+     input.focus(); input.select();
+     form.querySelector('[data-cancel]').addEventListener('click',()=>renderMedicationRefills());
+     form.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.preventDefault(); renderMedicationRefills(); } });
+     form.addEventListener('submit',e=>{
+       e.preventDefault();
+       const left=Math.floor(Number(input.value));
+       if(!Number.isFinite(left) || left<0 || left>9999){ input.setCustomValidity('Enter a number from 0 to 9999.'); input.reportValidity(); return; }
+       setMedicationStock(name,left,label);
+       renderMedicationRefills();
+       showToast('', 'Count updated', `${name}: ${left} left. Each dose you mark taken counts down from here.`);
+     });
+     input.addEventListener('input',()=>input.setCustomValidity(''));
+   }));
    panel.querySelectorAll('[data-refilled-med]').forEach(btn=>btn.addEventListener('click',()=>{
      markMedicationRefilled(btn.dataset.refilledMed, Number(btn.dataset.pack), btn.dataset.label);
      renderMedicationRefills();
