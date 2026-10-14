@@ -108,6 +108,7 @@
     $('profileWizardBack').onclick=()=>{saveDraft();current=Math.max(0,current-1);render();};
     $('profileWizardCancel').onclick=()=>$('cancelProfileBtn')?.click();
     $('profileWizardNext').onclick=async()=>{saveDraft();if(current<3){current++;render();return;} const save=$('saveProfileBtn'); if(save){save.click();} localStorage.removeItem('swasth_profileWizardStep'); localStorage.removeItem('swasth_profileWizardDraft');};
+    window.showProfileWizardStep=i=>{current=Math.max(0,Math.min(3,i));render();};
     form.addEventListener('input',saveDraft); form.addEventListener('change',saveDraft);
     restoreDraft(); render();
   }

@@ -165,10 +165,13 @@ async function generateEmergencyQR(force = false) {
    const qrText = await getEmergencyQRText();
    qrContainer.innerHTML = '';
    new QRCode(qrContainer, {text: qrText,width:220,height:220,colorDark:'#0F1E26',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+   // The library adds an image without a description; screen readers need one.
+   qrContainer.querySelectorAll('img, canvas').forEach(el => { el.setAttribute('alt', 'Emergency QR code. Scanning it opens your emergency details.'); if (el.tagName === 'CANVAS') el.setAttribute('aria-hidden', 'true'); });
+   qrContainer.setAttribute('role', 'img'); qrContainer.setAttribute('aria-label', 'Emergency QR code. Scanning it opens your emergency details.');
    const serverBacked = /emergency=v1\./.test(qrText) || /^v1\./.test(qrText);
    const expiresAt = Number(localStorage.getItem('swasth_emergencyExpiresAt') || 0);
    if (status) status.textContent = serverBacked
-     ? `Secure emergency QR ready. The server encrypts the emergency payload. Valid until ${expiresAt ? new Date(expiresAt).toLocaleDateString() : 'its expiry date'} unless you revoke it.`
+     ? `Secure emergency QR ready. The server encrypts the emergency payload. Valid until ${expiresAt ? new Date(expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'its expiry date'} unless you revoke it.`
      : 'Offline preview only: this QR is not encrypted or revocable. Open SwasthID from its website to create a secure QR.';
  } catch (error) {
    qrContainer.innerHTML = '<span class="qr-message is-error">No QR yet. Use Refresh to try again.</span>';

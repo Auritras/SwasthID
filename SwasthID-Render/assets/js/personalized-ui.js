@@ -191,7 +191,8 @@ function renderPersonalizedUI() {
   setText('ageValue', calculateAge(patientData.dob) ?? '', 'Not provided');
   setText('profileOccupation', patientData.occupation, 'Not provided');
   setText('profileHeight', patientData.vitals?.height ? `${patientData.vitals.height} cm` : '', '--');
-  setText('profileWeight', patientData.vitals?.weight ? `${patientData.vitals.weight} kg` : '', '--');
+  const body = bodyMetrics();
+  setText('profileWeight', body.weight ? `${body.weight} kg${body.weightAt ? ` (logged ${new Date(body.weightAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})` : ''}` : '', '--');
   setText('profileBloodGroup', patientData.bloodGroup, '--');
   setText('profileSmoking', patientData.lifestyle?.smoking, 'Not provided');
   setText('profileAlcohol', patientData.lifestyle?.alcohol, 'Not provided');
@@ -206,6 +207,8 @@ function renderPersonalizedUI() {
   setText('doctorNormalAllergies', formatNormalAllergies(patientData.normalAllergies), 'No common/environmental allergies recorded');
   const visits = Array.isArray(patientData.visits) ? patientData.visits.slice().sort((a,b) => new Date(b.date) - new Date(a.date)) : [];
   setText('doctorLatestVisit', visits.length ? `${visits[0].doctor || 'Visit'} · ${formatRecordDate(visits[0].date)}` : '', 'No visits recorded.');
+  setText('doctorVitals', doctorVitalsText(), 'No readings logged.');
+  setText('doctorLabs', doctorLabsText(), 'No lab values found in your reports.');
   setText('doctorRecordsCount', `${(visits.length + (patientData.reports || []).length + (patientData.conditions || []).length + (patientData.medications || []).length + getSavedPrescriptions().length)} records`);
   setText('doctorSummaryText', buildDoctorSummary(), 'Add health information in your profile, prescriptions, and records to generate a personalized clinical brief.');
 
@@ -242,6 +245,34 @@ function renderPersonalizedUI() {
   window.renderVitals?.();
   if (typeof renderActiveDoctorShare === 'function') renderActiveDoctorShare();
 }
+// Readings and lab values belong in the summary a doctor sees, with their
+// dates, so a stale number is never mistaken for a current one.
+function shortDate(at) {
+  const d = new Date(at);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function doctorVitalsText() {
+  const v = window.swasthVitals;
+  if (!v) return '';
+  return ['bp', 'glucose', 'weight', 'spo2'].map(type => {
+    const list = v.byType(type);
+    const r = list[list.length - 1];
+    if (!r) return '';
+    const extra = type === 'glucose' && v.GLUCOSE_CONTEXT?.[r.context] ? `, ${v.GLUCOSE_CONTEXT[r.context].toLowerCase()}` : '';
+    return `${v.TYPES[type].title} ${v.valueText(r)} ${v.TYPES[type].unit}${extra} (${shortDate(r.at)})`;
+  }).filter(Boolean).join('; ');
+}
+function doctorLabsText(limit = 6) {
+  if (typeof extractLabTrendPoints !== 'function') return '';
+  const trends = extractLabTrendPoints() || {};
+  return Object.entries(trends)
+    .map(([name, t]) => ({ name, unit: t.unit, last: (t.points || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date)).pop() }))
+    .filter(t => t.last)
+    .sort((a, b) => new Date(b.last.date) - new Date(a.last.date))
+    .slice(0, limit)
+    .map(t => `${t.name} ${t.last.value}${t.unit ? ' ' + t.unit : ''} (${shortDate(t.last.date)})`)
+    .join('; ');
+}
 function buildDoctorSummary() {
   const name = patientData.name || 'This patient';
   const conditions = (patientData.conditions || []).filter(c => String(c.status || '').toLowerCase() !== 'resolved').map(c => c.name);
@@ -250,6 +281,10 @@ function buildDoctorSummary() {
   const parts = [`${name} has ${conditions.length ? conditions.join(', ') : 'no ongoing conditions recorded'}.`];
   if (meds.length) parts.push(`Current medication list contains ${meds.length} item${meds.length === 1 ? '' : 's'}.`);
   if (latest) parts.push(`Latest recorded visit: ${latest.doctor || 'physician'} on ${formatRecordDate(latest.date)}.`);
+  const vitals = doctorVitalsText();
+  if (vitals) parts.push(`Latest readings: ${vitals}.`);
+  const labs = doctorLabsText(4);
+  if (labs) parts.push(`Recent lab values: ${labs}.`);
   parts.push('This summary is generated from information entered in SwasthID and should be reviewed by a qualified clinician.');
   return parts.join(' ');
 }
@@ -276,6 +311,67 @@ function restoreClinicalRiskInputs() {
  const boolMap={diabetes:'riskDiabetesInput',currentSmoker:'riskSmokingInput',bpTreatment:'riskBpMedsInput',statin:'riskStatinInput'};
  Object.entries(boolMap).forEach(([key,id]) => { const el=document.getElementById(id); if(el && data[key] !== undefined) el.value=data[key] ? '1' : '0'; });
 }
+// ---- Heart risk: start from what the record already says ----
+// A risk estimate that assumes "no diabetes" for someone with diabetes is
+// confidently wrong, so the form is filled from conditions, medicines and
+// lab reports, and refuses to calculate when an answer contradicts them.
+const RISK_BP_MEDICINES = /\b(amlodipine|nifedipine|cilnidipine|felodipine|telmisartan|losartan|olmesartan|valsartan|irbesartan|candesartan|azilsartan|ramipril|enalapril|lisinopril|perindopril|metoprolol|atenolol|bisoprolol|nebivolol|carvedilol|propranolol|labetalol|hydrochlorothiazide|chlorthalidone|indapamide|torsemide|spironolactone|eplerenone|prazosin|clonidine|methyldopa)\b/i;
+const RISK_LIPID_MEDICINES = /\b(atorvastatin|rosuvastatin|simvastatin|pravastatin|pitavastatin|lovastatin|fluvastatin|ezetimibe|fenofibrate|bempedoic)\b/i;
+const RISK_FIELDS = { sex: 'riskSexInput', totalCholesterol: 'riskTotalCholInput', hdlCholesterol: 'riskHdlInput', egfr: 'riskEgfrInput', diabetes: 'riskDiabetesInput', currentSmoker: 'riskSmokingInput', bpTreatment: 'riskBpMedsInput', statin: 'riskStatinInput' };
+const RISK_FACT_NAMES = { diabetes: 'Diabetes', currentSmoker: 'Current smoker', bpTreatment: 'Taking blood pressure medicine', statin: 'Taking a statin or other lipid medicine' };
+function riskFactsFromRecord() {
+ const facts = {};
+ const active = (patientData.conditions || []).filter(c => String(c.status || '').toLowerCase() !== 'resolved');
+ const diabetes = active.find(c => /diabet/i.test(c.name || '') && !/pre-?\s?diabet|insipidus/i.test(c.name || ''));
+ if (diabetes) facts.diabetes = { value: '1', from: diabetes.name };
+ const meds = (typeof getCurrentMedicationList === 'function' ? getCurrentMedicationList() : []).map(m => String(m.medicine || m.name || '').trim()).filter(Boolean);
+ const bp = meds.find(n => RISK_BP_MEDICINES.test(n));
+ if (bp) facts.bpTreatment = { value: '1', from: bp };
+ const lipid = meds.find(n => RISK_LIPID_MEDICINES.test(n));
+ if (lipid) facts.statin = { value: '1', from: lipid };
+ const sex = String(patientData.gender || patientData.sex || '').trim().toLowerCase();
+ if (/^(f|female|woman)$/.test(sex)) facts.sex = { value: 'F', from: 'your profile' };
+ else if (/^(m|male|man)$/.test(sex)) facts.sex = { value: 'M', from: 'your profile' };
+ const smoking = String(patientData.lifestyle?.smoking || '').toLowerCase();
+ if (smoking && /current|daily|occasional|yes|smoke/.test(smoking) && !/never|former|quit|stopped|^no/.test(smoking)) facts.currentSmoker = { value: '1', from: 'your lifestyle answers' };
+ const labs = typeof extractLabTrendPoints === 'function' ? extractLabTrendPoints() : {};
+ [['totalCholesterol', 'Total cholesterol'], ['hdlCholesterol', 'HDL'], ['egfr', 'eGFR']].forEach(([key, test]) => {
+   const p = labs[test]?.points?.slice(-1)[0];
+   if (p && Number.isFinite(p.value)) facts[key] = { value: String(Math.round(p.value)), from: `${p.report}${p.date ? ', ' + formatRecordDate(p.date) : ''}` };
+ });
+ return facts;
+}
+function riskFieldNote(input, text) {
+ const id = input.id + 'FromRecord';
+ let note = document.getElementById(id);
+ if (!text) { note?.remove(); return; }
+ if (!note) { note = document.createElement('div'); note.id = id; note.className = 'vital-prefill-note'; input.insertAdjacentElement('afterend', note); input.setAttribute('aria-describedby', id); }
+ note.textContent = text;
+}
+// Fill empty fields from the record; a yes in the record replaces an old saved
+// "No" unless the person changed that answer themselves on this visit.
+function prefillRiskFromRecord() {
+ const facts = riskFactsFromRecord();
+ Object.entries(RISK_FIELDS).forEach(([key, id]) => {
+   const input = document.getElementById(id); if (!input) return;
+   const fact = facts[key];
+   if (!fact) { riskFieldNote(input, ''); return; }
+   const isSelect = input.tagName === 'SELECT';
+   const userChose = input.dataset.userSet === '1';
+   if (!userChose && (input.value === '' || (isSelect && key in RISK_FACT_NAMES && input.value !== fact.value))) input.value = fact.value;
+   riskFieldNote(input, input.value === fact.value ? `From your record: ${fact.from}.` : '');
+ });
+}
+// An answer that contradicts the record: the message to show instead of a result.
+function riskContradiction(data) {
+ const facts = riskFactsFromRecord();
+ const key = Object.keys(RISK_FACT_NAMES).find(k => facts[k]?.value === '1' && !data[k]);
+ if (!key) return '';
+ return `Your record lists ${facts[key].from}, but “${RISK_FACT_NAMES[key]}” is set to No. Change it to Yes, or update your record if this is no longer true.`;
+}
+document.addEventListener('change', e => {
+ if (Object.values(RISK_FIELDS).includes(e.target?.id)) { e.target.dataset.userSet = '1'; prefillRiskFromRecord(); }
+});
 function saveClinicalRiskInputs(data) {
  localStorage.setItem('swasth_riskInputs', JSON.stringify(data));
  if (typeof syncCloudState === 'function') syncCloudState('swasth_riskInputs');
@@ -283,7 +379,8 @@ function saveClinicalRiskInputs(data) {
 function clinicalRiskPayload() {
  const data=getClinicalRiskInputs();
  const age=calculateAge(patientData.dob);
- return {...data, age, bmi:Number(patientData.vitals?.bmi || 0)};
+ const bmi=bodyMetrics().bmi;
+ return {...data, age, bmi:bmi ? Number(bmi.toFixed(1)) : 0};
 }
 async function calculateClinicalRisk() {
  const status=document.getElementById('clinicalRiskStatus');
@@ -294,6 +391,8 @@ async function calculateClinicalRisk() {
    if(result) result.style.display='none';
    return;
  }
+ const contradiction=riskContradiction(data);
+ if(contradiction){ if(status) status.textContent=contradiction; if(result) result.style.display='none'; return; }
  const required=[['age',data.age],['sbp',data.sbp],['totalCholesterol',data.totalCholesterol],['hdlCholesterol',data.hdlCholesterol],['egfr',data.egfr],['bmi',data.bmi]];
  const missing=required.filter(([,v]) => v === '' || v === null || !Number.isFinite(Number(v)) || Number(v) <= 0).map(([k])=>k);
  if (!['M','F'].includes(data.sex)) missing.push('sex');
@@ -345,9 +444,17 @@ function restoreClinicalRiskResult() {
  result.style.display='block'; result.innerHTML=riskResultHtml(body,'10-year risk',body.note || 'Reference estimate only.');
 }
 
+// Height comes from the profile; weight from the newest Vitals reading, or the
+// profile when nothing has been logged. Profile, BMI and heart risk all use this.
+function bodyMetrics() {
+  const h = Number.parseFloat(patientData.vitals?.height);
+  const logged = window.swasthVitals?.byType('weight').slice(-1)[0];
+  const w = logged ? Number(logged.weight) : Number.parseFloat(patientData.vitals?.weight);
+  const bmi = h > 0 && w > 0 ? w / Math.pow(h / 100, 2) : null;
+  return { height: h > 0 ? h : null, weight: w > 0 ? w : null, weightAt: logged?.at || null, bmi };
+}
 function updateRiskFactors() {
-  const h = Number.parseFloat(patientData.vitals?.height), w = Number.parseFloat(patientData.vitals?.weight);
-  const bmi = h > 0 && w > 0 ? w / Math.pow(h/100, 2) : null;
+  const { height: h, weight: w, bmi } = bodyMetrics();
   if (bmi !== null) {
     patientData.vitals.bmi = bmi.toFixed(1);
     setText('riskFactorBmi', `BMI ${bmi.toFixed(1)} based on ${h} cm and ${w} kg.`);
@@ -725,11 +832,22 @@ document.querySelectorAll('[data-emergency-visibility]').forEach(btn=>{
     btn.classList.toggle('on',next); btn.setAttribute('aria-pressed',String(next)); generateEmergencyQR(true);
   });
 });
-document.getElementById('revokeEmergencyQrBtn')?.addEventListener('click',async()=>{
+// Revoking breaks every printed card and saved image of the QR, so it asks
+// first, inline, and says what stops working.
+document.getElementById('revokeEmergencyQrBtn')?.addEventListener('click',()=>{
+  const box=document.getElementById('revokeConfirm'); if(!box) return;
+  box.hidden=false; box.querySelector('[data-revoke-yes]')?.focus();
+});
+document.getElementById('revokeConfirm')?.addEventListener('click',e=>{
+  const box=e.currentTarget;
+  if(e.target.closest('[data-revoke-no]')){ box.hidden=true; document.getElementById('revokeEmergencyQrBtn')?.focus(); }
+  if(e.target.closest('[data-revoke-yes]')){ box.hidden=true; revokeEmergencyQr(); }
+});
+async function revokeEmergencyQr(){
   const tokenId=localStorage.getItem('swasth_emergencyTokenId'), manageToken=localStorage.getItem('swasth_emergencyManageToken');
-  if(!tokenId||!manageToken){showToast('','QR Not Ready','Generate the emergency QR first.');return;}
-  try{const base=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');const r=await fetch(base+'/api/emergency/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tokenId,manageToken})});const b=await r.json().catch(()=>({}));if(!r.ok)throw new Error(b.error||'Could not revoke QR.');showToast('','Emergency QR Revoked','Generate a new QR badge before using it again.');['swasth_emergencyTokenId','swasth_emergencyQrCache'].forEach(k=>{localStorage.removeItem(k);if(typeof syncCloudState==='function')syncCloudState(k);});const st=document.getElementById('qrPayloadStatus');if(st)st.textContent='Emergency QR revoked. Generate a new badge when needed.';}catch(e){showToast('','Revoke Failed',e.message);}}
-);
+  if(!tokenId||!manageToken){showToast('','No QR to revoke yet','Open the emergency card once to create the QR.');return;}
+  try{const base=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');const r=await fetch(base+'/api/emergency/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tokenId,manageToken})});const b=await r.json().catch(()=>({}));if(!r.ok)throw new Error(b.error||'Could not revoke QR.');showToast('','Emergency QR revoked','Old cards and saved images no longer open your details. Refresh to make a new QR, then print a new card.');['swasth_emergencyTokenId','swasth_emergencyQrCache'].forEach(k=>{localStorage.removeItem(k);if(typeof syncCloudState==='function')syncCloudState(k);});const st=document.getElementById('qrPayloadStatus');if(st)st.textContent='Emergency QR revoked. Generate a new badge when needed.';}catch(e){showToast('','Revoke failed',e.message);}
+}
 document.getElementById('emergencyAccessLogBtn')?.addEventListener('click',async()=>{const out=document.getElementById('emergencyAccessLog');const tokenId=localStorage.getItem('swasth_emergencyTokenId'),manageToken=localStorage.getItem('swasth_emergencyManageToken');if(!out||!tokenId||!manageToken)return;try{const base=(window.SWASTH_API_BASE||location.origin).replace(/\/$/,'');const r=await fetch(base+'/api/emergency/activity?tokenId='+encodeURIComponent(tokenId)+'&manageToken='+encodeURIComponent(manageToken),{cache:'no-store'});const b=await r.json();if(!r.ok)throw new Error(b.error||'Unavailable');out.style.display='block';out.innerHTML='<b>Access activity</b><br>Opened '+(b.accessLog?.length||0)+' time(s). Last access: '+(b.accessLog?.length?new Date(b.accessLog[b.accessLog.length-1].at).toLocaleString():'Never')+'.';}catch(e){out.style.display='block';out.textContent='Access activity unavailable: '+e.message;}});
 
 function renderEmergencyQRIfReady(){

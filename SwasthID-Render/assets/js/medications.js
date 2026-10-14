@@ -220,7 +220,7 @@ function getCurrentMedicationList() {
            <button type="button" class="btn btn-sm" data-save-med-time="1" data-med-time-index="${i}" data-med-time-unit="${unit}">Save time</button>
          </div>
        </div>
-       <button class="med-action" type="button" data-mark-med="${id}" data-med-name="${escapeHtml(m.medicine)}">${savedStatus?.taken ? `Taken ${escapeHtml(savedStatus.time || '')}` : 'Mark taken'}</button>
+       <button class="med-action" type="button" data-mark-med="${id}" data-med-name="${escapeHtml(m.medicine)}">${savedStatus?.taken ? `<svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>Taken ${escapeHtml(savedStatus.time || '')}` : 'Mark taken'}</button>
      </div>`;
    });
  if (!scheduledDoses.length) html = '<div class="today-med-empty">No medicines due today.</div>';
@@ -488,7 +488,33 @@ function getCurrentMedicationList() {
      btn.addEventListener('click', () => window.markMedTaken(btn.dataset.markMed, btn.dataset.medName))
    );
  }
- function renderMedicationInsights(){ renderMedicationAdherence(); renderMedicationRefills(); renderMedicationMissedDoses(); }
+ // The full list in one place: Home only shows what is due today.
+ function renderMyMedicines() {
+   const list = document.getElementById('myMedsList');
+   if (!list) return;
+   const meds = getCurrentMedicationList();
+   if (!meds.length) {
+     list.innerHTML = '<div class="record-empty">No medicines yet. Select <b>Add or edit</b>, or scan a prescription.</div>';
+     return;
+   }
+   const refills = new Map(medicationRefillItems().map(x => [medicationIdentityKey(x.m.medicine), x]));
+   list.innerHTML = meds.map(m => {
+     const times = suggestedMedicationTimes(m, medicationSlotCount(m)).filter(Boolean).map(formatMedicationTime);
+     const refill = refills.get(medicationIdentityKey(m.medicine));
+     const supply = refill && Number.isFinite(refill.days)
+       ? `<span class="badge${refill.days <= 5 ? ' badge-warning' : ''}">${Math.max(0, Math.floor(refill.days))} days left</span>`
+       : '<span class="t-meta">Add a pack size to track refills</span>';
+     const detail = [medicationScheduleText(m), times.join(', '), m.instructions].filter(Boolean).map(escapeHtml).join(' · ');
+     return `<div class="record-row my-med-row"><div class="record-row-main"><b>${escapeHtml(m.medicine)}${m.dose ? ' · ' + escapeHtml(m.dose) : ''}</b><span>${detail || 'No schedule set'}</span></div>${supply}</div>`;
+   }).join('');
+ }
+ window.renderMyMedicines = renderMyMedicines;
+ document.getElementById('editMedicinesBtn')?.addEventListener('click', () => {
+   window.openProfileModal?.({ force: true });
+   window.showProfileWizardStep?.(1);
+   document.getElementById('medicineInputRows')?.scrollIntoView({ block: 'center' });
+ });
+ function renderMedicationInsights(){ renderMyMedicines(); renderMedicationAdherence(); renderMedicationRefills(); renderMedicationMissedDoses(); }
  // Save a dose as taken at `now`. Used by the Mark taken buttons and for
  // doses marked Taken on a reminder notification (dose-reminders.js).
  function recordMedicationTaken(id, name, now = new Date()) {
@@ -518,15 +544,78 @@ function getCurrentMedicationList() {
  return nowStr;
  }
  window.recordMedicationTaken = recordMedicationTaken;
+ // The latest history event for this dose today (where undo and time changes apply).
+ function todaysDoseEvent(meds, id) {
+   const today = new Date().toDateString();
+   const history = Array.isArray(meds.history) ? meds.history : [];
+   for (let i = history.length - 1; i >= 0; i--) {
+     const e = history[i];
+     if (e?.id === id && e.taken && new Date(e.date).toDateString() === today) return i;
+   }
+   return -1;
+ }
+ // Undo: forget today's "taken" for this dose.
+ function unrecordMedicationTaken(id) {
+   const meds = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+   const i = todaysDoseEvent(meds, id);
+   if (i >= 0) meds.history.splice(i, 1);
+   delete meds[id];
+   localStorage.setItem('swasth_medStatus', JSON.stringify(meds));
+   syncCloudState('swasth_medStatus');
+ }
+ // "It was at 8:00": move today's record for this dose to the given time.
+ function setMedicationTakenTime(id, when) {
+   const meds = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+   const i = todaysDoseEvent(meds, id);
+   if (i < 0) return;
+   const time = when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+   Object.assign(meds.history[i], { time, date: when.toISOString() });
+   meds[id] = { taken: true, time, date: when.toISOString() };
+   localStorage.setItem('swasth_medStatus', JSON.stringify(meds));
+   syncCloudState('swasth_medStatus');
+ }
+ // When this dose was due today, from its schedule.
+ function scheduledTimeToday(id) {
+   const current = getCurrentMedicationList();
+   for (let i = 0; i < current.length; i++) {
+     const count = medicationSlotCount(current[i]);
+     const times = suggestedMedicationTimes(current[i], count);
+     for (let u = 0; u < count; u++) {
+       if (medicationScheduleKey(i, u) !== id && legacyMedicationScheduleKey(i, u) !== id) continue;
+       const m = /^(\d{1,2}):(\d{2})$/.exec(times[u] || '');
+       if (!m) return null;
+       const d = new Date(); d.setHours(Number(m[1]), Number(m[2]), 0, 0);
+       return d;
+     }
+   }
+   return null;
+ }
+ function refreshAfterDoseChange() {
+   renderTodayMedications(); renderRecordMedicationActivity(); renderRecordTimeline(); renderMedicationInsights(); renderCareJourney(); renderTodayStats();
+   window.refreshDoseReminders?.(); // a taken dose is left out of its reminder
+ }
+ // Undo, and for a dose marked well after its time, record the scheduled time instead.
+ function doseToastActions(id, name) {
+   const actions = [{ label: 'Undo', run: () => { unrecordMedicationTaken(id); refreshAfterDoseChange(); showToast('', 'Dose unmarked', `${name} is no longer marked taken today.`); } }];
+   const due = scheduledTimeToday(id);
+   const meds = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+   const recorded = meds[id]?.date ? new Date(meds[id].date) : null;
+   if (due && recorded && recorded - due > 30 * 60000) {
+     const label = due.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+     actions.push({ label: `It was at ${label}`, run: () => { setMedicationTakenTime(id, due); refreshAfterDoseChange(); showToast('', 'Time corrected', `${name} recorded as taken at ${label}.`); } });
+   }
+   return actions;
+ }
  window.markMedTaken = function(id, name) {
  const el = document.getElementById(id);
  if(!el) return;
- if(el.classList.contains('taken')) return;
+ if (el.classList.contains('taken')) {
+   // Tapping a taken dose: undo it or correct its time.
+   const meds = safeJsonParse(localStorage.getItem('swasth_medStatus') || '{}', {});
+   showToast('', `${name} taken at ${meds[id]?.time || 'an earlier time'}`, 'Marked by mistake, or taken at a different time?', doseToastActions(id, name));
+   return;
+ }
  const nowStr = recordMedicationTaken(id, name);
- el.classList.add('taken');
- const btn = el.querySelector('.med-action');
- if (btn) btn.innerHTML = `Taken ${escapeHtml(nowStr)}`;
- renderRecordMedicationActivity(); renderRecordTimeline(); renderMedicationInsights(); renderCareJourney(); renderTodayStats();
- window.refreshDoseReminders?.(); // a taken dose is left out of its reminder
- showToast('', 'Medication Tracked', `${name} logged successfully.`);
+ refreshAfterDoseChange();
+ showToast('', 'Dose recorded', `${name} taken at ${nowStr}.`, doseToastActions(id, name));
  };

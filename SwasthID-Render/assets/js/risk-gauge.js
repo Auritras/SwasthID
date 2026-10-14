@@ -3,9 +3,7 @@
  ========================================================= */
  /** @returns {number} bounded prototype risk score */
  function calculatePersonalizedRisk() {
-   const height = Number.parseFloat(patientData.vitals?.height);
-   const weight = Number.parseFloat(patientData.vitals?.weight);
-   const bmi = height > 0 && weight > 0 ? weight / Math.pow(height / 100, 2) : null;
+   const bmi = typeof bodyMetrics === 'function' ? bodyMetrics().bmi : null;
    const age = calculateAge(patientData.dob);
    let score = 8;
    if (age !== null) score += age >= 65 ? 18 : age >= 50 ? 12 : age >= 35 ? 6 : 0;

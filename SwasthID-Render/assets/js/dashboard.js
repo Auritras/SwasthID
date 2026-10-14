@@ -89,6 +89,10 @@
    if(intake === 0) {
      label = 'No intake';
      color = 'var(--muted)';
+   } else if(intake < target * 0.80 && new Date().getHours() < 20) {
+     // The day is not over: a low running total is normal before dinner.
+     label = 'Logged so far';
+     color = 'var(--muted)';
    } else if(intake < target * 0.50) {
      label = 'Low intake';
      color = 'var(--danger)';
@@ -178,13 +182,25 @@ const authSuccessModal = document.getElementById('authSuccessModal');
 }
 
 let toastTimer = null;
-function showToast(icon, title, body) {
+// actions: optional [{ label, run }] buttons, e.g. Undo. A toast with actions
+// stays up longer so there is time to use them.
+function showToast(icon, title, body, actions = []) {
  document.getElementById('toastTitleText').textContent = title;
  document.getElementById('toastBodyText').textContent = body || '';
  const t = document.getElementById('medToast');
+ const box = document.getElementById('toastActions');
+ if (box) {
+   box.replaceChildren(...actions.map(a => {
+     const b = document.createElement('button');
+     b.type = 'button'; b.className = 'btn btn-sm toast-action'; b.textContent = a.label;
+     b.addEventListener('click', () => { t.classList.remove('show'); a.run(); });
+     return b;
+   }));
+   box.hidden = !actions.length;
+ }
  t.classList.add('show');
  clearTimeout(toastTimer);
- toastTimer = setTimeout(() => t.classList.remove('show'), 6000);
+ toastTimer = setTimeout(() => t.classList.remove('show'), actions.length ? 10000 : 6000);
  }
 
  function getNextMedicationDose() {

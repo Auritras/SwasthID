@@ -273,7 +273,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
 }
 
 /* ---------- App shell ---------- */
-#dashboard { min-height: 100vh; }
+#dashboard { min-height: 100vh; min-height: 100dvh; }
 .topbar {
   position: sticky; top: 0; z-index: 40; height: var(--topbar-h);
   display: flex; align-items: center; gap: var(--space-8);
@@ -387,8 +387,12 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-brand); }
 .link-btn:hover { text-decoration: underline; }
 .today-med-time-editor input[type=time] { min-height: 32px; height: 32px; padding: 0 var(--space-2); font-size: var(--text-xs); width: 120px; }
 .today-med-item .med-action { min-width: 112px; }
-.today-med-item.taken .med-action { background: var(--c-brand-soft); border-color: transparent; color: var(--c-brand-text); cursor: default; }
+/* Taken: a check and muted ink rather than fading the whole row (legacy.css's
+   opacity left the text too faint to read). Tapping it offers Undo. */
+.today-med-item.taken { opacity: 1; }
+.today-med-item.taken .med-action { background: var(--c-brand-soft); border-color: transparent; color: var(--c-brand-text); gap: var(--space-1); }
 .today-med-item.taken .today-med-name { color: var(--c-text-2); }
+.today-med-item.taken .today-med-time { text-decoration: none; color: var(--c-text-2); }
 .today-med-empty { padding: var(--space-6); text-align: center; color: var(--c-text-2); border: 1px dashed var(--c-border-strong); border-radius: var(--radius-control); }
 
 .reminder-bar {
@@ -786,13 +790,13 @@ button.list-row:hover { background: var(--c-surface-2); }
 .inline-editor-card .form-field input, .inline-editor-card .form-field select { margin-top: 0; }
 
 /* ---------- Login ---------- */
-#loginScreen { min-height: 100vh; background: var(--c-bg); display: flex; }
+#loginScreen { min-height: 100vh; min-height: 100dvh; background: var(--c-bg); display: flex; }
 .login-brand, .login-panel { margin: 0; }
 /* The brand panel is the one deep-colour surface in the product: it anchors
    the page and shows what SwasthID looks like before you sign in. */
 :root { --c-hero: #04506F; --c-on-hero: #FFFFFF; --c-on-hero-2: rgba(255, 255, 255, .78); --c-hero-line: rgba(255, 255, 255, .16); }
 body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(228, 237, 240, .74); --c-hero-line: rgba(228, 237, 240, .12); }
-.login-shell { width: 100%; min-height: 100vh; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
+.login-shell { width: 100%; min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
 .login-brand { display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-10); padding: var(--space-12) var(--space-12) var(--space-10); background: var(--c-hero); color: var(--c-on-hero); }
 .login-brand-top { display: grid; gap: var(--space-8); }
 .login-brand .brand { font-size: var(--text-lg); line-height: var(--leading-lg); color: var(--c-on-hero); }
@@ -837,7 +841,7 @@ body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(22
 .auth-mode-row button:hover { text-decoration: underline; }
 
 /* ---------- Account email links (/auth/action) ---------- */
-.auth-action-page { min-height: 100vh; background: var(--c-bg); }
+.auth-action-page { min-height: 100vh; min-height: 100dvh; background: var(--c-bg); }
 .auth-action { width: 100%; max-width: 440px; margin: 0 auto; padding: var(--space-12) var(--space-4); display: grid; gap: var(--space-6); }
 .auth-action-brand { justify-self: center; font-size: var(--text-lg); line-height: var(--leading-lg); color: var(--c-text); text-decoration: none; }
 .auth-action h1 { font-size: var(--text-xl); line-height: var(--leading-xl); }
@@ -878,6 +882,10 @@ body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(22
 /* ---------- Emergency ---------- */
 .emergency-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--space-6); align-items: start; margin-bottom: var(--space-6); }
 .emergency-grid section, .panel .content > section.card { margin: 0; }
+.revoke-confirm { margin-top: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--c-danger); border-radius: var(--radius-control); background: var(--c-danger-soft, var(--c-surface)); text-align: left; }
+.revoke-confirm[hidden] { display: none; }
+.revoke-confirm p { margin: var(--space-1) 0 var(--space-3); color: var(--c-text-2); }
+.revoke-confirm-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .qr-card { text-align: center; }
 .qr-frame { margin: var(--space-4) auto; width: 224px; height: 224px; padding: var(--space-3); background: #fff; border: 1px solid var(--c-border); border-radius: var(--radius-control); display: grid; place-items: center; }
 .qr-frame canvas, .qr-frame img { width: 100% !important; height: auto !important; display: block; }
@@ -930,6 +938,8 @@ body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(22
 .toast-title { font-weight: 600; }
 .toast-body { color: var(--c-text-2); }
 .toast-body:empty { display: none; }
+.toast-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.toast-actions[hidden] { display: none; }
 
 /* Vitals: measurement picker as a segmented control */
 .vitals-types { display: inline-flex; gap: var(--space-1); padding: var(--space-1); background: var(--c-surface-2); border-radius: var(--radius-control); max-width: 100%; overflow-x: auto; margin-bottom: var(--space-4); scrollbar-width: none; }
@@ -952,7 +962,7 @@ body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(22
   background: var(--c-surface); color: var(--c-text); border: 1px solid var(--c-border);
   border-radius: var(--radius-surface); box-shadow: var(--shadow-overlay);
 }
-.inline-editor-card { width: min(480px, 100%); max-height: calc(100vh - 2 * var(--space-4)); overflow-y: auto; padding: var(--space-6); }
+.inline-editor-card { width: min(480px, 100%); max-height: calc(100vh - 2 * var(--space-4)); max-height: calc(100dvh - 2 * var(--space-4)); overflow-y: auto; padding: var(--space-6); }
 .inline-editor-card h3 { font-size: var(--text-lg); line-height: var(--leading-lg); margin-bottom: var(--space-1); }
 .inline-editor-card > .section-sub { margin-bottom: var(--space-4); }
 .inline-editor-card label { display: block; margin: var(--space-4) 0 var(--space-2); }
@@ -1064,6 +1074,8 @@ body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(22
   .today-med-item .med-action { grid-column: 1 / -1; width: 100%; }
   .card-head { flex-wrap: wrap; }
   .emergency-grid, .privacy-cols, .doctor-grid, .risk-grid, .form-grid, .risk-stats, .share-grid, .scan-layout, .rx-med-grid { grid-template-columns: 1fr; }
+  /* On a phone the QR comes first: it is what a responder needs. */
+  .emergency-grid .qr-card { order: -1; }
   .dropzone { padding: var(--space-8) var(--space-4); }
   .med-result { grid-template-columns: minmax(0, 1fr) auto; }
   .profile-grid, .family-grid { grid-template-columns: 1fr; }
@@ -1091,3 +1103,30 @@ body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(22
 }
 
 } /* @layer app */
+
+/* ---------- Touch screens: room for a thumb ----------
+   Every control gets at least a 44 px tall target. Buttons grow; text-style
+   links keep their look and get an invisible larger hit area instead. Inputs
+   use 16 px text so iPhone Safari does not zoom in when one is tapped. */
+@media (pointer: coarse) {
+  input, select, textarea { font-size: 16px; }
+  .btn-sm, .n-btn.btn-sm, .chip, .med-day, .vital-delete, #subnav button, .day-tabs button, .mood-row .mood-emoji { min-height: 44px; }
+  #togglePwBtn { min-width: 44px; min-height: 44px; }
+  .link-btn, .refill-edit, #createAccountBtn, .switch { position: relative; }
+  .link-btn::after, .refill-edit::after, #createAccountBtn::after { content: ''; position: absolute; inset: -14px -6px; }
+  .switch::before { content: ''; position: absolute; inset: -10px -4px; }
+}
+
+/* Phones: the SwasthAI button steps out of the way while you scroll down
+   (assistant.js), so it never sits on top of what you are reading. */
+@media (max-width: 767px) {
+  #aiAssistantDock { transition: transform var(--dur-overlay) var(--ease), opacity var(--dur-overlay) var(--ease); }
+  #aiAssistantDock.is-tucked { transform: translateY(calc(100% + var(--space-6))); opacity: 0; pointer-events: none; }
+}
+@media (prefers-reduced-motion: reduce) { #aiAssistantDock { transition: none; } }
+
+/* My medicines: name and schedule on the left, supply on the right. */
+.my-meds .record-row:first-child { border-top: 0; }
+.record-row.my-med-row { grid-template-columns: minmax(0, 1fr) auto; }
+/* A group with one screen has no sections to switch between. */
+#subnav[hidden] { display: none; }

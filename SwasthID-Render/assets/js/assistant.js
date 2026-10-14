@@ -292,3 +292,24 @@ Rules:
  const welcomeBubble=document.getElementById('swasthaiWelcomeBubble');
  if(welcomeBubble && patientData?.name) welcomeBubble.innerHTML=`Welcome, <b>${aiEscape(patientData.name)}</b>. I can answer questions using the health information available in your SwasthID record.`;
  // Do not preload WebLLM on page load. The model downloads only when the user explicitly uses SwasthAI or parses an actual prescription.
+
+// Phones: tuck the SwasthAI button away while scrolling down, bring it back
+// on scrolling up or near the top, never while the chat is open.
+(function () {
+  const dock = document.getElementById('aiAssistantDock');
+  if (!dock || !window.matchMedia) return;
+  const phone = window.matchMedia('(max-width: 767px)');
+  let lastY = window.scrollY, ticking = false;
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      ticking = false;
+      const y = window.scrollY, open = document.getElementById('aiChatWindow')?.classList.contains('open');
+      if (!phone.matches || open || y < 80) dock.classList.remove('is-tucked');
+      else if (y > lastY + 6) dock.classList.add('is-tucked');
+      else if (y < lastY - 6) dock.classList.remove('is-tucked');
+      lastY = y;
+    });
+  }, { passive: true });
+})();

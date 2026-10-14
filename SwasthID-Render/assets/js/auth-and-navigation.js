@@ -317,10 +317,11 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
  ========================================================= */
  const NAV_GROUPS = {
    home:      { title: 'Home',      tabs: [['home', 'Home']] },
-   records:   { title: 'Records',   tabs: [['records', 'Your record'], ['timeline', 'Timeline'], ['share', 'Share and export']] },
-   medicines: { title: 'Medicines', tabs: [['scan', 'Scan prescription'], ['order', 'Find medicines']] },
+   records:   { title: 'Records',   tabs: [['records', 'Your record'], ['timeline', 'Timeline'], ['doctor', 'Doctor summary'], ['share', 'Share and export']] },
+   medicines: { title: 'Medicines', tabs: [['mymeds', 'My medicines'], ['scan', 'Scan prescription'], ['order', 'Find medicines']] },
    health:    { title: 'Health',    tabs: [['vitals', 'Vitals'], ['nutrition', 'Nutrition'], ['predict', 'Heart risk']] },
-   care:      { title: 'Care',      tabs: [['emergency', 'Emergency card'], ['doctor', 'Doctor summary']] },
+   // Emergency is a top-level destination of its own: in a crisis it must be one tap away.
+   emergency: { title: 'Emergency card', tabs: [['emergency', 'Emergency card']] },
    account:   { title: 'Account',   tabs: [['profile', 'Profile'], ['register', 'Family']] }
  };
  const TAB_GROUP = {};
@@ -328,9 +329,10 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
  const lastTabInGroup = {};
 
  function onTabShown(tab) {
-   if (tab === 'predict') { animateRiskMeter(); window.prefillRiskFromVitals?.(); }
+   if (tab === 'predict') { animateRiskMeter(); window.prefillRiskFromVitals?.(); prefillRiskFromRecord(); }
    if (tab === 'nutrition') window.renderNutritionUpgrades?.();
    if (tab === 'vitals') window.renderVitals?.();
+   if (tab === 'mymeds') window.renderMyMedicines?.();
    if (tab === 'emergency') {
      if (typeof wakeSwasthServer === 'function') wakeSwasthServer();
      if (!qrGenerated) { generateEmergencyQR(); qrGenerated = true; }
