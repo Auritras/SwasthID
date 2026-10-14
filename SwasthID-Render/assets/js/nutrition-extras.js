@@ -31,23 +31,27 @@
         kcal:dayLogs.reduce((a,x)=>a+safeNum(x.kcal),0),
         protein:dayLogs.reduce((a,x)=>a+safeNum(x.protein),0),
         carbs:dayLogs.reduce((a,x)=>a+safeNum(x.carbs),0),
-        fat:dayLogs.reduce((a,x)=>a+safeNum(x.fat),0)
+        fat:dayLogs.reduce((a,x)=>a+safeNum(x.fat),0),
+        count:dayLogs.length,
+        known:Object.fromEntries(['kcal','protein','carbs','fat'].map(k=>[k,dayLogs.some(x=>x[k]!==undefined&&x[k]!==null&&x[k]!==''&&Number.isFinite(Number(x[k])))]))
       });
     }
-    const avg=days.reduce((a,d)=>a+d.kcal,0)/WEEK_DAYS;
-    const avgProtein=days.reduce((a,d)=>a+d.protein,0)/WEEK_DAYS;
-    const avgCarbs=days.reduce((a,d)=>a+d.carbs,0)/WEEK_DAYS;
-    const avgFat=days.reduce((a,d)=>a+d.fat,0)/WEEK_DAYS;
-    const logged=days.filter(d=>d.kcal>0).length;
+    // Average over the days that have a log: an unlogged day is missing
+    // data, not a day of fasting, so it must not drag the average down.
+    const loggedDays=days.filter(d=>d.count>0);
+    const logged=loggedDays.length;
+    const avgOf=key=>{const known=loggedDays.filter(d=>d.known[key]);return known.length?known.reduce((a,d)=>a+d[key],0)/known.length:null;};
+    const avg=avgOf('kcal'), avgProtein=avgOf('protein'), avgCarbs=avgOf('carbs'), avgFat=avgOf('fat');
+    const grams=v=>v===null?'—':v.toFixed(1)+' g';
     const avgEl=document.getElementById('weeklyAvgKcal');
     const protEl=document.getElementById('weeklyProtein');
     const loggedEl=document.getElementById('weeklyAdherenceFood');
-    if(avgEl) avgEl.textContent=Math.round(avg)+' kcal';
-    if(protEl) protEl.textContent=avgProtein.toFixed(1)+' g';
+    if(avgEl) avgEl.textContent=avg===null?'—':Math.round(avg)+' kcal';
+    if(protEl) protEl.textContent=grams(avgProtein);
     const carbsEl=document.getElementById('weeklyCarbs');
     const fatEl=document.getElementById('weeklyFat');
-    if(carbsEl) carbsEl.textContent=avgCarbs.toFixed(1)+' g';
-    if(fatEl) fatEl.textContent=avgFat.toFixed(1)+' g';
+    if(carbsEl) carbsEl.textContent=grams(avgCarbs);
+    if(fatEl) fatEl.textContent=grams(avgFat);
     if(loggedEl) loggedEl.textContent=logged+'/7';
 
     const max=Math.max(1,...days.map(d=>d.kcal));

@@ -135,7 +135,7 @@
   <button type="button" data-group="records"><svg class="icon" aria-hidden="true"><use href="#i-records"/></svg>Records</button>
   <button type="button" data-group="medicines"><svg class="icon" aria-hidden="true"><use href="#i-pill"/></svg>Medicines</button>
   <button type="button" data-group="health"><svg class="icon" aria-hidden="true"><use href="#i-activity"/></svg>Health</button>
-  <button type="button" data-group="care"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>Care</button>
+  <button type="button" data-group="emergency"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>Emergency</button>
  </nav>
  <div class="topbar-right">
   <button id="darkModeToggle" class="btn btn-ghost btn-icon theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg></button>
@@ -287,10 +287,10 @@
     <h2 class="card-title card-title-spaced" id="riskFormTitle">Your values</h2>
     <div class="form-grid">
      <div class="form-field"><label for="riskSexInput">Sex</label><select id="riskSexInput"><option value="">Select</option><option value="M">Male</option><option value="F">Female</option></select></div>
-     <div class="form-field"><label for="riskSbpInput">Systolic blood pressure <span class="unit">mmHg</span></label><input id="riskSbpInput" type="number" inputmode="numeric" min="90" max="200" placeholder="120"></div>
-     <div class="form-field"><label for="riskTotalCholInput">Total cholesterol <span class="unit">mg/dL</span></label><input id="riskTotalCholInput" type="number" inputmode="numeric" min="130" max="320" placeholder="180"></div>
-     <div class="form-field"><label for="riskHdlInput">HDL cholesterol <span class="unit">mg/dL</span></label><input id="riskHdlInput" type="number" inputmode="numeric" min="20" max="100" placeholder="50"></div>
-     <div class="form-field"><label for="riskEgfrInput">eGFR <span class="unit">mL/min/1.73m²</span></label><input id="riskEgfrInput" type="number" inputmode="numeric" min="15" max="140" placeholder="90"></div>
+     <div class="form-field"><label for="riskSbpInput">Systolic blood pressure <span class="unit">mmHg</span></label><input id="riskSbpInput" type="number" inputmode="numeric" min="90" max="200" placeholder="e.g. 128"></div>
+     <div class="form-field"><label for="riskTotalCholInput">Total cholesterol <span class="unit">mg/dL</span></label><input id="riskTotalCholInput" type="number" inputmode="numeric" min="130" max="320" placeholder="From your lab report"></div>
+     <div class="form-field"><label for="riskHdlInput">HDL cholesterol <span class="unit">mg/dL</span></label><input id="riskHdlInput" type="number" inputmode="numeric" min="20" max="100" placeholder="From your lab report"></div>
+     <div class="form-field"><label for="riskEgfrInput">eGFR <span class="unit">mL/min/1.73m²</span></label><input id="riskEgfrInput" type="number" inputmode="numeric" min="15" max="140" placeholder="From your lab report"></div>
      <div class="form-field"><label for="riskDiabetesInput">Diabetes</label><select id="riskDiabetesInput"><option value="0">No</option><option value="1">Yes</option></select></div>
      <div class="form-field"><label for="riskSmokingInput">Current smoker</label><select id="riskSmokingInput"><option value="0">No</option><option value="1">Yes</option></select></div>
      <div class="form-field"><label for="riskBpMedsInput">Taking blood pressure medicine</label><select id="riskBpMedsInput"><option value="0">No</option><option value="1">Yes</option></select></div>
@@ -399,6 +399,23 @@
  </div>
 
  <!-- ===== SMART PRESCRIPTION SCANNER PANEL ===== -->
+ <!-- ===== MY MEDICINES PANEL ===== -->
+ <div class="panel" id="panel-mymeds">
+ <div class="content">
+  <div class="section-head">
+   <div>
+    <h2 class="section-title">Your medicines</h2>
+    <p class="section-sub">Everything you take, with its schedule and how much is left. Doses are marked on Home.</p>
+   </div>
+   <button type="button" class="btn btn-primary" id="editMedicinesBtn"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-edit"/></svg>Add or edit</button>
+  </div>
+  <section class="card" aria-labelledby="myMedsTitle">
+   <h2 class="card-title card-title-spaced" id="myMedsTitle">Current list</h2>
+   <div id="myMedsList" class="my-meds"></div>
+  </section>
+ </div>
+ </div>
+
  <div class="panel" id="panel-scan">
  <div class="content">
   <h2 class="section-title">Scan a prescription</h2>
@@ -467,6 +484,8 @@
      <div><dt>Drug allergies</dt><dd id="doctorAllergies">No allergies recorded.</dd></div>
      <div><dt>Other allergies</dt><dd id="doctorNormalAllergies">No common or environmental allergies recorded.</dd></div>
      <div><dt>Latest visit</dt><dd id="doctorLatestVisit">No visits recorded.</dd></div>
+     <div><dt>Latest vitals</dt><dd id="doctorVitals">No readings logged.</dd></div>
+     <div><dt>Recent labs</dt><dd id="doctorLabs">No lab values found in your reports.</dd></div>
     </dl>
    </section>
   </div>
@@ -517,6 +536,11 @@
      <button type="button" class="btn btn-ghost btn-sm" id="refreshEmergencyQrBtn">Refresh</button>
      <button type="button" class="btn btn-ghost btn-sm" id="emergencyAccessLogBtn">Access log</button>
      <button type="button" class="btn btn-ghost btn-sm btn-danger" id="revokeEmergencyQrBtn">Revoke</button>
+    </div>
+    <div class="revoke-confirm" id="revokeConfirm" role="group" aria-labelledby="revokeConfirmTitle" hidden>
+     <b id="revokeConfirmTitle">Revoke this QR?</b>
+     <p>Anyone who scans a printed card or saved image of it will no longer see your details, including in an emergency. You will need to print a new card.</p>
+     <div class="revoke-confirm-actions"><button type="button" class="btn btn-danger-solid btn-sm" data-revoke-yes>Revoke QR</button><button type="button" class="btn btn-sm" data-revoke-no>Keep it</button></div>
     </div>
     <div id="emergencyAccessLog" class="qr-log" style="display:none;"></div>
     <p class="t-meta qr-meta" id="qrPayloadStatus">The QR opens a read-only emergency view. It stays valid until you revoke it or it expires.</p>
@@ -816,7 +840,7 @@
   <button type="button" data-group="records"><svg class="icon" aria-hidden="true"><use href="#i-records"/></svg>Records</button>
   <button type="button" data-group="medicines"><svg class="icon" aria-hidden="true"><use href="#i-pill"/></svg>Medicines</button>
   <button type="button" data-group="health"><svg class="icon" aria-hidden="true"><use href="#i-activity"/></svg>Health</button>
-  <button type="button" data-group="care"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>Care</button>
+  <button type="button" data-group="emergency"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>Emergency</button>
  </nav>
 </div>
 
@@ -836,6 +860,7 @@
  <div class="toast-text">
   <div class="toast-title" id="toastTitleText"></div>
   <div class="toast-body" id="toastBodyText"></div>
+  <div class="toast-actions" id="toastActions" hidden></div>
  </div>
  <button type="button" class="btn btn-ghost btn-icon btn-sm" id="toastClose" aria-label="Dismiss"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg></button>
 </div>

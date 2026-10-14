@@ -1,8 +1,8 @@
 const { test, expect, openApp } = require('./fixtures');
 
 const SCREENS = {
-  home: 'Home', records: 'Records', timeline: 'Records', share: 'Records', scan: 'Medicines', order: 'Medicines',
-  vitals: 'Health', nutrition: 'Health', predict: 'Health', emergency: 'Care', doctor: 'Care', profile: 'Account', register: 'Account',
+  home: 'Home', records: 'Records', timeline: 'Records', share: 'Records', mymeds: 'Medicines', scan: 'Medicines', order: 'Medicines',
+  vitals: 'Health', nutrition: 'Health', predict: 'Health', emergency: 'Emergency card', doctor: 'Records', profile: 'Account', register: 'Account',
 };
 
 test('loads every script and opens every screen without errors', async ({ page, errors }) => {
