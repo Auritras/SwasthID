@@ -96,6 +96,11 @@
    <p class="sub">Log in to see your health record, prescriptions and medicines.</p>
 
    <form id="loginForm" novalidate>
+    <div class="form-field" id="signupNameField" hidden>
+     <label for="signupFirstName">First name</label>
+     <input type="text" id="signupFirstName" autocomplete="given-name" autocapitalize="words" maxlength="60" placeholder="What should we call you?">
+     <div class="field-error" id="nameError" role="alert">Please enter your first name.</div>
+    </div>
     <div class="form-field">
      <label for="healthId">Email</label>
      <input type="email" id="healthId" autocomplete="email" placeholder="you@example.com">

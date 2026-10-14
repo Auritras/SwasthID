@@ -1,7 +1,7 @@
 // Accounts and sync against the Firebase emulators, with the real
 // firestore.rules. Run with `npm run test:emulator`.
 const { test, expect, prepareContext } = require('../e2e/fixtures');
-const { createUser, idToken, readUserDoc, listEntries, logIn } = require('./helpers');
+const { createUser, verifyByEmail, idToken, readUserDoc, listEntries, logIn } = require('./helpers');
 
 test.use({ signedIn: false });
 
@@ -14,6 +14,23 @@ test('won\'t sign in until the email address is verified', async ({ page }) => {
   await expect(page.locator('#medToast')).toContainText('verify your email');
   await expect(page.locator('#loginScreen')).toBeVisible();
   await expect(page.locator('#dashboard')).toBeHidden();
+});
+
+test('the name given at sign-up is the one the app greets you by', async ({ page, errors }) => {
+  const email = `named-${Date.now()}@example.com`;
+  await page.goto('/');
+  await page.click('#createAccountBtn');
+  await page.fill('#signupFirstName', 'Meera');
+  await page.fill('#healthId', email);
+  await page.fill('#password', 'secret123');
+  await page.fill('#confirmPassword', 'secret123');
+  await page.click('.login-btn');
+  await expect.poll(async () => (await verifyByEmail(email))?.displayName, { timeout: 15_000 }).toBe('Meera');
+  await page.reload();
+  await logIn(page, { email, password: 'secret123' });
+  await expect(page.locator('#dashboardGreetingName')).toHaveText('Meera');
+  await expect(page.locator('#profileFirstNameInput')).toHaveValue('Meera');
+  expect(errors).toEqual([]);
 });
 
 test('a reading saved on one device appears on another', async ({ page, browser, errors }) => {
