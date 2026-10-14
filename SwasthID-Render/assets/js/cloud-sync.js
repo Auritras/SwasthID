@@ -106,12 +106,25 @@
    return firebaseInitPromise;
  }
 
- function createBlankPersonalizedProfile(email = '') {
+ // Older accounts were named after their email address ("Riya Sen 84" from
+ // riya.sen84@...) or "SwasthID User". Neither is a name, so the app greets
+ // those accounts plainly until the person gives one.
+ function emailNameGuess(email) {
    const localPart = String(email || '').split('@')[0].replace(/[._-]+/g, ' ').trim();
-   const guessedName = localPart ? localPart.replace(/\b\w/g, c => c.toUpperCase()) : 'SwasthID User';
+   return localPart.replace(/\b\w/g, c => c.toUpperCase());
+ }
+ function profileDisplayName(profile = patientData, email = '') {
+   const name = String(profile?.name || '').trim();
+   if (!name || name === 'SwasthID User' || name === 'Aditya Sharma') return '';
+   const mail = email || profile?.email || profile?.ownerEmail || '';
+   if (!profile?.firstName && mail && name === emailNameGuess(mail)) return '';
+   return name;
+ }
+ function createBlankPersonalizedProfile(email = '', givenName = '') {
+   const name = String(givenName || '').trim().replace(/\s+/g, ' ').slice(0, 60);
    return {
-     name: guessedName,
-     firstName: '',
+     name,
+     firstName: name.split(' ')[0] || '',
      middleName: '',
      lastName: '',
      email: email || '',
@@ -221,7 +234,7 @@ function clearCloudCacheForUserSwitch() {
 
  function resetAuthenticatedUserToBlankProfile() {
    const email = firebaseUser?.email || '';
-   const blankProfile = createBlankPersonalizedProfile(email);
+   const blankProfile = createBlankPersonalizedProfile(email, firebaseUser?.displayName || '');
    Object.keys(patientData).forEach(key => delete patientData[key]);
    Object.assign(patientData, blankProfile);
    clearCloudCacheForUserSwitch();
@@ -259,7 +272,7 @@ function clearCloudCacheForUserSwitch() {
      // Never show that seed data to a real Firebase account. Treat it as an uninitialized
      // profile and start the account with a clean personalized record.
      if (isSeedDemoProfile(data.profile)) {
-       const blankProfile = createBlankPersonalizedProfile(firebaseUser.email || '');
+       const blankProfile = createBlankPersonalizedProfile(firebaseUser.email || '', firebaseUser.displayName || '');
        Object.keys(patientData).forEach(key => delete patientData[key]);
        Object.assign(patientData, blankProfile);
        localState = {};
@@ -284,7 +297,7 @@ function clearCloudCacheForUserSwitch() {
          Object.assign(patientData, data.profile);
        } else if (data.profile && typeof data.profile === 'object') {
          // Reject profile data that is not bound to the authenticated Firebase account.
-         const blankProfile = createBlankPersonalizedProfile(firebaseUser.email || '');
+         const blankProfile = createBlankPersonalizedProfile(firebaseUser.email || '', firebaseUser.displayName || '');
          Object.keys(patientData).forEach(key => delete patientData[key]);
          Object.assign(patientData, blankProfile);
          localState = {};
@@ -311,7 +324,7 @@ function clearCloudCacheForUserSwitch() {
      // If this is a brand-new account, start with a blank personalized profile instead
      // of copying the demo patient's health information into the new user's account.
      if (!snap.exists) {
-       const blankProfile = createBlankPersonalizedProfile(firebaseUser.email || '');
+       const blankProfile = createBlankPersonalizedProfile(firebaseUser.email || '', firebaseUser.displayName || '');
        Object.keys(patientData).forEach(key => delete patientData[key]);
        Object.assign(patientData, blankProfile);
        await ref.set({
@@ -726,7 +739,7 @@ function clearCloudCacheForUserSwitch() {
    return credential.user;
  }
 
- async function firebaseCreateAccount(email, password) {
+ async function firebaseCreateAccount(email, password, firstName = '') {
    if (!auth) throw new Error('Firebase Authentication is not initialized.');
    const credential = await auth.createUserWithEmailAndPassword(email, password);
    firebaseUser = credential.user;
@@ -734,7 +747,8 @@ function clearCloudCacheForUserSwitch() {
 
    // A new Firebase account must start with a clean user-owned cache.
    clearCloudCacheForUserSwitch();
-   const blankProfile = createBlankPersonalizedProfile(email);
+   const blankProfile = createBlankPersonalizedProfile(email, firstName);
+   try { if (firstName) await credential.user.updateProfile({ displayName: blankProfile.name }); } catch (_) {}
    Object.keys(patientData).forEach(key => delete patientData[key]);
    Object.assign(patientData, blankProfile);
    cacheProfileLocally();

@@ -181,7 +181,7 @@ async function saveProfilePhoto(photo) {
 function renderPersonalizedUI() {
   renderCareJourney();
   const email = patientData.email || firebaseUser?.email || localStorage.getItem('swasth_abhaId') || '';
-  const name = patientData.name || 'there';
+  const name = profileDisplayName(patientData, email) || 'there';
   setText('topHealthId', email, 'Signed in');
   setText('dashboardGreetingName', name.split(' ')[0] || name, 'there');
   renderAvatars(patientData.photo);
@@ -479,7 +479,7 @@ window.openProfileModal = function openProfileModal(options = {}) {
   // per-account skip flag suppress the onboarding form indefinitely. The user can
   // close it for now, and it will be offered again on the next login.
   const modal = document.getElementById('profileModal'); if (!modal) return;
-  const fullName = patientData.name || '';
+  const fullName = profileDisplayName(patientData);
   const nameParts = {
     first: patientData.firstName || fullName.trim().split(/\s+/)[0] || '',
     middle: patientData.middleName || (fullName.trim().split(/\s+/).length > 2 ? fullName.trim().split(/\s+/).slice(1,-1).join(' ') : ''),
@@ -693,7 +693,7 @@ async function savePersonalizedProfile() {
   }
   const first=get('profileFirstNameInput'), middle=get('profileMiddleNameInput'), last=get('profileLastNameInput');
   patientData.firstName=first; patientData.middleName=middle; patientData.lastName=last;
-  patientData.name=[first,middle,last].filter(Boolean).join(' ') || patientData.name || 'SwasthID User';
+  patientData.name=[first,middle,last].filter(Boolean).join(' ') || profileDisplayName(patientData);
   patientData.email=firebaseUser?.email || localStorage.getItem('swasth_abhaId') || '';
   patientData.ownerUid=firebaseUser?.uid || '';
   patientData.ownerEmail=firebaseUser?.email || patientData.email || '';

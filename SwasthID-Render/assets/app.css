@@ -1130,3 +1130,6 @@ body.dark-mode { --c-hero: #0E2B37; --c-on-hero: #E4EDF0; --c-on-hero-2: rgba(22
 .record-row.my-med-row { grid-template-columns: minmax(0, 1fr) auto; }
 /* A group with one screen has no sections to switch between. */
 #subnav[hidden] { display: none; }
+/* Sign-up asks for a first name above the email. */
+.form-field[hidden] { display: none; }
+#signupNameField { margin-bottom: var(--space-4); }

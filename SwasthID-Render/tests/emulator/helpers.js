@@ -17,6 +17,14 @@ async function createUser(prefix, { verified = true } = {}) {
   return { email, password: PASSWORD, uid: user.localId };
 }
 
+// Mark an account made through the app's sign-up form as verified.
+async function verifyByEmail(email) {
+  const found = await post(`${AUTH}/identitytoolkit.googleapis.com/v1/projects/${PROJECT}/accounts:lookup`, { email: [email] }, { Authorization: 'Bearer owner' });
+  const user = found.users?.[0];
+  if (user) await post(`${AUTH}/identitytoolkit.googleapis.com/v1/projects/${PROJECT}/accounts:update`, { localId: user.localId, emailVerified: true }, { Authorization: 'Bearer owner' });
+  return user;
+}
+
 async function idToken(user) {
   const res = await post(`${AUTH}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo`, { email: user.email, password: user.password, returnSecureToken: true });
   return res.idToken || null;
@@ -48,4 +56,4 @@ async function logIn(page, user) {
   await page.evaluate(() => window.closeProfileModal?.());
 }
 
-module.exports = { createUser, idToken, readUserDoc, listEntries, logIn };
+module.exports = { createUser, verifyByEmail, idToken, readUserDoc, listEntries, logIn };

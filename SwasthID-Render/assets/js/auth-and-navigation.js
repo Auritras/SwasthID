@@ -26,6 +26,9 @@
  const confirmPasswordField = document.getElementById('confirmPasswordField');
  const confirmPasswordInput = document.getElementById('confirmPassword');
  const confirmPwError = document.getElementById('confirmPwError');
+ const signupNameField = document.getElementById('signupNameField');
+ const signupNameInput = document.getElementById('signupFirstName');
+ const nameError = document.getElementById('nameError');
  let authMode = 'login';
 let profileOnboardingRequired = false;
 
@@ -44,14 +47,12 @@ let profileOnboardingRequired = false;
      (ownerUid && ownerUid === firebaseUser.uid) ||
      (!ownerUid && ownerEmail && ownerEmail === currentEmail.toLowerCase())
    );
-   const storedName = ownsProfile ? String(patientData.name || '').trim() : '';
-   const emailName = currentEmail ? currentEmail.split('@')[0].replace(/[._-]+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase()) : '';
-   const displayName = storedName && storedName !== 'Aditya Sharma' ? storedName : (emailName || 'SwasthID User');
+   const storedName = ownsProfile ? profileDisplayName(patientData, currentEmail) : '';
    const greeting = document.getElementById('dashboardGreetingName');
-   if (greeting) greeting.textContent = displayName.split(/\s+/)[0] || displayName;
+   if (greeting) greeting.textContent = storedName.split(/\s+/)[0] || 'there';
    renderAvatars(ownsProfile ? patientData.photo : '');
    const accountName = document.getElementById('accountName');
-   if (accountName) accountName.textContent = displayName;
+   if (accountName) accountName.textContent = storedName || currentEmail || 'SwasthID';
 
    loginScreen.style.display = 'none';
    dashboard.style.display = 'block';
@@ -91,6 +92,9 @@ let profileOnboardingRequired = false;
    createAccountBtn.textContent = isSignup ? 'Back to login' : 'Create account';
    submitBtn.textContent = isSignup ? 'Create account' : 'Log in';
    confirmPasswordField.style.display = isSignup ? '' : 'none';
+   signupNameField.hidden = !isSignup;
+   signupNameInput.required = isSignup;
+   nameError.style.display = 'none';
    const forgot = loginScreen.querySelector('.forgot-link'); if (forgot) forgot.hidden = isSignup;
    confirmPasswordInput.required = isSignup;
    confirmPasswordInput.value = '';
@@ -107,7 +111,7 @@ let profileOnboardingRequired = false;
 
  createAccountBtn.addEventListener('click', () => {
    setAuthMode(authMode === 'login' ? 'signup' : 'login');
-   idInput.focus();
+   (authMode === 'signup' ? signupNameInput : idInput).focus();
  });
 
  const forgotPasswordBtn = document.querySelector('.forgot-link');
@@ -201,11 +205,13 @@ window.addEventListener('DOMContentLoaded', async () => {
    const password = pwInput.value;
    const confirmPassword = confirmPasswordInput.value;
    const isSignup = authMode === 'signup';
+   const firstName = signupNameInput.value.trim().replace(/\s+/g, ' ');
 
+   nameError.style.display = isSignup && !firstName ? 'block' : 'none';
    idError.style.display = email ? 'none' : 'block';
    pwError.style.display = password ? 'none' : 'block';
    confirmPwError.style.display = isSignup && confirmPassword !== password ? 'block' : 'none';
-   if (!email || !password || (isSignup && confirmPassword !== password)) return;
+   if ((isSignup && !firstName) || !email || !password || (isSignup && confirmPassword !== password)) return;
 
    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
      idError.textContent = 'Please enter a valid email address.';
@@ -231,7 +237,7 @@ window.addEventListener('DOMContentLoaded', async () => {
      }
 
      if (isSignup) {
-       const result = await firebaseCreateAccount(email, password);
+       const result = await firebaseCreateAccount(email, password, firstName);
        localStorage.removeItem('swasth_loggedIn');
        localStorage.setItem('swasth_abhaId', email);
        // Do not enter the dashboard until the email ownership check is complete.

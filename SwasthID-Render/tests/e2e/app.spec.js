@@ -33,6 +33,20 @@ test.describe('signed out', () => {
     expect(errors).toEqual([]);
   });
 
+  test('sign-up asks for a first name', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#signupFirstName')).toBeHidden();
+    await page.click('#createAccountBtn');
+    await expect(page.locator('#signupFirstName')).toBeFocused();
+    await page.fill('#healthId', 'new@example.com');
+    await page.fill('#password', 'secret123');
+    await page.fill('#confirmPassword', 'secret123');
+    await page.click('.login-btn');
+    await expect(page.locator('#nameError')).toBeVisible();
+    await page.click('#createAccountBtn');
+    await expect(page.locator('#signupFirstName')).toBeHidden();
+  });
+
   test('asks for an email before logging in', async ({ page }) => {
     await page.goto('/');
     await page.click('.login-btn');
@@ -46,4 +60,11 @@ test('dark mode stays on after a reload', async ({ page }) => {
   await expect(page.locator('body')).toHaveClass(/dark-mode/);
   await page.reload();
   await expect(page.locator('body')).toHaveClass(/dark-mode/);
+});
+
+test('a name made up from the email address is not used as a greeting', async ({ page }) => {
+  await openApp(page, { name: 'Tester', firstName: '', email: 'tester@example.com', profileCompleted: false });
+  await expect(page.locator('#dashboardGreetingName')).toHaveText('there');
+  await page.evaluate(() => { Object.assign(patientData, { name: 'Riya Sen', firstName: 'Riya' }); renderPersonalizedUI(); });
+  await expect(page.locator('#dashboardGreetingName')).toHaveText('Riya');
 });
